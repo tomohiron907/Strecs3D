@@ -2,13 +2,7 @@
 #include <QWidget>
 #include <vector>
 #include <QLineEdit>
-
-// 応力範囲と密度のマッピング構造体
-struct StressDensityMapping {
-    double stressMin;
-    double stressMax;
-    double density;
-};
+#include "../../core/types/StressDensityMapping.h"
 
 class DensitySlider : public QWidget {
     Q_OBJECT
