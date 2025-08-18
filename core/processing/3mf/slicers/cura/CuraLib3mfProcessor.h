@@ -1,7 +1,7 @@
 #ifndef CURALIB3MFPROCESSOR_H
 #define CURALIB3MFPROCESSOR_H
 
-#include "../BaseLib3mfProcessor.h"
+#include "../../BaseLib3mfProcessor.h"
 
 class CuraLib3mfProcessor : public BaseLib3mfProcessor {
 public:

@@ -4,9 +4,9 @@
 #include "lib3mf_implicit.hpp"
 using namespace Lib3MF;
 
-#include "../../utils/xmlConverter.h"
+#include "../../../utils/xmlConverter.h"
 #include <vector>
-#include "../../UI/widgets/DensitySlider.h" // For StressDensityMapping
+#include "../../../UI/widgets/DensitySlider.h" // For StressDensityMapping
 
 struct FileInfo {
     int id;

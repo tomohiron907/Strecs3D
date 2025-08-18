@@ -1,7 +1,7 @@
 #ifndef BAMBULIB3MFPROCESSOR_H
 #define BAMBULIB3MFPROCESSOR_H
 
-#include "../BaseLib3mfProcessor.h"
+#include "../../BaseLib3mfProcessor.h"
 
 class BambuLib3mfProcessor : public BaseLib3mfProcessor {
 private:

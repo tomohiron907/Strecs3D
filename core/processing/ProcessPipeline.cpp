@@ -1,8 +1,8 @@
 #include "ProcessPipeline.h"
 #include "VtkProcessor.h"
-#include "BaseLib3mfProcessor.h"
-#include "cura/CuraLib3mfProcessor.h"
-#include "bambu/BambuLib3mfProcessor.h"
+#include "3mf/BaseLib3mfProcessor.h"
+#include "3mf/slicers/cura/CuraLib3mfProcessor.h"
+#include "3mf/slicers/bambu/BambuLib3mfProcessor.h"
 #include "../../utils/fileUtility.h"
 #include "../../utils/tempPathUtility.h"
 #include <QMessageBox>
