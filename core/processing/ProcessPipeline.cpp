@@ -1,11 +1,14 @@
 #include "ProcessPipeline.h"
 #include "VtkProcessor.h"
-#include "lib3mfProcessor.h"
+#include "BaseLib3mfProcessor.h"
+#include "cura/CuraLib3mfProcessor.h"
+#include "bambu/BambuLib3mfProcessor.h"
 #include "../../utils/fileUtility.h"
 #include "../../utils/tempPathUtility.h"
 #include <QMessageBox>
 #include <iostream>
 #include <stdexcept>
+#include <memory>
 #include <vtkPolyData.h>
 
 ProcessPipeline::ProcessPipeline() {
@@ -61,14 +64,28 @@ std::vector<vtkSmartPointer<vtkPolyData>> ProcessPipeline::processMeshDivision()
 bool ProcessPipeline::process3mfFile(const std::string& mode, const std::vector<StressDensityMapping>& mappings, 
                                   double maxStress, QWidget* parent) {
     try {
-        Lib3mfProcessor lib3mfProcessor;
-        if (!loadInputFiles(lib3mfProcessor, stlFile)) {
+        QString currentMode = QString::fromStdString(mode);
+        auto processor = createProcessor(currentMode);
+        if (!processor) {
+            throw std::runtime_error("Failed to create processor for mode: " + mode);
+        }
+        
+        if (!loadInputFiles(*processor, stlFile)) {
             throw std::runtime_error("Failed to load input files");
         }
-        QString currentMode = QString::fromStdString(mode);
-        if (!processByMode(lib3mfProcessor, currentMode, mappings, maxStress)) {
-            throw std::runtime_error("Failed to process in " + mode + " mode");
+        
+        if (currentMode == "cura") {
+            if (!processCuraMode(*processor, mappings, maxStress)) {
+                throw std::runtime_error("Failed to process in cura mode");
+            }
+        } else if (currentMode == "bambu") {
+            if (!processBambuMode(*processor, maxStress, mappings)) {
+                throw std::runtime_error("Failed to process in bambu mode");
+            }
+        } else {
+            throw std::runtime_error("Unknown mode: " + mode);
         }
+        
         return true;
     }
     catch (const std::exception& e) {
@@ -77,7 +94,7 @@ bool ProcessPipeline::process3mfFile(const std::string& mode, const std::vector<
     }
 }
 
-bool ProcessPipeline::loadInputFiles(Lib3mfProcessor& processor, const std::string& stlFile) {
+bool ProcessPipeline::loadInputFiles(BaseLib3mfProcessor& processor, const std::string& stlFile) {
     if (!processor.getMeshes()) {
         throw std::runtime_error("Failed to load divided meshes");
     }
@@ -87,17 +104,16 @@ bool ProcessPipeline::loadInputFiles(Lib3mfProcessor& processor, const std::stri
     return true;
 }
 
-bool ProcessPipeline::processByMode(Lib3mfProcessor& processor, const QString& mode, 
-                                 const std::vector<StressDensityMapping>& mappings, double maxStress) {
+std::unique_ptr<BaseLib3mfProcessor> ProcessPipeline::createProcessor(const QString& mode) {
     if (mode == "cura") {
-        return processCuraMode(processor, mappings, maxStress);
+        return std::make_unique<CuraLib3mfProcessor>();
     } else if (mode == "bambu") {
-        return processBambuMode(processor, maxStress, mappings);
+        return std::make_unique<BambuLib3mfProcessor>();
     }
-    throw std::runtime_error("Unknown mode: " + mode.toStdString());
+    return nullptr;
 }
 
-bool ProcessPipeline::processCuraMode(Lib3mfProcessor& processor, const std::vector<StressDensityMapping>& mappings, 
+bool ProcessPipeline::processCuraMode(BaseLib3mfProcessor& processor, const std::vector<StressDensityMapping>& mappings, 
                                    double maxStress) {
     std::cout << "Processing in Cura mode" << std::endl;
     if (!processor.setMetaData(maxStress, mappings)) {
@@ -114,9 +130,9 @@ bool ProcessPipeline::processCuraMode(Lib3mfProcessor& processor, const std::vec
     return true;
 }
 
-bool ProcessPipeline::processBambuMode(Lib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings) {
+bool ProcessPipeline::processBambuMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings) {
     std::cout << "Processing in Bambu mode" << std::endl;
-    processor.setMetaDataBambu(maxStress, mappings);
+    processor.setMetaData(maxStress, mappings);
     const std::string tempFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
     if (!processor.save3mf(tempFile)) {
         throw std::runtime_error("Failed to save temporary 3MF file");

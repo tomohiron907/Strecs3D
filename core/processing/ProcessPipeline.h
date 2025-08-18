@@ -10,7 +10,7 @@
 #include "../../UI/widgets/DensitySlider.h"
 
 class VtkProcessor;
-class Lib3mfProcessor;
+class BaseLib3mfProcessor;
 class vtkPolyData;
 class StressDensityMapping;
 
@@ -31,14 +31,13 @@ public:
                        double maxStress, QWidget* parent = nullptr);
     
     // ファイル読み込み
-    bool loadInputFiles(Lib3mfProcessor& processor, const std::string& stlFile);
+    bool loadInputFiles(BaseLib3mfProcessor& processor, const std::string& stlFile);
     
     // モード別処理
-    bool processByMode(Lib3mfProcessor& processor, const QString& mode, 
-                      const std::vector<StressDensityMapping>& mappings, double maxStress);
-    bool processCuraMode(Lib3mfProcessor& processor, const std::vector<StressDensityMapping>& mappings, 
+    std::unique_ptr<BaseLib3mfProcessor> createProcessor(const QString& mode);
+    bool processCuraMode(BaseLib3mfProcessor& processor, const std::vector<StressDensityMapping>& mappings, 
                         double maxStress);
-    bool processBambuMode(Lib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings);
+    bool processBambuMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings);
     bool processBambuZipFiles();
     
     // エラーハンドリング

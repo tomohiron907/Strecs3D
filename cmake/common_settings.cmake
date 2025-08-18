@@ -105,7 +105,9 @@ add_executable(Strecs3D
   UI/widgets/CustomCheckBox.cpp
   UI/SceneRenderer.cpp
   core/processing/VtkProcessor.cpp
-  core/processing/lib3mfProcessor.cpp
+  core/processing/BaseLib3mfProcessor.cpp
+  core/processing/cura/CuraLib3mfProcessor.cpp
+  core/processing/bambu/BambuLib3mfProcessor.cpp
   utils/fileUtility.cpp
   utils/tempPathUtility.cpp
   utils/xmlConverter.cpp
