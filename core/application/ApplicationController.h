@@ -7,7 +7,6 @@
 #include <vtkSmartPointer.h>
 #include <vtkPolyData.h>
 #include "../processing/ProcessPipeline.h"
-#include "../visualization/VisualizationManager.h"
 #include "../export/ExportManager.h"
 #include "../interfaces/IUserInterface.h"
 
@@ -18,8 +17,6 @@ public:
     ApplicationController(QObject* parent = nullptr);
     ~ApplicationController() = default;
     
-    // 初期化
-    void initializeVisualizationManager(IUserInterface* ui);
 
     // ファイル操作
     bool openVtkFile(const std::string& vtkFile, IUserInterface* ui);
@@ -44,7 +41,6 @@ public:
     
     // ゲッター
     ProcessPipeline* getFileProcessor() { return fileProcessor.get(); }
-    VisualizationManager* getVisualizationManager() { return visualizationManager.get(); }
     ExportManager* getExportManager() { return exportManager.get(); }
 
 private:
@@ -53,7 +49,6 @@ private:
     QString currentStlFilename;
     
     std::unique_ptr<ProcessPipeline> fileProcessor;
-    std::unique_ptr<VisualizationManager> visualizationManager;
     std::unique_ptr<ExportManager> exportManager;
     
     // ヘルパーメソッド

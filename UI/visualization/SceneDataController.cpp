@@ -1,5 +1,5 @@
 #include "SceneDataController.h"
-#include "../processing/VtkProcessor.h"
+#include "../../core/processing/VtkProcessor.h"
 #include "../../utils/tempPathUtility.h"
 #include <regex>
 #include <algorithm>

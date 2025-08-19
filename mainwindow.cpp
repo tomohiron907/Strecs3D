@@ -16,8 +16,6 @@ MainWindow::MainWindow(QWidget* parent)
     uiAdapter = std::make_unique<MainWindowUIAdapter>(ui.get(), this);
     appController = std::make_unique<ApplicationController>(this);
     
-    // VisualizationManagerを初期化
-    appController->initializeVisualizationManager(uiAdapter.get());
     
     setCentralWidget(ui->getCentralWidget());
     resize(1600, 900);
@@ -135,10 +133,7 @@ void MainWindow::onObjectVisibilityChanged(bool visible)
     auto objectDisplayWidget = ui->getObjectDisplayOptionsWidget();
     if (objectDisplayWidget) {
         QString fileName = objectDisplayWidget->getFileName();
-        auto visualizationManager = appController->getVisualizationManager();
-        if (visualizationManager) {
-            visualizationManager->setObjectVisible(fileName.toStdString(), visible);
-        }
+        uiAdapter->setVisualizationObjectVisible(fileName.toStdString(), visible);
     }
 }
 
@@ -147,10 +142,7 @@ void MainWindow::onObjectOpacityChanged(double opacity)
     auto objectDisplayWidget = ui->getObjectDisplayOptionsWidget();
     if (objectDisplayWidget) {
         QString fileName = objectDisplayWidget->getFileName();
-        auto visualizationManager = appController->getVisualizationManager();
-        if (visualizationManager) {
-            visualizationManager->setObjectOpacity(fileName.toStdString(), opacity);
-        }
+        uiAdapter->setVisualizationObjectOpacity(fileName.toStdString(), opacity);
     }
 }
 
@@ -159,10 +151,7 @@ void MainWindow::onVtkObjectVisibilityChanged(bool visible)
     auto vtkDisplayWidget = ui->getVtkDisplayOptionsWidget();
     if (vtkDisplayWidget) {
         QString fileName = vtkDisplayWidget->getFileName();
-        auto visualizationManager = appController->getVisualizationManager();
-        if (visualizationManager) {
-            visualizationManager->setObjectVisible(fileName.toStdString(), visible);
-        }
+        uiAdapter->setVisualizationObjectVisible(fileName.toStdString(), visible);
     }
 }
 
@@ -171,10 +160,7 @@ void MainWindow::onVtkObjectOpacityChanged(double opacity)
     auto vtkDisplayWidget = ui->getVtkDisplayOptionsWidget();
     if (vtkDisplayWidget) {
         QString fileName = vtkDisplayWidget->getFileName();
-        auto visualizationManager = appController->getVisualizationManager();
-        if (visualizationManager) {
-            visualizationManager->setObjectOpacity(fileName.toStdString(), opacity);
-        }
+        uiAdapter->setVisualizationObjectOpacity(fileName.toStdString(), opacity);
     }
 }
 

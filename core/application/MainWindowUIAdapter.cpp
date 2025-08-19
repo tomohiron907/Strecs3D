@@ -1,11 +1,18 @@
 #include "MainWindowUIAdapter.h"
 #include "ApplicationController.h"
 #include "../../UI/widgets/DensitySlider.h"
+#include "../../UI/visualization/VisualizationManager.h"
 
 MainWindowUIAdapter::MainWindowUIAdapter(MainWindowUI* ui, QObject* parent) 
     : IUserInterface(parent), ui(ui)
 {
+    // Initialize VisualizationManager
+    if (ui) {
+        visualizationManager = std::make_unique<VisualizationManager>(ui);
+    }
 }
+
+MainWindowUIAdapter::~MainWindowUIAdapter() = default;
 
 void MainWindowUIAdapter::setVtkFileName(const QString& fileName)
 {
@@ -181,4 +188,77 @@ ObjectDisplayOptionsWidget* MainWindowUIAdapter::getDividedMeshWidget(int meshIn
         case 3: return ui->getDividedMeshWidget4();
         default: return nullptr;
     }
+}
+
+// 3D可視化制御の実装
+void MainWindowUIAdapter::displayVtkFile(const std::string& vtkFile, VtkProcessor* vtkProcessor)
+{
+    if (visualizationManager) {
+        visualizationManager->displayVtkFile(vtkFile, vtkProcessor);
+    }
+}
+
+void MainWindowUIAdapter::displayStlFile(const std::string& stlFile, VtkProcessor* vtkProcessor)
+{
+    if (visualizationManager) {
+        visualizationManager->displayStlFile(stlFile, vtkProcessor);
+    }
+}
+
+void MainWindowUIAdapter::showTempDividedStl(VtkProcessor* vtkProcessor)
+{
+    if (visualizationManager) {
+        visualizationManager->showTempDividedStl(vtkProcessor, qobject_cast<QWidget*>(ui));
+    }
+}
+
+void MainWindowUIAdapter::setVisualizationObjectVisible(const std::string& filename, bool visible)
+{
+    if (visualizationManager) {
+        visualizationManager->setObjectVisible(filename, visible);
+    }
+}
+
+void MainWindowUIAdapter::setVisualizationObjectOpacity(const std::string& filename, double opacity)
+{
+    if (visualizationManager) {
+        visualizationManager->setObjectOpacity(filename, opacity);
+    }
+}
+
+void MainWindowUIAdapter::removeDividedStlActors()
+{
+    if (visualizationManager) {
+        visualizationManager->removeDividedStlActors();
+    }
+}
+
+void MainWindowUIAdapter::hideAllStlObjects()
+{
+    if (visualizationManager) {
+        visualizationManager->hideAllStlObjects();
+    }
+}
+
+void MainWindowUIAdapter::hideVtkObject()
+{
+    if (visualizationManager) {
+        visualizationManager->hideVtkObject();
+    }
+}
+
+std::vector<std::string> MainWindowUIAdapter::getAllStlFilenames() const
+{
+    if (visualizationManager) {
+        return visualizationManager->getAllStlFilenames();
+    }
+    return {};
+}
+
+std::string MainWindowUIAdapter::getVtkFilename() const
+{
+    if (visualizationManager) {
+        return visualizationManager->getVtkFilename();
+    }
+    return "";
 }

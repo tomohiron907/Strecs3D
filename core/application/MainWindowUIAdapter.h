@@ -2,16 +2,18 @@
 
 #include <QObject>
 #include <QMessageBox>
+#include <memory>
 #include "../interfaces/IUserInterface.h"
 #include "../../UI/mainwindowui.h"
 
 class ObjectDisplayOptionsWidget;
+class VisualizationManager;
 
 class MainWindowUIAdapter : public IUserInterface {
     Q_OBJECT
 public:
     explicit MainWindowUIAdapter(MainWindowUI* ui, QObject* parent = nullptr);
-    ~MainWindowUIAdapter() = default;
+    ~MainWindowUIAdapter();
     
     // IUserInterface implementation
     void setVtkFileName(const QString& fileName) override;
@@ -38,10 +40,23 @@ public:
     bool showProcessingError(const QString& errorMessage) override;
     void showProcessingSuccess() override;
     
+    // 3D可視化制御
+    void displayVtkFile(const std::string& vtkFile, VtkProcessor* vtkProcessor) override;
+    void displayStlFile(const std::string& stlFile, VtkProcessor* vtkProcessor) override;
+    void showTempDividedStl(VtkProcessor* vtkProcessor) override;
+    void setVisualizationObjectVisible(const std::string& filename, bool visible) override;
+    void setVisualizationObjectOpacity(const std::string& filename, double opacity) override;
+    void removeDividedStlActors() override;
+    void hideAllStlObjects() override;
+    void hideVtkObject() override;
+    std::vector<std::string> getAllStlFilenames() const override;
+    std::string getVtkFilename() const override;
+    
     // Adapter specific method
     MainWindowUI* getMainWindowUI() const { return ui; }
 
 private:
     ObjectDisplayOptionsWidget* getDividedMeshWidget(int meshIndex) const;
     MainWindowUI* ui;
+    std::unique_ptr<VisualizationManager> visualizationManager;
 };

@@ -103,7 +103,7 @@ add_executable(Strecs3D
   UI/widgets/ObjectDisplayOptionsWidget.cpp
   UI/widgets/DisplayOptionsContainer.cpp
   UI/widgets/CustomCheckBox.cpp
-  UI/SceneRenderer.cpp
+  UI/visualization/SceneRenderer.cpp
   core/processing/VtkProcessor.cpp
   core/processing/3mf/BaseLib3mfProcessor.cpp
   core/processing/3mf/slicers/cura/CuraLib3mfProcessor.cpp
@@ -115,8 +115,8 @@ add_executable(Strecs3D
   core/application/MainWindowUIAdapter.cpp
   core/interfaces/IUserInterface.cpp
   core/processing/ProcessPipeline.cpp
-  core/visualization/VisualizationManager.cpp
-  core/visualization/SceneDataController.cpp
+  UI/visualization/VisualizationManager.cpp
+  UI/visualization/SceneDataController.cpp
   core/export/ExportManager.cpp
   resources/resources.qrc
 )

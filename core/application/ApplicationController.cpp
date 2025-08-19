@@ -10,17 +10,10 @@
 ApplicationController::ApplicationController(QObject* parent)
     : QObject(parent)
     , fileProcessor(std::make_unique<ProcessPipeline>())
-    , visualizationManager(nullptr)
     , exportManager(std::make_unique<ExportManager>())
 {
 }
 
-void ApplicationController::initializeVisualizationManager(IUserInterface* ui)
-{
-    if (auto adapter = dynamic_cast<MainWindowUIAdapter*>(ui)) {
-        visualizationManager = std::make_unique<VisualizationManager>(adapter->getMainWindowUI());
-    }
-}
 
 bool ApplicationController::openVtkFile(const std::string& vtkFile, IUserInterface* ui)
 {
@@ -35,14 +28,10 @@ bool ApplicationController::openVtkFile(const std::string& vtkFile, IUserInterfa
     // --- 追加: STLを非表示にし、チェックボックスもオフ ---
     emit stlVisibilityChanged(false);
     emit stlOpacityChanged(1.0);
-    if (visualizationManager) {
-        visualizationManager->hideAllStlObjects();
-    }
+    ui->hideAllStlObjects();
     // --- ここまで追加 ---
     try {
-        if (visualizationManager) {
-            visualizationManager->displayVtkFile(vtkFile, fileProcessor->getVtkProcessor().get());
-        }
+        ui->displayVtkFile(vtkFile, fileProcessor->getVtkProcessor().get());
         
         // ストレス範囲をスライダーに設定
         if (fileProcessor->getVtkProcessor()) {
@@ -71,9 +60,7 @@ bool ApplicationController::openStlFile(const std::string& stlFile, IUserInterfa
     emit stlFileNameChanged(QString::fromStdString(stlFile));
     
     try {
-        if (visualizationManager) {
-            visualizationManager->displayStlFile(stlFile, fileProcessor->getVtkProcessor().get());
-        }
+        ui->displayStlFile(stlFile, fileProcessor->getVtkProcessor().get());
         return true;
     }
     catch (const std::exception& e) {
@@ -183,27 +170,21 @@ void ApplicationController::loadAndDisplayTempStlFiles(IUserInterface* ui)
     if (!ui || !fileProcessor->getVtkProcessor()) return;
     
     // 分割STL Actorを削除
-    if (visualizationManager) {
-        visualizationManager->removeDividedStlActors();
-    }
+    ui->removeDividedStlActors();
     // 分割されたメッシュウィジェットをリセット
     resetDividedMeshWidgets(ui);
     
     // --- 追加: VTKを非表示にし、チェックボックスもオフ ---
     emit vtkVisibilityChanged(false);
     emit vtkOpacityChanged(1.0);
-    if (visualizationManager) {
-        visualizationManager->hideVtkObject();
-    }
+    ui->hideVtkObject();
     // 分割STLウィジェットのチェックボックスをオン
     for (int i = 0; i < DIVIDED_MESH_COUNT; ++i) {
         emit dividedMeshVisibilityChanged(i, true);
         emit dividedMeshOpacityChanged(i, 1.0);
     }
     // --- ここまで追加 ---
-    if (visualizationManager) {
-        visualizationManager->showTempDividedStl(fileProcessor->getVtkProcessor().get(), nullptr);
-    }
+    ui->showTempDividedStl(fileProcessor->getVtkProcessor().get());
 }
 
 void ApplicationController::cleanupTempFiles()

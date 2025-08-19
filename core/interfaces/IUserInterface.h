@@ -3,8 +3,10 @@
 #include <QObject>
 #include <QString>
 #include <vector>
+#include <string>
 
 struct StressDensityMapping;
+class VtkProcessor;
 
 class IUserInterface : public QObject {
     Q_OBJECT
@@ -44,6 +46,18 @@ public:
     virtual bool showFileValidationError() = 0;
     virtual bool showProcessingError(const QString& errorMessage) = 0;
     virtual void showProcessingSuccess() = 0;
+    
+    // 3D可視化制御
+    virtual void displayVtkFile(const std::string& vtkFile, VtkProcessor* vtkProcessor) = 0;
+    virtual void displayStlFile(const std::string& stlFile, VtkProcessor* vtkProcessor) = 0;
+    virtual void showTempDividedStl(VtkProcessor* vtkProcessor) = 0;
+    virtual void setVisualizationObjectVisible(const std::string& filename, bool visible) = 0;
+    virtual void setVisualizationObjectOpacity(const std::string& filename, double opacity) = 0;
+    virtual void removeDividedStlActors() = 0;
+    virtual void hideAllStlObjects() = 0;
+    virtual void hideVtkObject() = 0;
+    virtual std::vector<std::string> getAllStlFilenames() const = 0;
+    virtual std::string getVtkFilename() const = 0;
 
 public slots:
     // ApplicationControllerからのシグナルを受信するスロット
