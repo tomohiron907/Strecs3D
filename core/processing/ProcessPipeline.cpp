@@ -115,7 +115,6 @@ std::unique_ptr<BaseLib3mfProcessor> ProcessPipeline::createProcessor(const QStr
 
 bool ProcessPipeline::processCuraMode(BaseLib3mfProcessor& processor, const std::vector<StressDensityMapping>& mappings, 
                                    double maxStress) {
-    std::cout << "Processing in Cura mode" << std::endl;
     
     const auto& meshInfos = vtkProcessor->getMeshInfos();
     if (!processor.setMetaData(maxStress, mappings, meshInfos)) {
@@ -128,13 +127,10 @@ bool ProcessPipeline::processCuraMode(BaseLib3mfProcessor& processor, const std:
     if (!processor.save3mf(outputPath)) {
         throw std::runtime_error("Failed to save 3MF file");
     }
-    std::cout << "Successfully saved 3MF file: " << outputPath << std::endl;
     return true;
 }
 
 bool ProcessPipeline::processBambuMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings) {
-    std::cout << "Processing in Bambu mode" << std::endl;
-    
     const auto& meshInfos = vtkProcessor->getMeshInfos();
     processor.setMetaData(maxStress, mappings, meshInfos);
     const std::string tempFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
@@ -154,7 +150,6 @@ bool ProcessPipeline::processBambuZipFiles() {
     if (!FileUtility::zipDirectory(extractDir, outputFile)) {
         throw std::runtime_error("Failed to create output ZIP file");
     }
-    std::cout << "Successfully processed Bambu mode files" << std::endl;
     return true;
 }
 

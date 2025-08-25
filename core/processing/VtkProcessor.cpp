@@ -14,7 +14,6 @@ VtkProcessor::VtkProcessor(const std::string& vtuFileName): vtuFileName(vtuFileN
 }
 
 void VtkProcessor::showInfo(){
-    std::cout << "VTK file: " << vtuFileName << std::endl;
 }
 
 std::string VtkProcessor::detectStressLabel() {
@@ -39,7 +38,6 @@ std::string VtkProcessor::detectStressLabel() {
         for (int i = 0; i < numArrays; ++i) {
             const char* arrayName = pointData->GetArrayName(i);
             if (arrayName && std::string(arrayName) == candidate) {
-                std::cout << "Detected stress label: " << candidate << std::endl;
                 return candidate;
             }
         }
@@ -54,7 +52,6 @@ std::string VtkProcessor::detectStressLabel() {
                 name.find("Mises") != std::string::npos ||
                 name.find("stress") != std::string::npos ||
                 name.find("Stress") != std::string::npos) {
-                std::cout << "Detected stress label (partial match): " << name << std::endl;
                 return name;
             }
         }
@@ -64,7 +61,6 @@ std::string VtkProcessor::detectStressLabel() {
     if (numArrays > 0) {
         const char* defaultName = pointData->GetArrayName(0);
         if (defaultName) {
-            std::cout << "Using default array as stress label: " << defaultName << std::endl;
             return std::string(defaultName);
         }
     }
@@ -134,7 +130,6 @@ std::vector<vtkSmartPointer<vtkPolyData>> VtkProcessor::divideMesh() {
     for (int i = 0; i < isoSurfaceNum - 1; ++i) {
         int minValue = stressValues[i];
         int maxValue = stressValues[i + 1];
-        std::cout << "Extracting cells in range: " << minValue << " -> " << maxValue << std::endl;
         vtkSmartPointer<vtkPolyData> currentPolyData = this->extractRegionInRange(minValue, maxValue);
         
         dividedPolyData.push_back(currentPolyData);
@@ -155,7 +150,6 @@ void VtkProcessor::prepareStressValues(const std::vector<int>& thresholds) {
         stressValues.push_back(v);
     }
     isoSurfaceNum = stressValues.size();
-    std::cout << "isoSurfaceNum: " << isoSurfaceNum << std::endl;
 }
 
 void VtkProcessor::savePolyDataAsSTL(vtkPolyData* polyData, const std::string& fileName) {

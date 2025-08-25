@@ -194,7 +194,6 @@ bool BambuLib3mfProcessor::exportConfig(){
 
     // XMLファイル "config.xml" に書き出し
     if (xmlconverter::writeConfigToFile(config, outputFilename)) {
-        std::cout << "XMLファイル 'config.xml' に書き出しました。" << std::endl;
     } else {
         std::cerr << "XMLの書き出しに失敗しました。" << std::endl;
     }

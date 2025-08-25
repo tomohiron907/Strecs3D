@@ -47,8 +47,6 @@ bool BaseLib3mfProcessor::getMeshes(){
         // ソート済みのファイルを処理
         for (const auto& entry : files) {
             std::string filename = entry.path().filename().string();
-            std::cout << "filename: " << filename << std::endl;
-            // ここで setStl 関数を呼び出す（directoryPath と filename を結合）
             setStl(directoryPath + "/" + filename);
         }
     } catch (const std::filesystem::filesystem_error& e) {
@@ -60,7 +58,6 @@ bool BaseLib3mfProcessor::getMeshes(){
 
 bool BaseLib3mfProcessor::setStl(const std::string stlFileName){
     // Import Model from File
-    std::cout << "reading " << stlFileName << "..." << std::endl;
     try{
         reader->ReadFromFile(stlFileName);
     } catch (Lib3MF::ELib3MFException &e) {
@@ -71,7 +68,6 @@ bool BaseLib3mfProcessor::setStl(const std::string stlFileName){
     auto meshIterator = model->GetMeshObjects();
     // メッシュの総数を取得
     size_t meshCount = meshIterator->Count();
-    std::cout << "Mesh count: " << meshCount << std::endl;
     //メッシュが存在しない場合はエラーメッセージを出力して終了
     if (meshCount == 0) {
         std::cerr << "No mesh objects found in the model." << std::endl;
@@ -120,8 +116,6 @@ bool BaseLib3mfProcessor::save3mf(const std::string outputFilename){
     }
     
     PWriter writer = model->QueryWriter("3mf");
-    std::cout << "Writing " << outputFilename << "..." << std::endl;
     writer->WriteToFile(outputFilename);
-    std::cout << "Done" << std::endl;
     return true;
 }
