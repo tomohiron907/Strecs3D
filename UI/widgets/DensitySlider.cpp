@@ -328,10 +328,10 @@ void DensitySlider::updateStressDensityMappings() {
     }
 }
 
-std::vector<double> DensitySlider::stressThresholds() const {
+std::vector<int> DensitySlider::stressThresholds() const {
     int top = m_margin;
     int bottom = height() - m_margin;
-    std::vector<double> thresholds;
+    std::vector<int> thresholds;
     thresholds.push_back(m_minStress);
     for (int y : m_handles) {
         double t = (double)(y - bottom) / (top - bottom);

@@ -21,7 +21,7 @@ public:
 
     // VTKファイル処理
     bool initializeVtkProcessor(const std::string& vtkFile, const std::string& stlFile, 
-                               const std::vector<double>& thresholds, QWidget* parent = nullptr);
+                               const std::vector<int>& thresholds, QWidget* parent = nullptr);
     
     // メッシュ分割処理
     std::vector<vtkSmartPointer<vtkPolyData>> processMeshDivision();

@@ -18,7 +18,7 @@ ProcessPipeline::ProcessPipeline() {
 ProcessPipeline::~ProcessPipeline() = default;
 
 bool ProcessPipeline::initializeVtkProcessor(const std::string& vtkFile, const std::string& stlFile, 
-                                          const std::vector<double>& thresholds, QWidget* parent) {
+                                          const std::vector<int>& thresholds, QWidget* parent) {
     this->vtkFile = vtkFile;
     this->stlFile = stlFile;
     

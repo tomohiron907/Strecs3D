@@ -51,11 +51,11 @@
 
 struct MeshInfo {
     int meshID;
-    double stressMin;
-    double stressMax;
+    int stressMin;
+    int stressMax;
     std::string filePath;
     
-    MeshInfo(int id, double minStress, double maxStress, const std::string& path)
+    MeshInfo(int id, int minStress, int maxStress, const std::string& path)
         : meshID(id), stressMin(minStress), stressMax(maxStress), filePath(path) {}
 };
 
@@ -66,10 +66,10 @@ private:
     std::string vtuFileName;
     vtkSmartPointer<vtkUnstructuredGrid> vtuData;
     double stressRange[2];
-    float minStress;
-    float maxStress;
+    int minStress;
+    int maxStress;
     int isoSurfaceNum;
-    std::vector<float> stressValues;
+    std::vector<int> stressValues;
     std::vector<vtkSmartPointer<vtkPolyData>> dividedMeshes;
     vtkSmartPointer<vtkLookupTable> currentLookupTable;
     std::string detectedStressLabel; // 検出されたストレスラベルを保存
@@ -79,26 +79,26 @@ public:
     VtkProcessor(const std::string& vtuFileName);
     void showInfo();
     bool LoadAndPrepareData();
-    void prepareStressValues(const std::vector<double>& thresholds);
+    void prepareStressValues(const std::vector<int>& thresholds);
     void clearPreviousData();
-    vtkSmartPointer<vtkPolyData> extractRegionInRange(double lowerBound, double upperBound);
+    vtkSmartPointer<vtkPolyData> extractRegionInRange(int lowerBound, int upperBound);
     std::vector<vtkSmartPointer<vtkPolyData>> divideMesh();
     void savePolyDataAsSTL(vtkPolyData* polyData, const std::string& fileName);
 
-    std::vector<float> getStressValues()                                   const { return stressValues; }
+    std::vector<int> getStressValues()                                    const { return stressValues; }
     int getIsoSurfaceNum()                                                 const { return isoSurfaceNum; }
-    double getMaxStress()                                                  const { return maxStress;}
-    double getMinStress()                                                  const { return minStress;}
+    int getMaxStress()                                                     const { return maxStress;}
+    int getMinStress()                                                     const { return minStress;}
     
     vtkSmartPointer<vtkActor> getVtuActor(const std::string& fileName);
     vtkSmartPointer<vtkActor> getStlActor(const std::string& fileName);
     vtkSmartPointer<vtkActor> getColoredStlActor(const std::string& fileName, double r, double g, double b);
-    vtkSmartPointer<vtkActor> getColoredStlActorByStress(const std::string& fileName, double stressValue, double minStress, double maxStress);
+    vtkSmartPointer<vtkActor> getColoredStlActorByStress(const std::string& fileName, int stressValue, int minStress, int maxStress);
 
     void saveDividedMeshes(const std::vector<vtkSmartPointer<vtkPolyData>>& dividedMeshes);
     std::string generateMeshFileName(int index,
-        float minValue,
-        float maxValue) const;
+        int minValue,
+        int maxValue) const;
     vtkSmartPointer<vtkLookupTable> getCurrentLookupTable() const { return currentLookupTable; }
     
     // 新しいメソッド: ストレスラベルを検出

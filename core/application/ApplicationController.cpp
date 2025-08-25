@@ -212,7 +212,7 @@ bool ApplicationController::export3mfFile(IUserInterface* ui)
     return exportManager->export3mfFile(stlFile, nullptr);
 }
 
-std::vector<double> ApplicationController::getStressThresholds(IUserInterface* ui)
+std::vector<int> ApplicationController::getStressThresholds(IUserInterface* ui)
 {
     if (!ui) return {};
     

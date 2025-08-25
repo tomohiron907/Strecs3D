@@ -53,7 +53,7 @@ private:
     
     // ヘルパーメソッド
     bool validateFiles(IUserInterface* ui);
-    std::vector<double> getStressThresholds(IUserInterface* ui);
+    std::vector<int> getStressThresholds(IUserInterface* ui);
     std::vector<StressDensityMapping> getStressDensityMappings(IUserInterface* ui);
     QString getCurrentMode(IUserInterface* ui);
     

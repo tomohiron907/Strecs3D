@@ -92,7 +92,7 @@ void MainWindowUIAdapter::setDividedMeshFileName(int meshIndex, const QString& f
     }
 }
 
-std::vector<double> MainWindowUIAdapter::getStressThresholds() const
+std::vector<int> MainWindowUIAdapter::getStressThresholds() const
 {
     if (!ui) return {};
     auto slider = ui->getRangeSlider();

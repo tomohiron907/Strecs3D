@@ -30,7 +30,7 @@ public:
     virtual void setDividedMeshFileName(int meshIndex, const QString& fileName) = 0;
     
     // データ取得
-    virtual std::vector<double> getStressThresholds() const = 0;
+    virtual std::vector<int> getStressThresholds() const = 0;
     virtual std::vector<StressDensityMapping> getStressDensityMappings() const = 0;
     virtual QString getCurrentMode() const = 0;
     

@@ -15,7 +15,7 @@ public:
     std::vector<double> regionPercents() const;
     void setRegionPercents(const std::vector<double>& percents);
     std::vector<StressDensityMapping> stressDensityMappings() const;
-    std::vector<double> stressThresholds() const;
+    std::vector<int> stressThresholds() const;
 
 signals:
     void handlePositionsChanged(const std::vector<int>& positions);

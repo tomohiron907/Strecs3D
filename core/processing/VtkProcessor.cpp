@@ -96,12 +96,12 @@ bool VtkProcessor:: LoadAndPrepareData() {
     pointData->SetActiveScalars(detectedStressLabel.c_str());
     vtuData->GetScalarRange(stressRange);
 
-    minStress = stressRange[0];
-    maxStress = stressRange[1];
+    minStress = static_cast<int>(stressRange[0]);
+    maxStress = static_cast<int>(stressRange[1]);
     return true;
 }
 
-vtkSmartPointer<vtkPolyData> VtkProcessor::extractRegionInRange(double lowerBound, double upperBound){
+vtkSmartPointer<vtkPolyData> VtkProcessor::extractRegionInRange(int lowerBound, int upperBound){
 
     vtkSmartPointer<vtkClipDataSet> clip_min = vtkSmartPointer<vtkClipDataSet>::New();
     clip_min->SetInputData(vtuData);
@@ -132,8 +132,8 @@ std::vector<vtkSmartPointer<vtkPolyData>> VtkProcessor::divideMesh() {
     std::vector<vtkSmartPointer<vtkPolyData>> dividedPolyData;
 
     for (int i = 0; i < isoSurfaceNum - 1; ++i) {
-        double minValue = stressValues[i];
-        double maxValue = stressValues[i + 1];
+        int minValue = stressValues[i];
+        int maxValue = stressValues[i + 1];
         std::cout << "Extracting cells in range: " << minValue << " -> " << maxValue << std::endl;
         vtkSmartPointer<vtkPolyData> currentPolyData = this->extractRegionInRange(minValue, maxValue);
         
@@ -149,10 +149,10 @@ void VtkProcessor::clearPreviousData(){
     meshInfos.clear();
 }
 
-void VtkProcessor::prepareStressValues(const std::vector<double>& thresholds) {
+void VtkProcessor::prepareStressValues(const std::vector<int>& thresholds) {
     stressValues.clear();
-    for (double v : thresholds) {
-        stressValues.push_back(static_cast<float>(v));
+    for (int v : thresholds) {
+        stressValues.push_back(v);
     }
     isoSurfaceNum = stressValues.size();
     std::cout << "isoSurfaceNum: " << isoSurfaceNum << std::endl;
@@ -225,8 +225,8 @@ vtkSmartPointer<vtkActor> VtkProcessor::getVtuActor(const std::string& fileName)
     // ストレスのレンジを取得
     double stressRange[2];
     unstructuredGrid->GetScalarRange(stressRange);
-    minStress = stressRange[0];
-    maxStress = stressRange[1];
+    minStress = static_cast<int>(stressRange[0]);
+    maxStress = static_cast<int>(stressRange[1]);
 
     // LookupTableの作成（ColorManagerで指定された色のグラデーション）
     vtkSmartPointer<vtkLookupTable> lookupTable =
@@ -380,7 +380,7 @@ QColor getGradientColorByStress(double t) {
     return QColor(); // fallback
 }
 
-vtkSmartPointer<vtkActor> VtkProcessor::getColoredStlActorByStress(const std::string& fileName, double stressValue, double minStress, double maxStress) {
+vtkSmartPointer<vtkActor> VtkProcessor::getColoredStlActorByStress(const std::string& fileName, int stressValue, int minStress, int maxStress) {
     // STLファイルの読み込み
     vtkSmartPointer<vtkSTLReader> reader = vtkSmartPointer<vtkSTLReader>::New();
     reader->SetFileName(fileName.c_str());
@@ -395,7 +395,7 @@ vtkSmartPointer<vtkActor> VtkProcessor::getColoredStlActorByStress(const std::st
 
     // ストレス値を0.0〜1.0に正規化（DensitySliderと同じ計算）
     // 高いストレス値をt=0.0（赤）、低いストレス値をt=1.0（青）にする
-    double t = (maxStress - stressValue) / (maxStress - minStress);
+    double t = static_cast<double>(maxStress - stressValue) / static_cast<double>(maxStress - minStress);
     t = std::clamp(t, 0.0, 1.0); // 範囲を制限
     
     // DensitySliderと同じ色計算を使用
@@ -422,8 +422,8 @@ void VtkProcessor::saveDividedMeshes(const std::vector<vtkSmartPointer<vtkPolyDa
     meshInfos.clear();
     
     for (size_t i = 0; i < dividedMeshes.size(); ++i) {
-        float minValue = stressValues[i];
-        float maxValue = stressValues[i + 1];
+        int minValue = stressValues[i];
+        int maxValue = stressValues[i + 1];
         std::string fileName = generateMeshFileName(i  , minValue, maxValue);
         this->savePolyDataAsSTL(dividedMeshes[i], fileName);
         
@@ -432,18 +432,16 @@ void VtkProcessor::saveDividedMeshes(const std::vector<vtkSmartPointer<vtkPolyDa
         std::filesystem::path filePath = tempDirPath / fileName;
         
         // メッシュ情報を作成してvectorに追加
-        MeshInfo meshInfo(static_cast<int>(i), static_cast<double>(minValue), 
-                         static_cast<double>(maxValue), filePath.string());
+        MeshInfo meshInfo(static_cast<int>(i), minValue, maxValue, filePath.string());
         meshInfos.push_back(meshInfo);
     }
 }
 
 std::string VtkProcessor::generateMeshFileName(int index,
-    float minValue,
-    float maxValue) const
+    int minValue,
+    int maxValue) const
 {
     std::ostringstream oss;
-    oss << std::fixed << std::setprecision(6);
     oss << "dividedMesh"
     << std::setw(2) << std::setfill('0') << index << "_"
     << minValue << "_"
