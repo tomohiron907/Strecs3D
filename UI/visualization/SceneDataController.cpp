@@ -43,7 +43,7 @@ void SceneDataController::setObjectOpacity(const std::string& filename, double o
 }
 
 void SceneDataController::removeDividedStlActors() {
-    std::regex dividedStlPattern(R"(dividedMesh\d+_[-0-9.]+_[-0-9.]+\.stl$)");
+    std::regex dividedStlPattern(R"(modifierMesh\d+\.stl$)");
     
     objectList_.erase(
         std::remove_if(
@@ -105,13 +105,17 @@ std::vector<std::pair<std::filesystem::path, int>> SceneDataController::fetchDiv
     return sortStlFiles(tempDir);
 }
 
-std::optional<std::pair<double, double>> SceneDataController::parseStressRange(const std::string& filename) {
-    std::regex stressPattern(R"(^dividedMesh\d+_([0-9.]+)_([0-9.]+)\.stl$)");
+std::optional<std::pair<double, double>> SceneDataController::parseStressRange(const std::string& filename, const std::vector<MeshInfo>& meshInfos) {
+    std::regex modifierPattern(R"(^modifierMesh(\d+)\.stl$)");
     std::smatch match;
-    if (std::regex_search(filename, match, stressPattern)) {
-        double stressMin = std::stod(match[1].str());
-        double stressMax = std::stod(match[2].str());
-        return std::make_pair(stressMin, stressMax);
+    if (std::regex_search(filename, match, modifierPattern)) {
+        int meshID = std::stoi(match[1].str());
+        // Look up stress values from meshInfos
+        for (const auto& meshInfo : meshInfos) {
+            if (meshInfo.meshID == meshID) {
+                return std::make_pair(static_cast<double>(meshInfo.stressMin), static_cast<double>(meshInfo.stressMax));
+            }
+        }
     }
     return std::nullopt;
 }
@@ -130,7 +134,8 @@ std::vector<vtkSmartPointer<vtkActor>> SceneDataController::loadDividedStlFiles(
     const std::vector<std::pair<std::filesystem::path, int>>& stlFiles,
     VtkProcessor* vtkProcessor,
     double minStress,
-    double maxStress) {
+    double maxStress,
+    const std::vector<MeshInfo>& meshInfos) {
     
     std::vector<vtkSmartPointer<vtkActor>> actors;
     
@@ -138,7 +143,7 @@ std::vector<vtkSmartPointer<vtkActor>> SceneDataController::loadDividedStlFiles(
         std::string filename = path.filename().string();
         vtkSmartPointer<vtkActor> actor = nullptr;
         
-        if (auto stressValues = parseStressRange(filename)) {
+        if (auto stressValues = parseStressRange(filename, meshInfos)) {
             actor = createStlActorWithStress(path, *stressValues, minStress, maxStress, vtkProcessor);
         } else {
             actor = createStlActorWithColor(path, number, stlFiles.size(), vtkProcessor);
@@ -156,7 +161,7 @@ std::vector<vtkSmartPointer<vtkActor>> SceneDataController::loadDividedStlFiles(
 
 std::vector<std::pair<std::filesystem::path, int>> SceneDataController::sortStlFiles(const std::filesystem::path& tempDir) {
     std::vector<std::pair<std::filesystem::path, int>> stlFiles;
-    std::regex filePattern(R"(^dividedMesh(\d+)_)");
+    std::regex filePattern(R"(^modifierMesh(\d+)\.stl$)");
     
     for (const auto& entry : std::filesystem::directory_iterator(tempDir)) {
         if (entry.path().extension() == ".stl") {

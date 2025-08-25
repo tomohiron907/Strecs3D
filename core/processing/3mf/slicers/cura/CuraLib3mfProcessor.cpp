@@ -5,30 +5,40 @@
 
 bool CuraLib3mfProcessor::setMetaData(double maxStress) {
     std::vector<StressDensityMapping> emptyMappings;
-    return setMetaData(maxStress, emptyMappings);
+    std::vector<MeshInfo> emptyMeshInfos;
+    return setMetaData(maxStress, emptyMappings, emptyMeshInfos);
 }
 
-bool CuraLib3mfProcessor::setMetaData(double maxStress, const std::vector<StressDensityMapping>& mappings) {
+bool CuraLib3mfProcessor::setMetaData(double maxStress, const std::vector<StressDensityMapping>& mappings, const std::vector<MeshInfo>& meshInfos) {
     auto meshIterator = model->GetMeshObjects();
     std::regex filePattern(
-        R"(^dividedMesh(\d+)_(\d+(?:\.\d+)?)_(\d+(?:\.\d+)?)\.stl$)"
+        R"(^modifierMesh(\d+)\.stl$)"
     );
     for (; meshIterator->MoveNext(); ) {
         Lib3MF::PMeshObject currentMesh = meshIterator->GetCurrentMeshObject();
         auto name = currentMesh->GetName();
-        std::map<std::string, FileInfo> fileInfoMap;
         std::smatch match;
         if (std::regex_match(name, match, filePattern)) {
-            std::string id_str = match[1].str();
-            std::string minStress_str = match[2].str();
-            std::string maxStress_str = match[3].str();
+            std::string meshID_str = match[1].str();
+            int meshID = std::stoi(meshID_str);
+            
+            // Find the corresponding MeshInfo by ID
             FileInfo fileInfo;
-            fileInfo.id = std::stoi(id_str);
+            fileInfo.id = meshID;
             fileInfo.name = name;
-            fileInfo.minStress = std::stod(minStress_str);
-            fileInfo.maxStress = std::stod(maxStress_str);
-            fileInfoMap[name] = fileInfo;
-            setMetaDataForInfillMesh(currentMesh, fileInfoMap[name], maxStress, mappings);
+            fileInfo.minStress = 0; // Default values
+            fileInfo.maxStress = 0;
+            
+            // Look up stress values from meshInfos
+            for (const auto& meshInfo : meshInfos) {
+                if (meshInfo.meshID == meshID) {
+                    fileInfo.minStress = meshInfo.stressMin;
+                    fileInfo.maxStress = meshInfo.stressMax;
+                    break;
+                }
+            }
+            
+            setMetaDataForInfillMesh(currentMesh, fileInfo, maxStress, mappings);
         } else {
             setMetaDataForOutlineMesh(currentMesh);
         }

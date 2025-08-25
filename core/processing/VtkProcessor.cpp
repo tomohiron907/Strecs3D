@@ -442,10 +442,8 @@ std::string VtkProcessor::generateMeshFileName(int index,
     int maxValue) const
 {
     std::ostringstream oss;
-    oss << "dividedMesh"
-    << std::setw(2) << std::setfill('0') << index << "_"
-    << minValue << "_"
-    << maxValue << ".stl";
+    oss << "modifierMesh"
+    << std::setw(2) << std::setfill('0') << index << ".stl";  
 
     return oss.str();
 }

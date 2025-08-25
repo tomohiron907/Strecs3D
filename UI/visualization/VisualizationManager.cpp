@@ -62,9 +62,10 @@ void VisualizationManager::showTempDividedStl(VtkProcessor* vtkProcessor, QWidge
         }
         double minStress = vtkProcessor->getMinStress();
         double maxStress = vtkProcessor->getMaxStress();
+        const auto& meshInfos = vtkProcessor->getMeshInfos();
         auto widgets = renderer_->fetchMeshDisplayWidgets();
         
-        auto actors = dataController_->loadDividedStlFiles(stlFiles, vtkProcessor, minStress, maxStress);
+        auto actors = dataController_->loadDividedStlFiles(stlFiles, vtkProcessor, minStress, maxStress, meshInfos);
         
         int widgetIndex = 0;
         for (size_t i = 0; i < stlFiles.size() && i < actors.size(); ++i) {

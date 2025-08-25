@@ -15,6 +15,7 @@ struct ObjectInfo {
 };
 
 class VtkProcessor;
+struct MeshInfo;
 
 class SceneDataController {
 public:
@@ -38,7 +39,7 @@ public:
     
     // STL分割ファイル処理
     std::vector<std::pair<std::filesystem::path, int>> fetchDividedStlFiles();
-    std::optional<std::pair<double, double>> parseStressRange(const std::string& filename);
+    std::optional<std::pair<double, double>> parseStressRange(const std::string& filename, const std::vector<MeshInfo>& meshInfos);
     
     // VTKファイル処理
     vtkSmartPointer<vtkActor> loadVtkFile(const std::string& vtkFile, VtkProcessor* vtkProcessor);
@@ -49,7 +50,8 @@ public:
         const std::vector<std::pair<std::filesystem::path, int>>& stlFiles,
         VtkProcessor* vtkProcessor,
         double minStress,
-        double maxStress);
+        double maxStress,
+        const std::vector<MeshInfo>& meshInfos);
 
 private:
     std::vector<ObjectInfo> objectList_;

@@ -116,7 +116,9 @@ std::unique_ptr<BaseLib3mfProcessor> ProcessPipeline::createProcessor(const QStr
 bool ProcessPipeline::processCuraMode(BaseLib3mfProcessor& processor, const std::vector<StressDensityMapping>& mappings, 
                                    double maxStress) {
     std::cout << "Processing in Cura mode" << std::endl;
-    if (!processor.setMetaData(maxStress, mappings)) {
+    
+    const auto& meshInfos = vtkProcessor->getMeshInfos();
+    if (!processor.setMetaData(maxStress, mappings, meshInfos)) {
         throw std::runtime_error("Failed to set metadata");
     }
     if (!processor.assembleObjects()) {
@@ -132,7 +134,9 @@ bool ProcessPipeline::processCuraMode(BaseLib3mfProcessor& processor, const std:
 
 bool ProcessPipeline::processBambuMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings) {
     std::cout << "Processing in Bambu mode" << std::endl;
-    processor.setMetaData(maxStress, mappings);
+    
+    const auto& meshInfos = vtkProcessor->getMeshInfos();
+    processor.setMetaData(maxStress, mappings, meshInfos);
     const std::string tempFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
     if (!processor.save3mf(tempFile)) {
         throw std::runtime_error("Failed to save temporary 3MF file");

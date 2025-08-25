@@ -7,6 +7,7 @@ using namespace Lib3MF;
 #include "../../../utils/xmlConverter.h"
 #include <vector>
 #include "../../types/StressDensityMapping.h"
+#include "../VtkProcessor.h"
 
 struct FileInfo {
     int id;
@@ -31,7 +32,7 @@ public:
 
     // Pure virtual methods that must be implemented by derived classes
     virtual bool setMetaData(double maxStress) = 0;
-    virtual bool setMetaData(double maxStress, const std::vector<StressDensityMapping>& mappings) = 0;
+    virtual bool setMetaData(double maxStress, const std::vector<StressDensityMapping>& mappings, const std::vector<MeshInfo>& meshInfos) = 0;
     virtual bool setMetaDataForInfillMesh(Lib3MF::PMeshObject Mesh, FileInfo fileInfo, double maxStress, const std::vector<StressDensityMapping>& mappings) = 0;
     virtual bool setMetaDataForOutlineMesh(Lib3MF::PMeshObject Mesh) = 0;
     virtual bool assembleObjects() = 0;
