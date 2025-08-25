@@ -146,6 +146,7 @@ std::vector<vtkSmartPointer<vtkPolyData>> VtkProcessor::divideMesh() {
 void VtkProcessor::clearPreviousData(){
     stressValues.clear();
     dividedMeshes.clear();
+    meshInfos.clear();
 }
 
 void VtkProcessor::prepareStressValues(const std::vector<double>& thresholds) {
@@ -418,12 +419,22 @@ vtkSmartPointer<vtkActor> VtkProcessor::getColoredStlActorByStress(const std::st
 void VtkProcessor::saveDividedMeshes(const std::vector<vtkSmartPointer<vtkPolyData>>& dividedMeshes)
 {
     const auto& stressValues = this->getStressValues();
+    meshInfos.clear();
     
     for (size_t i = 0; i < dividedMeshes.size(); ++i) {
         float minValue = stressValues[i];
         float maxValue = stressValues[i + 1];
-        std::string fileName = generateMeshFileName(i + 1, minValue, maxValue);
+        std::string fileName = generateMeshFileName(i  , minValue, maxValue);
         this->savePolyDataAsSTL(dividedMeshes[i], fileName);
+        
+        // ファイルの絶対パスを生成
+        std::filesystem::path tempDirPath = TempPathUtility::getTempSubDirPath("div");
+        std::filesystem::path filePath = tempDirPath / fileName;
+        
+        // メッシュ情報を作成してvectorに追加
+        MeshInfo meshInfo(static_cast<int>(i), static_cast<double>(minValue), 
+                         static_cast<double>(maxValue), filePath.string());
+        meshInfos.push_back(meshInfo);
     }
 }
 

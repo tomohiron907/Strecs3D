@@ -49,6 +49,16 @@
 
 #include <string>
 
+struct MeshInfo {
+    int meshID;
+    double stressMin;
+    double stressMax;
+    std::string filePath;
+    
+    MeshInfo(int id, double minStress, double maxStress, const std::string& path)
+        : meshID(id), stressMin(minStress), stressMax(maxStress), filePath(path) {}
+};
+
 class VtkProcessor{
 
 
@@ -63,6 +73,7 @@ private:
     std::vector<vtkSmartPointer<vtkPolyData>> dividedMeshes;
     vtkSmartPointer<vtkLookupTable> currentLookupTable;
     std::string detectedStressLabel; // 検出されたストレスラベルを保存
+    std::vector<MeshInfo> meshInfos; // 分割されたメッシュの情報を保持
 
 public:
     VtkProcessor(const std::string& vtuFileName);
@@ -96,6 +107,11 @@ public:
     
     // ファイル名を設定するメソッド
     void setVtuFileName(const std::string& fileName) { vtuFileName = fileName; }
+    
+    // メッシュ情報を管理するメソッド
+    const std::vector<MeshInfo>& getMeshInfos() const { return meshInfos; }
+    void clearMeshInfos() { meshInfos.clear(); }
+    void addMeshInfo(const MeshInfo& info) { meshInfos.push_back(info); }
 
 };
 
