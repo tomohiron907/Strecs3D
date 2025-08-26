@@ -34,6 +34,7 @@ public slots:
     void onObjectOpacityChanged(double opacity);
     void onVtkObjectVisibilityChanged(bool visible);
     void onVtkObjectOpacityChanged(double opacity);
+    void onParametersChanged(); // DensitySliderやModeComboBoxが変更された時の処理
 
 private:
     void setupSignalSlotConnections();

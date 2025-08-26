@@ -29,6 +29,10 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui->getProcessButton(), &QPushButton::clicked, this, &MainWindow::processFiles);
     connect(ui->getExport3mfButton(), &QPushButton::clicked, this, &MainWindow::export3mfFile);
     
+    // DensitySliderやModeComboBoxの変更を監視
+    connect(ui->getRangeSlider(), &DensitySlider::handlePositionsChanged, this, &MainWindow::onParametersChanged);
+    connect(ui->getModeComboBox(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onParametersChanged);
+    
     // ObjectDisplayOptionsWidgetのシグナルをVisualizationManagerに接続
     auto objectDisplayWidget = ui->getObjectDisplayOptionsWidget();
     if (objectDisplayWidget) {
@@ -105,6 +109,8 @@ void MainWindow::processFiles()
         // Processが成功したらExport3MFボタンを有効化し、強調表示する
         ui->getExport3mfButton()->setEnabled(true);
         ui->getExport3mfButton()->setEmphasized(true);
+        // Processボタンを無効化
+        ui->getProcessButton()->setEnabled(false);
     } else {
         logMessage("File processing failed");
     }
@@ -209,4 +215,13 @@ void MainWindow::setupSignalSlotConnections()
     
     connect(appController.get(), &ApplicationController::showInfoMessage,
             uiAdapter.get(), &IUserInterface::onShowInfoMessage);
+}
+
+void MainWindow::onParametersChanged()
+{
+    // DensitySliderやModeComboBoxが変更されたらExport3MFボタンを無効化
+    ui->getExport3mfButton()->setEnabled(false);
+    ui->getExport3mfButton()->setEmphasized(false);
+    // Processボタンを有効化（再処理が必要）
+    ui->getProcessButton()->setEnabled(true);
 }
