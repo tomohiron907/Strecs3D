@@ -75,6 +75,7 @@ void MainWindow::openVTKFile()
     
     if (appController->openVtkFile(vtkFile, uiAdapter.get())) {
         logMessage("VTK file loaded successfully");
+        updateProcessButtonState(); // ボタン状態を更新
     } else {
         logMessage("Failed to load VTK file");
     }
@@ -95,6 +96,7 @@ void MainWindow::openSTLFile()
     
     if (appController->openStlFile(stlFile, uiAdapter.get())) {
         logMessage("STL file loaded successfully");
+        updateProcessButtonState(); // ボタン状態を更新
     } else {
         logMessage("Failed to load STL file");
     }
@@ -223,7 +225,19 @@ void MainWindow::onParametersChanged()
     // DensitySliderやModeComboBoxが変更されたらExport3MFボタンを無効化
     ui->getExport3mfButton()->setEnabled(false);
     ui->getExport3mfButton()->setEmphasized(false);
-    // Processボタンを有効化し、強調表示（再処理が必要）
-    ui->getProcessButton()->setEnabled(true);
-    ui->getProcessButton()->setEmphasized(true);
+    // Processボタンの状態を更新（両ファイルが読み込まれている場合のみ有効化）
+    updateProcessButtonState();
+}
+
+void MainWindow::updateProcessButtonState()
+{
+    // 両ファイル（STLとVTK）が読み込まれている場合のみProcessボタンを有効化
+    bool bothFilesLoaded = appController->areBothFilesLoaded();
+    ui->getProcessButton()->setEnabled(bothFilesLoaded);
+    
+    if (bothFilesLoaded) {
+        ui->getProcessButton()->setEmphasized(true);
+    } else {
+        ui->getProcessButton()->setEmphasized(false);
+    }
 }

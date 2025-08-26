@@ -39,6 +39,11 @@ public:
     QString getCurrentStlFilename() const { return currentStlFilename; }
     void setCurrentStlFilename(const QString& filename) { currentStlFilename = filename; }
     
+    // ファイル読み込み状態確認
+    bool isStlFileLoaded() const { return !stlFile.empty(); }
+    bool isVtkFileLoaded() const { return !vtkFile.empty(); }
+    bool areBothFilesLoaded() const { return isStlFileLoaded() && isVtkFileLoaded(); }
+    
     // ゲッター
     ProcessPipeline* getFileProcessor() { return fileProcessor.get(); }
     ExportManager* getExportManager() { return exportManager.get(); }
