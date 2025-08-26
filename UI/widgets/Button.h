@@ -23,6 +23,7 @@ public:
     void setAnimationEnabled(bool enabled);
     void setHoverAnimation(bool enabled);
     void setClickAnimation(bool enabled);
+    void setEmphasized(bool emphasized);
     QColor currentColor() const;
     void setCurrentColor(const QColor& color);
     Q_PROPERTY(QColor currentColor READ currentColor WRITE setCurrentColor)
@@ -50,6 +51,10 @@ private:
     bool m_clickAnimation;
     bool m_isHovered;
     bool m_isPressed;
+    bool m_isEmphasized;
+    QColor m_disabledColor;
+    QColor m_disabledTextColor;
+    QColor m_emphasizedColor;
 };
 
 #endif // BUTTON_H 

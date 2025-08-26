@@ -22,6 +22,10 @@ Button::Button(const QString& text, QWidget* parent)
     , m_clickAnimation(true)
     , m_isHovered(false)
     , m_isPressed(false)
+    , m_isEmphasized(false)
+    , m_disabledColor(ColorManager::BUTTON_DISABLED_COLOR)
+    , m_disabledTextColor(ColorManager::BUTTON_DISABLED_TEXT_COLOR)
+    , m_emphasizedColor(ColorManager::BUTTON_EMPHASIZED_COLOR)
 {
     setupDefaultStyle();
 }
@@ -42,6 +46,10 @@ Button::Button(const QString& text, const QColor& backgroundColor,
     , m_clickAnimation(true)
     , m_isHovered(false)
     , m_isPressed(false)
+    , m_isEmphasized(false)
+    , m_disabledColor(ColorManager::BUTTON_DISABLED_COLOR)
+    , m_disabledTextColor(ColorManager::BUTTON_DISABLED_TEXT_COLOR)
+    , m_emphasizedColor(ColorManager::BUTTON_EMPHASIZED_COLOR)
 {
     setupDefaultStyle();
 }
@@ -101,9 +109,25 @@ void Button::setClickAnimation(bool enabled)
     m_clickAnimation = enabled;
 }
 
+void Button::setEmphasized(bool emphasized)
+{
+    m_isEmphasized = emphasized;
+    if (m_isEmphasized) {
+        m_backgroundColor = m_emphasizedColor;
+        m_textColor = Qt::black; // 強調表示時は黒文字
+    } else {
+        m_backgroundColor = ColorManager::BUTTON_COLOR;
+        m_textColor = ColorManager::BUTTON_TEXT_COLOR;
+    }
+    m_currentColor = m_backgroundColor;
+    updateStyle();
+}
+
 void Button::enterEvent(QEnterEvent* event)
 {
     QPushButton::enterEvent(event);
+    if (!isEnabled()) return;
+    
     m_isHovered = true;
     
     if (m_animationEnabled && m_hoverAnimation) {
@@ -121,6 +145,8 @@ void Button::enterEvent(QEnterEvent* event)
 void Button::leaveEvent(QEvent* event)
 {
     QPushButton::leaveEvent(event);
+    if (!isEnabled()) return;
+    
     m_isHovered = false;
     
     if (m_animationEnabled && m_hoverAnimation) {
@@ -138,6 +164,8 @@ void Button::leaveEvent(QEvent* event)
 void Button::mousePressEvent(QMouseEvent* event)
 {
     QPushButton::mousePressEvent(event);
+    if (!isEnabled()) return;
+    
     m_isPressed = true;
     
     if (m_animationEnabled && m_clickAnimation) {
@@ -155,6 +183,8 @@ void Button::mousePressEvent(QMouseEvent* event)
 void Button::mouseReleaseEvent(QMouseEvent* event)
 {
     QPushButton::mouseReleaseEvent(event);
+    if (!isEnabled()) return;
+    
     m_isPressed = false;
     
     if (m_animationEnabled && m_clickAnimation) {
@@ -175,6 +205,24 @@ void Button::paintEvent(QPaintEvent* event)
     painter.setRenderHint(QPainter::Antialiasing);
     
     QRect rect = this->rect();
+    
+    // 無効状態の場合
+    if (!isEnabled()) {
+        // 無効状態の背景
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(m_disabledColor);
+        painter.drawRoundedRect(rect, m_borderRadius, m_borderRadius);
+        
+        // 無効状態のテキスト
+        painter.setPen(m_disabledTextColor);
+        painter.setFont(font());
+        QRect textRect = rect.adjusted(m_paddingHorizontal, m_paddingVertical, 
+                                      -m_paddingHorizontal, -m_paddingVertical);
+        painter.drawText(textRect, Qt::AlignCenter, text());
+        return;
+    }
+    
+    // 通常状態
     // 背景
     painter.setPen(Qt::NoPen);
     painter.setBrush(m_currentColor);

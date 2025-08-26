@@ -102,6 +102,9 @@ void MainWindow::processFiles()
     
     if (appController->processFiles(uiAdapter.get())) {
         logMessage("File processing completed successfully");
+        // Processが成功したらExport3MFボタンを有効化し、強調表示する
+        ui->getExport3mfButton()->setEnabled(true);
+        ui->getExport3mfButton()->setEmphasized(true);
     } else {
         logMessage("File processing failed");
     }

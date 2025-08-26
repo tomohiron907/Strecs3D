@@ -62,6 +62,7 @@ void MainWindowUI::setupUI()
     
     processButton = new Button("Process", centralWidget);
     export3mfButton = new Button("Export 3MF", centralWidget);
+    export3mfButton->setEnabled(false); // 初期状態で無効
     messageConsole = new MessageConsole(centralWidget);
     messageConsole->setMinimumHeight(200);
 
