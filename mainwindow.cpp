@@ -109,8 +109,9 @@ void MainWindow::processFiles()
         // Processが成功したらExport3MFボタンを有効化し、強調表示する
         ui->getExport3mfButton()->setEnabled(true);
         ui->getExport3mfButton()->setEmphasized(true);
-        // Processボタンを無効化
+        // Processボタンを無効化し、強調表示を解除
         ui->getProcessButton()->setEnabled(false);
+        ui->getProcessButton()->setEmphasized(false);
     } else {
         logMessage("File processing failed");
     }
@@ -222,6 +223,7 @@ void MainWindow::onParametersChanged()
     // DensitySliderやModeComboBoxが変更されたらExport3MFボタンを無効化
     ui->getExport3mfButton()->setEnabled(false);
     ui->getExport3mfButton()->setEmphasized(false);
-    // Processボタンを有効化（再処理が必要）
+    // Processボタンを有効化し、強調表示（再処理が必要）
     ui->getProcessButton()->setEnabled(true);
+    ui->getProcessButton()->setEmphasized(true);
 }

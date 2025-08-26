@@ -61,6 +61,7 @@ void MainWindowUI::setupUI()
     modeComboBox = new ModeComboBox(centralWidget);
     
     processButton = new Button("Process", centralWidget);
+    processButton->setEmphasized(true); // 初期状態で強調表示
     export3mfButton = new Button("Export 3MF", centralWidget);
     export3mfButton->setEnabled(false); // 初期状態で無効
     messageConsole = new MessageConsole(centralWidget);
