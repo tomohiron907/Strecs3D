@@ -147,11 +147,19 @@ void DensitySlider::paintEvent(QPaintEvent*) {
     }
 
     // ハンドル
-    painter.setBrush(QColor(220,220,220));
     for (int y : m_handles) {
-        painter.setPen(QPen(Qt::black, 2));
+        painter.setPen(QPen(ColorManager::HANDLE_COLOR, 2));
         painter.drawLine(gradLeft, y, right, y);
+        
+        // 右端に左向きの三角形を描画
+        int triangleSize = 13;
+        QPolygon triangle;
+        triangle << QPoint(right, y)
+                 << QPoint(right + triangleSize, y - triangleSize/2)
+                 << QPoint(right + triangleSize, y + triangleSize/2);
+        painter.setBrush(ColorManager::HANDLE_COLOR);
         painter.setPen(Qt::NoPen);
+        painter.drawPolygon(triangle);
     }
 
     // パーセント入力欄の位置を更新
@@ -224,12 +232,22 @@ int DensitySlider::handleAtPosition(const QPoint& pos) const {
     int gradWidth = 30;
     int gradLeft = left - gradWidth - 30;
     int right = x + 15;
+    int triangleSize = 13;
     int tolerance = 6; // ピクセル単位の許容範囲
+    
     for (int i = 0; i < (int)m_handles.size(); ++i) {
         int y = m_handles[i];
+        
         // 線の範囲内かどうか
-        if (pos.x() >= gradLeft && pos.x() <= right && std::abs(pos.y() - y) <= tolerance)
+        if (pos.x() >= gradLeft && pos.x() <= right && std::abs(pos.y() - y) <= tolerance) {
             return i;
+        }
+        
+        // 三角形の範囲内かどうか
+        if (pos.x() >= right && pos.x() <= right + triangleSize && 
+            pos.y() >= y - triangleSize/2 && pos.y() <= y + triangleSize/2) {
+            return i;
+        }
     }
     return -1;
 }

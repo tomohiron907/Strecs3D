@@ -20,6 +20,9 @@ public:
     static const QColor BUTTON_TEXT_COLOR;    // ボタンテキスト色
     static const QColor BUTTON_EDGE_COLOR;     // ボタン枠線色
     static const QColor HEADER_COLOR;         // ヘッダー用色
+    
+    // Density slider handle colors
+    static const QColor HANDLE_COLOR;         // ハンドル色（線と三角形）
 };
 
 #endif // COLORMANAGER_H 

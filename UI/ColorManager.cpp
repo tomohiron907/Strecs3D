@@ -10,4 +10,5 @@ const QColor ColorManager::BUTTON_HOVER_COLOR = QColor(58, 58, 58, 200);     // 
 const QColor ColorManager::BUTTON_PRESSED_COLOR = QColor(26, 26, 26, 220);   // 押下時
 const QColor ColorManager::BUTTON_TEXT_COLOR = QColor(255, 255, 255, 255);   // テキスト 
 const QColor ColorManager::BUTTON_EDGE_COLOR = QColor(255, 255, 255, 100); // 枠線色（白半透明） 
-const QColor ColorManager::HEADER_COLOR = QColor("#222222"); 
+const QColor ColorManager::HEADER_COLOR = QColor("#222222");
+const QColor ColorManager::HANDLE_COLOR = QColor(200, 200, 200, 255);           // ハンドル色（黒） 
