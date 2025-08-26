@@ -236,7 +236,12 @@ void Button::paintEvent(QPaintEvent* event)
     painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), m_borderRadius, m_borderRadius);
 
     // テキスト
-    painter.setPen(m_textColor);
+    QColor textColor = m_textColor;
+    // 強調表示ボタンのホバー時は白文字に変更
+    if (m_isEmphasized && m_isHovered) {
+        textColor = Qt::white;
+    }
+    painter.setPen(textColor);
     painter.setFont(font());
     QRect textRect = rect.adjusted(m_paddingHorizontal, m_paddingVertical, 
                                   -m_paddingHorizontal, -m_paddingVertical);
