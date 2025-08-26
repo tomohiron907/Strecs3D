@@ -73,7 +73,6 @@ void MainWindowUI::setupUI()
     leftPaneLayout->addWidget(rangeSlider);
     leftPaneLayout->addWidget(modeComboBox);
     leftPaneLayout->addWidget(processButton);
-    leftPaneLayout->addWidget(export3mfButton);
     leftPaneLayout->addWidget(messageConsole);
     leftPaneLayout->addStretch();
 
@@ -104,12 +103,30 @@ void MainWindowUI::setupUI()
     leftPaneWidget->show();
     // 必要なら: leftPaneWidget->setAttribute(Qt::WA_TransparentForMouseEvents);
 
-    // 表示オプションコンテナ（VTKウィジェットの上に重ねて表示）
+    // 右ペインレイアウトの作成
+    QVBoxLayout* rightPaneLayout = new QVBoxLayout();
+    rightPaneLayout->setContentsMargins(10, 10, 10, 10); // displayOptionsContainerと同じマージンに統一
+    rightPaneLayout->setSpacing(10);
+    
+    // 表示オプションコンテナを右ペインに追加
     displayOptionsContainer = new DisplayOptionsContainer(vtkWidget);
-    displayOptionsContainer->setFixedWidth(300); // 幅を固定
-    displayOptionsContainer->setMaximumHeight(1000); // 最大高さを制限
-    displayOptionsContainer->raise();
-    displayOptionsContainer->show();
+    displayOptionsContainer->setFixedWidth(300);
+    displayOptionsContainer->setMaximumHeight(1000);
+    rightPaneLayout->addWidget(displayOptionsContainer);
+    
+    // Export 3MFボタンを右ペインに追加（幅をdisplayOptionsContainerと合わせる）
+    export3mfButton->setFixedWidth(300);
+    rightPaneLayout->addSpacing(50);
+    rightPaneLayout->addWidget(export3mfButton);
+    rightPaneLayout->addStretch();
+    
+    // 右ペインウィジェット作成
+    QWidget* rightPaneWidget = new QWidget(vtkWidget);
+    rightPaneWidget->setLayout(rightPaneLayout);
+    rightPaneWidget->setFixedWidth(320); // コンテンツ幅300px + 左右マージン20px
+    rightPaneWidget->setStyleSheet("QWidget { background-color:rgba(45, 45, 45, 0); border-radius: 10px; }");
+    rightPaneWidget->raise();
+    rightPaneWidget->show();
 
     vtkWidget->installEventFilter(this);
 
@@ -135,9 +152,13 @@ void MainWindowUI::resizeDisplayOptionsContainer()
 {
     if (!displayOptionsContainer || !vtkWidget) return;
     int margin = 20;
-    int x = vtkWidget->width() - displayOptionsContainer->width() - margin;
-    int y = margin;
-    displayOptionsContainer->move(x, y);
+    // 右ペインウィジェット全体の位置を調整
+    QWidget* rightPaneWidget = displayOptionsContainer->parentWidget();
+    if (rightPaneWidget) {
+        int x = vtkWidget->width() - rightPaneWidget->width() - margin;
+        int y = margin;
+        rightPaneWidget->move(x, y);
+    }
 }
 
 void MainWindowUI::setupStyle()

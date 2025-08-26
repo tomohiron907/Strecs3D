@@ -15,7 +15,7 @@ void DisplayOptionsContainer::setupUI()
 {
     // メインレイアウト
     QVBoxLayout* containerLayout = new QVBoxLayout(this);
-    containerLayout->setContentsMargins(10, 10, 10, 10);
+    containerLayout->setContentsMargins(0, 0, 0, 0); // マージンを削除して右ペインレイアウトで統一管理
     containerLayout->setSpacing(10);
 
     // 各表示オプションウィジェットを作成
