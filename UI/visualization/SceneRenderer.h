@@ -30,6 +30,10 @@ public:
     // カメラ操作
     void resetCamera();
     
+    // グリッド操作
+    void showGrid(bool show = true);
+    void hideGrid();
+    
     // スカラーバー
     void setupScalarBar(VtkProcessor* vtkProcessor);
     
@@ -50,6 +54,8 @@ signals:
 
 private:
     MainWindowUI* ui_;
+    vtkSmartPointer<vtkActor> gridActor_;
     
     void connectWidgetSignals(ObjectDisplayOptionsWidget* widget, const std::string& filePath);
+    void createGrid();
 };

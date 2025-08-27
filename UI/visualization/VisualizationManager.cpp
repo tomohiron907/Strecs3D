@@ -75,7 +75,6 @@ void VisualizationManager::showTempDividedStl(VtkProcessor* vtkProcessor, QWidge
             renderer_->updateWidgetAndConnectSignals(widgets, widgetIndex, filename, path.string());
         }
         
-        renderer_->resetCamera();
         renderer_->renderObjects(dataController_->getObjectList());
     }
     catch (const std::exception& e) {
