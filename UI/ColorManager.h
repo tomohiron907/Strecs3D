@@ -26,6 +26,12 @@ public:
     
     // Density slider handle colors
     static const QColor HANDLE_COLOR;         // ハンドル色（線と三角形）
+    
+    // Coordinate axes colors
+    static const QColor X_AXIS_COLOR;         // X軸色（赤）
+    static const QColor Y_AXIS_COLOR;         // Y軸色（緑）
+    static const QColor Z_AXIS_COLOR;         // Z軸色（青）
+    static const QColor ORIGIN_COLOR;         // 原点色（白）
 };
 
 #endif // COLORMANAGER_H 

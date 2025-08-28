@@ -3,6 +3,7 @@
 #include "../../core/processing/VtkProcessor.h"
 #include "../mainwindowui.h"
 #include "../widgets/ObjectDisplayOptionsWidget.h"
+#include "../ColorManager.h"
 #include <QMessageBox>
 #include <QString>
 #include <vtkScalarBarActor.h>
@@ -340,9 +341,10 @@ void SceneRenderer::createAxes() {
         
         xAxisActor_ = vtkSmartPointer<vtkActor>::New();
         xAxisActor_->SetMapper(mapper);
-        xAxisActor_->GetProperty()->SetColor(1.0, 0.0, 0.0); // 赤
+        QColor xColor = ColorManager::X_AXIS_COLOR;
+        xAxisActor_->GetProperty()->SetColor(xColor.redF(), xColor.greenF(), xColor.blueF());
         xAxisActor_->GetProperty()->SetLineWidth(lineWidth);
-        xAxisActor_->GetProperty()->SetOpacity(1.0);
+        xAxisActor_->GetProperty()->SetOpacity(xColor.alphaF());
     }
     
     // Y軸を作成（緑色）
@@ -366,9 +368,10 @@ void SceneRenderer::createAxes() {
         
         yAxisActor_ = vtkSmartPointer<vtkActor>::New();
         yAxisActor_->SetMapper(mapper);
-        yAxisActor_->GetProperty()->SetColor(0.0, 1.0, 0.0); // 緑
+        QColor yColor = ColorManager::Y_AXIS_COLOR;
+        yAxisActor_->GetProperty()->SetColor(yColor.redF(), yColor.greenF(), yColor.blueF());
         yAxisActor_->GetProperty()->SetLineWidth(lineWidth);
-        yAxisActor_->GetProperty()->SetOpacity(1.0);
+        yAxisActor_->GetProperty()->SetOpacity(yColor.alphaF());
     }
     
     // Z軸を作成（青色）
@@ -392,9 +395,10 @@ void SceneRenderer::createAxes() {
         
         zAxisActor_ = vtkSmartPointer<vtkActor>::New();
         zAxisActor_->SetMapper(mapper);
-        zAxisActor_->GetProperty()->SetColor(0.0, 0.0, 1.0); // 青
+        QColor zColor = ColorManager::Z_AXIS_COLOR;
+        zAxisActor_->GetProperty()->SetColor(zColor.redF(), zColor.greenF(), zColor.blueF());
         zAxisActor_->GetProperty()->SetLineWidth(lineWidth);
-        zAxisActor_->GetProperty()->SetOpacity(1.0);
+        zAxisActor_->GetProperty()->SetOpacity(zColor.alphaF());
     }
     
     // 原点マーカーを作成（白い球）
@@ -410,13 +414,15 @@ void SceneRenderer::createAxes() {
         
         originActor_ = vtkSmartPointer<vtkActor>::New();
         originActor_->SetMapper(mapper);
-        originActor_->GetProperty()->SetColor(1.0, 1.0, 1.0); // 白
-        originActor_->GetProperty()->SetOpacity(1.0);
+        QColor originColor = ColorManager::ORIGIN_COLOR;
+        originActor_->GetProperty()->SetColor(originColor.redF(), originColor.greenF(), originColor.blueF());
+        originActor_->GetProperty()->SetOpacity(originColor.alphaF());
     }
     
     // デフォルトで座標軸を表示
     showAxes(true);
 }
+
 
 void SceneRenderer::handleStlFileLoadError(const std::exception& e, QWidget* parent) {
     std::cerr << "Error loading STL files: " << e.what() << std::endl;
