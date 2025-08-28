@@ -13,6 +13,7 @@
 #include "UI/mainwindowui.h"
 #include "UI/widgets/MessageConsole.h"
 #include <QString>
+#include <functional>
 
 class MainWindow : public QMainWindow
 {
@@ -38,7 +39,32 @@ public slots:
     void updateProcessButtonState(); // Processボタンの有効/無効状態を更新
 
 private:
+    // Initialization methods
+    void initializeComponents();
+    void setupWindow();
+    void connectSignals();
+    
+    // Signal connection methods
     void setupSignalSlotConnections();
+    void connectUISignals();
+    void connectDisplayWidgetSignals();
+    void connectFileSignals();
+    void connectVisibilitySignals();
+    void connectOpacitySignals();
+    void connectMessageSignals();
+    
+    // File operation methods
+    QString selectSTLFile();
+    QString selectVTKFile();
+    void handleFileLoad(const QString& fileName, std::function<bool(const std::string&)> loadFunction, const QString& fileType);
+    
+    // Processing methods
+    bool executeProcessing();
+    bool executeExport();
+    
+    // UI update methods
+    void updateButtonsAfterProcessing(bool success);
+    void resetExportButton();
     
     std::unique_ptr<ApplicationController> appController;
     std::unique_ptr<MainWindowUI> ui;
