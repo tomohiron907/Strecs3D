@@ -15,10 +15,12 @@
 #include <vtkLine.h>
 #include <vtkActorCollection.h>
 #include <vtkActor2DCollection.h>
+#include <vtkSphereSource.h>
 #include <iostream>
 
 SceneRenderer::SceneRenderer(MainWindowUI* ui) : QObject(), ui_(ui) {
     createGrid();
+    createAxes();
 }
 
 SceneRenderer::~SceneRenderer() = default;
@@ -31,6 +33,20 @@ void SceneRenderer::renderObjects(const std::vector<ObjectInfo>& objectList) {
     // グリッドが確実に表示されているかチェック
     if (gridActor_ && ui_->getRenderer()->GetActors()->IsItemPresent(gridActor_) == 0) {
         ui_->getRenderer()->AddActor(gridActor_);
+    }
+    
+    // 座標軸が確実に表示されているかチェック
+    if (xAxisActor_ && ui_->getRenderer()->GetActors()->IsItemPresent(xAxisActor_) == 0) {
+        ui_->getRenderer()->AddActor(xAxisActor_);
+    }
+    if (yAxisActor_ && ui_->getRenderer()->GetActors()->IsItemPresent(yAxisActor_) == 0) {
+        ui_->getRenderer()->AddActor(yAxisActor_);
+    }
+    if (zAxisActor_ && ui_->getRenderer()->GetActors()->IsItemPresent(zAxisActor_) == 0) {
+        ui_->getRenderer()->AddActor(zAxisActor_);
+    }
+    if (originActor_ && ui_->getRenderer()->GetActors()->IsItemPresent(originActor_) == 0) {
+        ui_->getRenderer()->AddActor(originActor_);
     }
     
     for (const auto& obj : objectList) {
@@ -68,8 +84,9 @@ void SceneRenderer::clearRenderer() {
             std::vector<vtkActor*> actorsToRemove;
             
             while ((actor = actors->GetNextActor()) != nullptr) {
-                // グリッドアクター以外を削除対象に追加
-                if (actor != gridActor_) {
+                // グリッドアクターと座標軸アクター以外を削除対象に追加
+                if (actor != gridActor_ && actor != xAxisActor_ && 
+                    actor != yAxisActor_ && actor != zAxisActor_ && actor != originActor_) {
                     actorsToRemove.push_back(actor);
                 }
             }
@@ -248,6 +265,157 @@ void SceneRenderer::createGrid() {
     
     // デフォルトでグリッドを表示
     showGrid(true);
+}
+
+void SceneRenderer::showAxes(bool show) {
+    if (!ui_ || !ui_->getRenderer()) return;
+    
+    if (show) {
+        if (xAxisActor_) {
+            xAxisActor_->SetVisibility(1);
+            ui_->getRenderer()->AddActor(xAxisActor_);
+        }
+        if (yAxisActor_) {
+            yAxisActor_->SetVisibility(1);
+            ui_->getRenderer()->AddActor(yAxisActor_);
+        }
+        if (zAxisActor_) {
+            zAxisActor_->SetVisibility(1);
+            ui_->getRenderer()->AddActor(zAxisActor_);
+        }
+        if (originActor_) {
+            originActor_->SetVisibility(1);
+            ui_->getRenderer()->AddActor(originActor_);
+        }
+        render();
+    } else {
+        hideAxes();
+    }
+}
+
+void SceneRenderer::hideAxes() {
+    if (!ui_ || !ui_->getRenderer()) return;
+    
+    if (xAxisActor_) {
+        xAxisActor_->SetVisibility(0);
+        ui_->getRenderer()->RemoveActor(xAxisActor_);
+    }
+    if (yAxisActor_) {
+        yAxisActor_->SetVisibility(0);
+        ui_->getRenderer()->RemoveActor(yAxisActor_);
+    }
+    if (zAxisActor_) {
+        zAxisActor_->SetVisibility(0);
+        ui_->getRenderer()->RemoveActor(zAxisActor_);
+    }
+    if (originActor_) {
+        originActor_->SetVisibility(0);
+        ui_->getRenderer()->RemoveActor(originActor_);
+    }
+    render();
+}
+
+void SceneRenderer::createAxes() {
+    const double axisLength = 50.0;
+    const double lineWidth = 2.0;
+    
+    // X軸を作成（赤色）
+    {
+        vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+        points->InsertNextPoint(0.0, 0.0, 0.0);
+        points->InsertNextPoint(axisLength, 0.0, 0.0);
+        
+        vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
+        vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
+        line->GetPointIds()->SetId(0, 0);
+        line->GetPointIds()->SetId(1, 1);
+        lines->InsertNextCell(line);
+        
+        vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
+        polyData->SetPoints(points);
+        polyData->SetLines(lines);
+        
+        vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        mapper->SetInputData(polyData);
+        
+        xAxisActor_ = vtkSmartPointer<vtkActor>::New();
+        xAxisActor_->SetMapper(mapper);
+        xAxisActor_->GetProperty()->SetColor(1.0, 0.0, 0.0); // 赤
+        xAxisActor_->GetProperty()->SetLineWidth(lineWidth);
+        xAxisActor_->GetProperty()->SetOpacity(1.0);
+    }
+    
+    // Y軸を作成（緑色）
+    {
+        vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+        points->InsertNextPoint(0.0, 0.0, 0.0);
+        points->InsertNextPoint(0.0, axisLength, 0.0);
+        
+        vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
+        vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
+        line->GetPointIds()->SetId(0, 0);
+        line->GetPointIds()->SetId(1, 1);
+        lines->InsertNextCell(line);
+        
+        vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
+        polyData->SetPoints(points);
+        polyData->SetLines(lines);
+        
+        vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        mapper->SetInputData(polyData);
+        
+        yAxisActor_ = vtkSmartPointer<vtkActor>::New();
+        yAxisActor_->SetMapper(mapper);
+        yAxisActor_->GetProperty()->SetColor(0.0, 1.0, 0.0); // 緑
+        yAxisActor_->GetProperty()->SetLineWidth(lineWidth);
+        yAxisActor_->GetProperty()->SetOpacity(1.0);
+    }
+    
+    // Z軸を作成（青色）
+    {
+        vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+        points->InsertNextPoint(0.0, 0.0, 0.0);
+        points->InsertNextPoint(0.0, 0.0, axisLength);
+        
+        vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
+        vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
+        line->GetPointIds()->SetId(0, 0);
+        line->GetPointIds()->SetId(1, 1);
+        lines->InsertNextCell(line);
+        
+        vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
+        polyData->SetPoints(points);
+        polyData->SetLines(lines);
+        
+        vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        mapper->SetInputData(polyData);
+        
+        zAxisActor_ = vtkSmartPointer<vtkActor>::New();
+        zAxisActor_->SetMapper(mapper);
+        zAxisActor_->GetProperty()->SetColor(0.0, 0.0, 1.0); // 青
+        zAxisActor_->GetProperty()->SetLineWidth(lineWidth);
+        zAxisActor_->GetProperty()->SetOpacity(1.0);
+    }
+    
+    // 原点マーカーを作成（白い球）
+    {
+        vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
+        sphere->SetCenter(0.0, 0.0, 0.0);
+        sphere->SetRadius(1.0);
+        sphere->SetPhiResolution(10);
+        sphere->SetThetaResolution(10);
+        
+        vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        mapper->SetInputConnection(sphere->GetOutputPort());
+        
+        originActor_ = vtkSmartPointer<vtkActor>::New();
+        originActor_->SetMapper(mapper);
+        originActor_->GetProperty()->SetColor(1.0, 1.0, 1.0); // 白
+        originActor_->GetProperty()->SetOpacity(1.0);
+    }
+    
+    // デフォルトで座標軸を表示
+    showAxes(true);
 }
 
 void SceneRenderer::handleStlFileLoadError(const std::exception& e, QWidget* parent) {

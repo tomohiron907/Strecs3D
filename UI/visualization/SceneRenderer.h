@@ -34,6 +34,10 @@ public:
     void showGrid(bool show = true);
     void hideGrid();
     
+    // 座標軸操作
+    void showAxes(bool show = true);
+    void hideAxes();
+    
     // スカラーバー
     void setupScalarBar(VtkProcessor* vtkProcessor);
     
@@ -55,7 +59,12 @@ signals:
 private:
     MainWindowUI* ui_;
     vtkSmartPointer<vtkActor> gridActor_;
+    vtkSmartPointer<vtkActor> xAxisActor_;
+    vtkSmartPointer<vtkActor> yAxisActor_;
+    vtkSmartPointer<vtkActor> zAxisActor_;
+    vtkSmartPointer<vtkActor> originActor_;
     
     void connectWidgetSignals(ObjectDisplayOptionsWidget* widget, const std::string& filePath);
     void createGrid();
+    void createAxes();
 };
