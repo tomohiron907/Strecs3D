@@ -17,6 +17,7 @@
 #include <vtkActorCollection.h>
 #include <vtkActor2DCollection.h>
 #include <vtkSphereSource.h>
+#include <vtkCamera.h>
 #include <iostream>
 
 SceneRenderer::SceneRenderer(MainWindowUI* ui) : QObject(), ui_(ui) {
@@ -124,7 +125,14 @@ void SceneRenderer::render() {
 
 void SceneRenderer::resetCamera() {
     if (ui_ && ui_->getRenderer()) {
-        ui_->getRenderer()->ResetCamera();
+        auto camera = ui_->getRenderer()->GetActiveCamera();
+        if (camera) {
+            // カメラを斜め上から中心を見るように設定
+            camera->SetPosition(150, -150, 100);  // 斜め上の位置
+            camera->SetFocalPoint(0, 0, 0);       // 中心を注視
+            camera->SetViewUp(0, 0, 1);           // Z軸を上方向に設定
+            ui_->getRenderer()->ResetCameraClippingRange();
+        }
     }
 }
 
