@@ -48,6 +48,8 @@ public:
 
     // アイコンサイズ一括設定
     void setButtonIconSize(const QSize& size);
+    
+private:
 
 public slots:
     void resizeDisplayOptionsContainer();
@@ -55,7 +57,30 @@ public slots:
     bool eventFilter(QObject* watched, QEvent* event);
 
 private:
+    // Constants
+    static constexpr int HEADER_HEIGHT = 70;
+    static constexpr int LOGO_SIZE = 40;
+    static constexpr int LOGO_TYPE_HEIGHT = 19;
+    static constexpr int HEADER_SPACING = 15;
+    static constexpr int HEADER_LEFT_MARGIN = 35;
+    static constexpr int HEADER_BOTTOM_MARGIN = 3;
+    static constexpr int LEFT_PANE_MAX_WIDTH = 300;
+    static constexpr int RIGHT_PANE_WIDTH = 320;
+    static constexpr int DISPLAY_OPTIONS_WIDTH = 300;
+    static constexpr int WIDGET_MARGIN = 20;
+    static constexpr int CONSOLE_MIN_HEIGHT = 200;
+    static constexpr int ICON_SIZE = 25;
+    static constexpr int LAYOUT_SPACING = 10;
+    static constexpr int EXPORT_BUTTON_TOP_SPACING = 50;
+
+    // Setup methods
     void setupStyle();
+    void createHeaderWidget(QVBoxLayout* outerLayout);
+    void createLeftPaneWidget(QWidget* vtkParent);
+    void createRightPaneWidget(QWidget* vtkParent);
+    void createVtkWidget();
+    void createButtons();
+    void setupWidgetPositioning();
 
     MainWindow* mainWindow;
     QWidget* centralWidget;
