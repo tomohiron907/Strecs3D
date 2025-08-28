@@ -4,8 +4,8 @@
 CustomCheckBox::CustomCheckBox(QWidget* parent)
     : QPushButton(parent), checked(true) {
     // アイコンのパスを設定
-    iconChecked = QIcon(":/resources/eye.png");
-    iconUnchecked = QIcon(":/resources/eye_slash.png");
+    iconChecked = QIcon(":/resources/icons/eye.png");
+    iconUnchecked = QIcon(":/resources/icons/eye_slash.png");
     setCheckable(false); // 独自で管理
     setFlat(true);
     setFixedSize(32, 32); // 必要に応じてサイズ調整

@@ -2,8 +2,8 @@
     <qresource prefix="/resources">
         <file>white_symbol.png</file>
         <file>logo_type.png</file>
-        <file>eye.png</file>
-        <file>eye_slash.png</file>
+        <file>icons/eye.png</file>
+        <file>icons/eye_slash.png</file>
         <file>strecs_icon.png</file>
     </qresource>
 </RCC> 
