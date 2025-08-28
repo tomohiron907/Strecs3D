@@ -1,4 +1,5 @@
 #include "SceneRenderer.h"
+#include "TurntableInteractorStyle.h"
 #include "SceneDataController.h"
 #include "../../core/processing/VtkProcessor.h"
 #include "../mainwindowui.h"
@@ -18,11 +19,14 @@
 #include <vtkActor2DCollection.h>
 #include <vtkSphereSource.h>
 #include <vtkCamera.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkInteractorStyleTrackballCamera.h>
 #include <iostream>
 
 SceneRenderer::SceneRenderer(MainWindowUI* ui) : QObject(), ui_(ui) {
     createGrid();
     createAxes();
+    enableTurntableMode(true);
 }
 
 SceneRenderer::~SceneRenderer() = default;
@@ -133,6 +137,31 @@ void SceneRenderer::resetCamera() {
             camera->SetViewUp(0, 0, 1);           // Z軸を上方向に設定
             ui_->getRenderer()->ResetCameraClippingRange();
         }
+    }
+}
+
+void SceneRenderer::enableTurntableMode(bool enable) {
+    if (!ui_ || !ui_->getVtkWidget()) return;
+    
+    auto interactor = ui_->getVtkWidget()->interactor();
+    if (!interactor) return;
+    
+    if (enable) {
+        // ターンテーブルモード用のカスタムインタラクションスタイルを設定
+        turntableStyle_ = vtkSmartPointer<TurntableInteractorStyle>::New();
+        interactor->SetInteractorStyle(turntableStyle_);
+    } else {
+        // デフォルトのトラックボールカメラスタイルに戻す
+        vtkSmartPointer<vtkInteractorStyleTrackballCamera> defaultStyle = 
+            vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
+        interactor->SetInteractorStyle(defaultStyle);
+        turntableStyle_ = nullptr;
+    }
+}
+
+void SceneRenderer::setTurntableRotationSpeed(double speed) {
+    if (turntableStyle_) {
+        turntableStyle_->SetRotationSpeed(speed);
     }
 }
 

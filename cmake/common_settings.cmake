@@ -104,6 +104,7 @@ add_executable(Strecs3D
   UI/widgets/DisplayOptionsContainer.cpp
   UI/widgets/CustomCheckBox.cpp
   UI/visualization/SceneRenderer.cpp
+  UI/visualization/TurntableInteractorStyle.cpp
   core/processing/VtkProcessor.cpp
   core/processing/3mf/BaseLib3mfProcessor.cpp
   core/processing/3mf/slicers/cura/CuraLib3mfProcessor.cpp

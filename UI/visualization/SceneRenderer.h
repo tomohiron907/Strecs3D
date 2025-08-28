@@ -29,6 +29,8 @@ public:
     
     // カメラ操作
     void resetCamera();
+    void enableTurntableMode(bool enable = true);
+    void setTurntableRotationSpeed(double speed);
     
     // グリッド操作
     void showGrid(bool show = true);
@@ -63,6 +65,7 @@ private:
     vtkSmartPointer<vtkActor> yAxisActor_;
     vtkSmartPointer<vtkActor> zAxisActor_;
     vtkSmartPointer<vtkActor> originActor_;
+    vtkSmartPointer<class TurntableInteractorStyle> turntableStyle_;
     
     void connectWidgetSignals(ObjectDisplayOptionsWidget* widget, const std::string& filePath);
     void createGrid();
