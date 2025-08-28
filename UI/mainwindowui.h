@@ -46,6 +46,9 @@ public:
     ObjectDisplayOptionsWidget* getDividedMeshWidget3() const { return displayOptionsContainer->getDividedMeshWidget3(); }
     ObjectDisplayOptionsWidget* getDividedMeshWidget4() const { return displayOptionsContainer->getDividedMeshWidget4(); }
 
+    // アイコンサイズ一括設定
+    void setButtonIconSize(const QSize& size);
+
 public slots:
     void resizeDisplayOptionsContainer();
     void resizeEvent(QResizeEvent* event);

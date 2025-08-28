@@ -55,15 +55,24 @@ void MainWindowUI::setupUI()
     // 3Dオブジェクト表示オプションウィジェットを追加（左ペインから削除）
     // ObjectDisplayOptionsWidget* objectOptions = new ObjectDisplayOptionsWidget("sample.stl", centralWidget);
     // leftPaneLayout->addWidget(objectOptions);
+    // グローバルアイコンサイズを設定（全てのボタンに適用される）
+    Button::setGlobalIconSize(QSize(25, 25));
+    
     openStlButton = new Button("Open STL File", centralWidget);
+    openStlButton->setIcon(":/resources/icons/stl.png");
     openVtkButton = new Button("Open VTK File", centralWidget);
+    openVtkButton->setIcon(":/resources/icons/vtk.png");
     rangeSlider = new DensitySlider(centralWidget);
     modeComboBox = new ModeComboBox(centralWidget);
     
     processButton = new Button("Process", centralWidget);
+    processButton->setIcon(":/resources/icons/process.png");
+    processButton->setIconDark(":/resources/icons/process_dark.png");
     processButton->setEnabled(false); // 初期状態で無効
     processButton->setEmphasized(false); // 初期状態で強調表示なし
     export3mfButton = new Button("Export 3MF", centralWidget);
+    export3mfButton->setIcon(":/resources/icons/export.png");
+    export3mfButton->setIconDark(":/resources/icons/export_dark.png");
     export3mfButton->setEnabled(false); // 初期状態で無効
     messageConsole = new MessageConsole(centralWidget);
     messageConsole->setMinimumHeight(200);
@@ -164,4 +173,24 @@ void MainWindowUI::resizeDisplayOptionsContainer()
 void MainWindowUI::setupStyle()
 {
     mainWindow->setStyleSheet("background-color: #1a1a1a;");
+}
+
+void MainWindowUI::setButtonIconSize(const QSize& size)
+{
+    // グローバルアイコンサイズを設定
+    Button::setGlobalIconSize(size);
+    
+    // 既存のボタンのアイコンサイズを更新
+    if (openStlButton) {
+        openStlButton->setIconSize(size);
+    }
+    if (openVtkButton) {
+        openVtkButton->setIconSize(size);
+    }
+    if (processButton) {
+        processButton->setIconSize(size);
+    }
+    if (export3mfButton) {
+        export3mfButton->setIconSize(size);
+    }
 } 

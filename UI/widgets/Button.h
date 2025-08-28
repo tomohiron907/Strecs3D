@@ -5,6 +5,8 @@
 #include <QString>
 #include <QColor>
 #include <QEnterEvent>
+#include <QIcon>
+#include <QPixmap>
 
 class Button : public QPushButton
 {
@@ -24,6 +26,14 @@ public:
     void setHoverAnimation(bool enabled);
     void setClickAnimation(bool enabled);
     void setEmphasized(bool emphasized);
+    void setIcon(const QString& iconPath);
+    void setIconDark(const QString& iconPath);
+    void setIconSize(const QSize& size);
+    
+    // 静的メソッド：全ボタンのアイコンサイズを一括設定
+    static void setGlobalIconSize(const QSize& size);
+    static QSize getGlobalIconSize();
+    
     QColor currentColor() const;
     void setCurrentColor(const QColor& color);
     Q_PROPERTY(QColor currentColor READ currentColor WRITE setCurrentColor)
@@ -38,6 +48,7 @@ protected:
 private:
     void updateStyle();
     void setupDefaultStyle();
+    QString getCurrentIconPath() const;
     QColor m_backgroundColor;
     QColor m_textColor;
     QColor m_hoverColor;
@@ -55,6 +66,10 @@ private:
     QColor m_disabledColor;
     QColor m_disabledTextColor;
     QColor m_emphasizedColor;
+    QString m_iconPath;
+    QString m_iconDarkPath;
+    QSize m_iconSize;
+    static QSize s_globalIconSize;
 };
 
 #endif // BUTTON_H 
