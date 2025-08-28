@@ -6,6 +6,8 @@
 
 VisualizationManager::VisualizationManager(MainWindowUI* ui) : QObject() {
     initializeComponents(ui);
+    // ソフトウェア起動時にカメラをリセット
+    renderer_->resetCamera();
 }
 
 VisualizationManager::~VisualizationManager() = default;
@@ -36,7 +38,6 @@ void VisualizationManager::displayVtkFile(const std::string& vtkFile, VtkProcess
         ObjectInfo objInfo{importActor, vtkFile, true, 1.0};
         dataController_->registerObject(objInfo);
         renderer_->setupScalarBar(vtkProcessor);
-        renderer_->resetCamera();
         renderer_->renderObjects(dataController_->getObjectList());
     }
 }
@@ -49,7 +50,6 @@ void VisualizationManager::displayStlFile(const std::string& stlFile, VtkProcess
         renderer_->addActorToRenderer(importActor);
         ObjectInfo objInfo{importActor, stlFile, true, 1.0};
         dataController_->registerObject(objInfo);
-        renderer_->resetCamera();
         renderer_->renderObjects(dataController_->getObjectList());
     }
 }
