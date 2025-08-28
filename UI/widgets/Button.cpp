@@ -12,56 +12,47 @@ QSize Button::s_globalIconSize(20, 20);
 
 Button::Button(const QString& text, QWidget* parent)
     : QPushButton(text, parent)
-    , m_backgroundColor(ColorManager::BUTTON_COLOR)
-    , m_textColor(ColorManager::BUTTON_TEXT_COLOR)
-    , m_hoverColor(ColorManager::BUTTON_HOVER_COLOR.lighter(120))
-    , m_pressedColor(ColorManager::BUTTON_PRESSED_COLOR.darker(120))
-    , m_currentColor(m_backgroundColor)
-    , m_borderRadius(3)
-    , m_paddingHorizontal(20)
-    , m_paddingVertical(12)
-    , m_animationEnabled(true)
-    , m_hoverAnimation(true)
-    , m_clickAnimation(true)
-    , m_isHovered(false)
-    , m_isPressed(false)
-    , m_isEmphasized(false)
-    , m_disabledColor(ColorManager::BUTTON_DISABLED_COLOR)
-    , m_disabledTextColor(ColorManager::BUTTON_DISABLED_TEXT_COLOR)
-    , m_emphasizedColor(ColorManager::BUTTON_EMPHASIZED_COLOR)
-    , m_iconSize(s_globalIconSize)
 {
+    initializeDefaultValues();
+    m_backgroundColor = ColorManager::BUTTON_COLOR;
+    m_textColor = ColorManager::BUTTON_TEXT_COLOR;
+    m_currentColor = m_backgroundColor;
     setupDefaultStyle();
 }
 
 Button::Button(const QString& text, const QColor& backgroundColor, 
                          const QColor& textColor, QWidget* parent)
     : QPushButton(text, parent)
-    , m_backgroundColor(backgroundColor)
-    , m_textColor(textColor)
-    , m_hoverColor(ColorManager::BUTTON_HOVER_COLOR.lighter(120))
-    , m_pressedColor(ColorManager::BUTTON_PRESSED_COLOR.darker(120))
-    , m_currentColor(m_backgroundColor)
-    , m_borderRadius(3)
-    , m_paddingHorizontal(20)
-    , m_paddingVertical(12)
-    , m_animationEnabled(true)
-    , m_hoverAnimation(true)
-    , m_clickAnimation(true)
-    , m_isHovered(false)
-    , m_isPressed(false)
-    , m_isEmphasized(false)
-    , m_disabledColor(ColorManager::BUTTON_DISABLED_COLOR)
-    , m_disabledTextColor(ColorManager::BUTTON_DISABLED_TEXT_COLOR)
-    , m_emphasizedColor(ColorManager::BUTTON_EMPHASIZED_COLOR)
-    , m_iconSize(s_globalIconSize)
 {
+    initializeDefaultValues();
+    m_backgroundColor = backgroundColor;
+    m_textColor = textColor;
+    m_currentColor = m_backgroundColor;
     setupDefaultStyle();
+}
+
+void Button::initializeDefaultValues()
+{
+    m_hoverColor = ColorManager::BUTTON_HOVER_COLOR.lighter(120);
+    m_pressedColor = ColorManager::BUTTON_PRESSED_COLOR.darker(120);
+    m_borderRadius = DEFAULT_BORDER_RADIUS;
+    m_paddingHorizontal = DEFAULT_PADDING_HORIZONTAL;
+    m_paddingVertical = DEFAULT_PADDING_VERTICAL;
+    m_animationEnabled = true;
+    m_hoverAnimation = true;
+    m_clickAnimation = true;
+    m_isHovered = false;
+    m_isPressed = false;
+    m_isEmphasized = false;
+    m_disabledColor = ColorManager::BUTTON_DISABLED_COLOR;
+    m_disabledTextColor = ColorManager::BUTTON_DISABLED_TEXT_COLOR;
+    m_emphasizedColor = ColorManager::BUTTON_EMPHASIZED_COLOR;
+    m_iconSize = s_globalIconSize;
 }
 
 void Button::setupDefaultStyle()
 {
-    setMinimumHeight(50);
+    setMinimumHeight(DEFAULT_MINIMUM_HEIGHT);
     setCursor(Qt::PointingHandCursor);
     updateStyle();
 }
@@ -136,11 +127,7 @@ void Button::enterEvent(QEnterEvent* event)
     m_isHovered = true;
     
     if (m_animationEnabled && m_hoverAnimation) {
-        QPropertyAnimation* animation = new QPropertyAnimation(this, "currentColor");
-        animation->setDuration(150);
-        animation->setStartValue(m_currentColor);
-        animation->setEndValue(m_hoverColor);
-        animation->start(QAbstractAnimation::DeleteWhenStopped);
+        createColorAnimation(m_currentColor, m_hoverColor, HOVER_ANIMATION_DURATION);
     } else {
         m_currentColor = m_hoverColor;
         update();
@@ -155,11 +142,7 @@ void Button::leaveEvent(QEvent* event)
     m_isHovered = false;
     
     if (m_animationEnabled && m_hoverAnimation) {
-        QPropertyAnimation* animation = new QPropertyAnimation(this, "currentColor");
-        animation->setDuration(150);
-        animation->setStartValue(m_currentColor);
-        animation->setEndValue(m_backgroundColor);
-        animation->start(QAbstractAnimation::DeleteWhenStopped);
+        createColorAnimation(m_currentColor, m_backgroundColor, HOVER_ANIMATION_DURATION);
     } else {
         m_currentColor = m_backgroundColor;
         update();
@@ -174,11 +157,7 @@ void Button::mousePressEvent(QMouseEvent* event)
     m_isPressed = true;
     
     if (m_animationEnabled && m_clickAnimation) {
-        QPropertyAnimation* animation = new QPropertyAnimation(this, "currentColor");
-        animation->setDuration(100);
-        animation->setStartValue(m_currentColor);
-        animation->setEndValue(m_pressedColor);
-        animation->start(QAbstractAnimation::DeleteWhenStopped);
+        createColorAnimation(m_currentColor, m_pressedColor, CLICK_ANIMATION_DURATION);
     } else {
         m_currentColor = m_pressedColor;
         update();
@@ -192,14 +171,11 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
     
     m_isPressed = false;
     
+    QColor targetColor = m_isHovered ? m_hoverColor : m_backgroundColor;
     if (m_animationEnabled && m_clickAnimation) {
-        QPropertyAnimation* animation = new QPropertyAnimation(this, "currentColor");
-        animation->setDuration(100);
-        animation->setStartValue(m_currentColor);
-        animation->setEndValue(m_isHovered ? m_hoverColor : m_backgroundColor);
-        animation->start(QAbstractAnimation::DeleteWhenStopped);
+        createColorAnimation(m_currentColor, targetColor, CLICK_ANIMATION_DURATION);
     } else {
-        m_currentColor = m_isHovered ? m_hoverColor : m_backgroundColor;
+        m_currentColor = targetColor;
         update();
     }
 }
@@ -211,145 +187,10 @@ void Button::paintEvent(QPaintEvent* event)
     
     QRect rect = this->rect();
     
-    // 無効状態の場合
     if (!isEnabled()) {
-        // 無効状態の背景
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(m_disabledColor);
-        painter.drawRoundedRect(rect, m_borderRadius, m_borderRadius);
-        
-        // 無効状態でのアイコンとテキストの描画
-        QString iconPath = getCurrentIconPath();
-        bool hasIcon = !iconPath.isEmpty();
-        
-        if (hasIcon) {
-            QPixmap iconPixmap(iconPath);
-            if (!iconPixmap.isNull()) {
-                iconPixmap = iconPixmap.scaled(m_iconSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-                
-                // テキストとアイコンの配置計算
-                QFontMetrics fm(font());
-                int textWidth = fm.horizontalAdvance(text());
-                int iconWidth = iconPixmap.width();
-                int spacing = hasIcon && !text().isEmpty() ? 8 : 0;
-                int totalWidth = iconWidth + spacing + textWidth;
-                
-                // 中央揃えのための開始位置
-                int startX = rect.center().x() - totalWidth / 2;
-                
-                // アイコンを描画（無効状態の透明度を適用）
-                painter.setOpacity(0.5); // 無効状態の透明度
-                QRect iconRect(startX, rect.center().y() - iconPixmap.height() / 2, 
-                              iconPixmap.width(), iconPixmap.height());
-                painter.drawPixmap(iconRect, iconPixmap);
-                painter.setOpacity(1.0); // 透明度をリセット
-                
-                // テキストを描画（アイコンの右側）
-                if (!text().isEmpty()) {
-                    painter.setPen(m_disabledTextColor);
-                    painter.setFont(font());
-                    
-                    QRect textRect(startX + iconWidth + spacing, 
-                                  rect.y() + m_paddingVertical,
-                                  textWidth, 
-                                  rect.height() - 2 * m_paddingVertical);
-                    painter.drawText(textRect, Qt::AlignCenter, text());
-                }
-            } else {
-                // アイコンが読み込めない場合はテキストのみ
-                painter.setPen(m_disabledTextColor);
-                painter.setFont(font());
-                QRect textRect = rect.adjusted(m_paddingHorizontal, m_paddingVertical, 
-                                              -m_paddingHorizontal, -m_paddingVertical);
-                painter.drawText(textRect, Qt::AlignCenter, text());
-            }
-        } else {
-            // アイコンがない場合はテキストのみ
-            painter.setPen(m_disabledTextColor);
-            painter.setFont(font());
-            QRect textRect = rect.adjusted(m_paddingHorizontal, m_paddingVertical, 
-                                          -m_paddingHorizontal, -m_paddingVertical);
-            painter.drawText(textRect, Qt::AlignCenter, text());
-        }
-        return;
-    }
-    
-    // 通常状態
-    // 背景
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(m_currentColor);
-    painter.drawRoundedRect(rect, m_borderRadius, m_borderRadius);
-    
-    // エッジ（枠線）
-    QPen edgePen(ColorManager::BUTTON_EDGE_COLOR);
-    edgePen.setWidth(0); // 枠線の太さ
-    painter.setPen(edgePen);
-    painter.setBrush(Qt::NoBrush);
-    painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), m_borderRadius, m_borderRadius);
-
-    // アイコンとテキストの描画
-    QString iconPath = getCurrentIconPath();
-    bool hasIcon = !iconPath.isEmpty();
-    
-    if (hasIcon) {
-        QPixmap iconPixmap(iconPath);
-        if (!iconPixmap.isNull()) {
-            iconPixmap = iconPixmap.scaled(m_iconSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-            
-            // テキストとアイコンの配置計算
-            QFontMetrics fm(font());
-            int textWidth = fm.horizontalAdvance(text());
-            int iconWidth = iconPixmap.width();
-            int spacing = hasIcon && !text().isEmpty() ? 8 : 0;
-            int totalWidth = iconWidth + spacing + textWidth;
-            
-            // 中央揃えのための開始位置
-            int startX = rect.center().x() - totalWidth / 2;
-            
-            // アイコンを描画
-            QRect iconRect(startX, rect.center().y() - iconPixmap.height() / 2, 
-                          iconPixmap.width(), iconPixmap.height());
-            painter.drawPixmap(iconRect, iconPixmap);
-            
-            // テキストを描画（アイコンの右側）
-            if (!text().isEmpty()) {
-                QColor textColor = m_textColor;
-                // 強調表示ボタンのホバー時は白文字に変更
-                if (m_isEmphasized && m_isHovered) {
-                    textColor = Qt::white;
-                }
-                painter.setPen(textColor);
-                painter.setFont(font());
-                
-                QRect textRect(startX + iconWidth + spacing, 
-                              rect.y() + m_paddingVertical,
-                              textWidth, 
-                              rect.height() - 2 * m_paddingVertical);
-                painter.drawText(textRect, Qt::AlignCenter, text());
-            }
-        } else {
-            // アイコンが読み込めない場合はテキストのみ
-            QColor textColor = m_textColor;
-            if (m_isEmphasized && m_isHovered) {
-                textColor = Qt::white;
-            }
-            painter.setPen(textColor);
-            painter.setFont(font());
-            QRect textRect = rect.adjusted(m_paddingHorizontal, m_paddingVertical, 
-                                          -m_paddingHorizontal, -m_paddingVertical);
-            painter.drawText(textRect, Qt::AlignCenter, text());
-        }
+        paintDisabledState(painter, rect);
     } else {
-        // アイコンがない場合はテキストのみ
-        QColor textColor = m_textColor;
-        if (m_isEmphasized && m_isHovered) {
-            textColor = Qt::white;
-        }
-        painter.setPen(textColor);
-        painter.setFont(font());
-        QRect textRect = rect.adjusted(m_paddingHorizontal, m_paddingVertical, 
-                                      -m_paddingHorizontal, -m_paddingVertical);
-        painter.drawText(textRect, Qt::AlignCenter, text());
+        paintEnabledState(painter, rect);
     }
 }
 
@@ -411,4 +252,133 @@ void Button::setGlobalIconSize(const QSize& size)
 QSize Button::getGlobalIconSize()
 {
     return s_globalIconSize;
+}
+
+void Button::createColorAnimation(const QColor& startColor, const QColor& endColor, int duration)
+{
+    QPropertyAnimation* animation = new QPropertyAnimation(this, "currentColor");
+    animation->setDuration(duration);
+    animation->setStartValue(startColor);
+    animation->setEndValue(endColor);
+    animation->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void Button::paintBackground(QPainter& painter, const QRect& rect) const
+{
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(m_currentColor);
+    painter.drawRoundedRect(rect, m_borderRadius, m_borderRadius);
+    
+    // エッジ（枠線）
+    QPen edgePen(ColorManager::BUTTON_EDGE_COLOR);
+    edgePen.setWidth(0);
+    painter.setPen(edgePen);
+    painter.setBrush(Qt::NoBrush);
+    painter.drawRoundedRect(rect.adjusted(BORDER_EDGE_OFFSET, BORDER_EDGE_OFFSET, 
+                                        -BORDER_EDGE_OFFSET, -BORDER_EDGE_OFFSET), 
+                           m_borderRadius, m_borderRadius);
+}
+
+void Button::paintDisabledState(QPainter& painter, const QRect& rect)
+{
+    // 無効状態の背景
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(m_disabledColor);
+    painter.drawRoundedRect(rect, m_borderRadius, m_borderRadius);
+    
+    paintIconAndText(painter, rect, true);
+}
+
+void Button::paintEnabledState(QPainter& painter, const QRect& rect)
+{
+    paintBackground(painter, rect);
+    paintIconAndText(painter, rect, false);
+}
+
+void Button::paintIconAndText(QPainter& painter, const QRect& rect, bool isDisabled)
+{
+    QString iconPath = getCurrentIconPath();
+    bool hasIcon = !iconPath.isEmpty();
+    
+    if (hasIcon) {
+        QPixmap iconPixmap(iconPath);
+        if (!iconPixmap.isNull()) {
+            iconPixmap = iconPixmap.scaled(m_iconSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            
+            // テキストとアイコンの配置計算
+            QFontMetrics fm(font());
+            int textWidth = fm.horizontalAdvance(text());
+            int iconWidth = iconPixmap.width();
+            int spacing = hasIcon && !text().isEmpty() ? ICON_TEXT_SPACING : 0;
+            int totalWidth = iconWidth + spacing + textWidth;
+            
+            // 中央揃えのための開始位置
+            int startX = rect.center().x() - totalWidth / 2;
+            
+            // アイコンを描画
+            if (isDisabled) {
+                painter.setOpacity(DISABLED_OPACITY);
+            }
+            
+            QRect iconRect = calculateIconRect(iconPixmap, rect, totalWidth);
+            iconRect.moveLeft(startX);
+            painter.drawPixmap(iconRect, iconPixmap);
+            
+            if (isDisabled) {
+                painter.setOpacity(1.0);
+            }
+            
+            // テキストを描画（アイコンの右側）
+            if (!text().isEmpty()) {
+                painter.setPen(getTextColor(isDisabled));
+                painter.setFont(font());
+                
+                QRect textRect = calculateTextRect(rect, startX, iconWidth, spacing, textWidth);
+                painter.drawText(textRect, Qt::AlignCenter, text());
+            }
+        } else {
+            // アイコンが読み込めない場合はテキストのみ
+            painter.setPen(getTextColor(isDisabled));
+            painter.setFont(font());
+            QRect textRect = rect.adjusted(m_paddingHorizontal, m_paddingVertical, 
+                                          -m_paddingHorizontal, -m_paddingVertical);
+            painter.drawText(textRect, Qt::AlignCenter, text());
+        }
+    } else {
+        // アイコンがない場合はテキストのみ
+        painter.setPen(getTextColor(isDisabled));
+        painter.setFont(font());
+        QRect textRect = rect.adjusted(m_paddingHorizontal, m_paddingVertical, 
+                                      -m_paddingHorizontal, -m_paddingVertical);
+        painter.drawText(textRect, Qt::AlignCenter, text());
+    }
+}
+
+QRect Button::calculateIconRect(const QPixmap& icon, const QRect& rect, int totalWidth) const
+{
+    int startX = rect.center().x() - totalWidth / 2;
+    return QRect(startX, rect.center().y() - icon.height() / 2, 
+                icon.width(), icon.height());
+}
+
+QRect Button::calculateTextRect(const QRect& rect, int startX, int iconWidth, int spacing, int textWidth) const
+{
+    return QRect(startX + iconWidth + spacing, 
+                rect.y() + m_paddingVertical,
+                textWidth, 
+                rect.height() - 2 * m_paddingVertical);
+}
+
+QColor Button::getTextColor(bool isDisabled) const
+{
+    if (isDisabled) {
+        return m_disabledTextColor;
+    }
+    
+    QColor textColor = m_textColor;
+    // 強調表示ボタンのホバー時は白文字に変更
+    if (m_isEmphasized && m_isHovered) {
+        textColor = Qt::white;
+    }
+    return textColor;
 } 

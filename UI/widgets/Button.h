@@ -48,7 +48,28 @@ protected:
 private:
     void updateStyle();
     void setupDefaultStyle();
+    void initializeDefaultValues();
     QString getCurrentIconPath() const;
+    void paintBackground(QPainter& painter, const QRect& rect) const;
+    void paintDisabledState(QPainter& painter, const QRect& rect);
+    void paintEnabledState(QPainter& painter, const QRect& rect);
+    void paintIconAndText(QPainter& painter, const QRect& rect, bool isDisabled = false);
+    QRect calculateIconRect(const QPixmap& icon, const QRect& rect, int totalWidth) const;
+    QRect calculateTextRect(const QRect& rect, int startX, int iconWidth, int spacing, int textWidth) const;
+    QColor getTextColor(bool isDisabled = false) const;
+    void createColorAnimation(const QColor& startColor, const QColor& endColor, int duration);
+    
+    // 定数
+    static constexpr int DEFAULT_BORDER_RADIUS = 3;
+    static constexpr int DEFAULT_PADDING_HORIZONTAL = 20;
+    static constexpr int DEFAULT_PADDING_VERTICAL = 12;
+    static constexpr int DEFAULT_MINIMUM_HEIGHT = 50;
+    static constexpr int HOVER_ANIMATION_DURATION = 150;
+    static constexpr int CLICK_ANIMATION_DURATION = 100;
+    static constexpr int ICON_TEXT_SPACING = 8;
+    static constexpr int BORDER_EDGE_OFFSET = 1;
+    static constexpr double DISABLED_OPACITY = 0.5;
+    
     QColor m_backgroundColor;
     QColor m_textColor;
     QColor m_hoverColor;
