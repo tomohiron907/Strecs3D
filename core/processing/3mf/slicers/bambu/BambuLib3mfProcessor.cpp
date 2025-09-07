@@ -84,7 +84,7 @@ bool BambuLib3mfProcessor::setMetaDataForInfillMeshBambu(Lib3MF::PMeshObject Mes
         }
     }
     std::string density_str = std::to_string(density);
-    part.id = fileInfo.id;
+    part.id = fileInfo.id+1;
     part.subtype = "modifier_part";
     part.metadata.push_back({"name", fileInfo.name});
     part.metadata.push_back({"matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"});
