@@ -16,6 +16,7 @@
 #include "widgets/ObjectDisplayOptionsWidget.h"
 #include "widgets/DisplayOptionsContainer.h"
 #include <QObject>
+#include <QTouchEvent>
 
 class MainWindow;
 

@@ -42,8 +42,16 @@ void MainWindowUI::setupUI()
 
 bool MainWindowUI::eventFilter(QObject* watched, QEvent* event)
 {
-    if (watched == vtkWidget && event->type() == QEvent::Resize) {
-        resizeDisplayOptionsContainer();
+    if (watched == vtkWidget) {
+        if (event->type() == QEvent::Resize) {
+            resizeDisplayOptionsContainer();
+        }
+        // Block touch events to fix macOS trackpad issue
+        else if (event->type() == QEvent::TouchBegin || 
+                 event->type() == QEvent::TouchUpdate || 
+                 event->type() == QEvent::TouchEnd) {
+            return true; // Block the event
+        }
     }
     return false;
 }
@@ -171,6 +179,12 @@ void MainWindowUI::createRightPaneWidget(QWidget* vtkParent)
 void MainWindowUI::createVtkWidget()
 {
     vtkWidget = new QVTKOpenGLNativeWidget(centralWidget);
+    
+    // Multiple approaches to disable touch event processing to fix macOS trackpad issue
+    // See: https://gitlab.kitware.com/vtk/vtk/-/issues/19073
+    vtkWidget->setAttribute(Qt::WA_AcceptTouchEvents, false);
+    vtkWidget->setAttribute(Qt::WA_TouchPadAcceptSingleTouchEvents, false);
+    
     renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
     vtkWidget->setRenderWindow(renderWindow);
     renderer = vtkSmartPointer<vtkRenderer>::New();
