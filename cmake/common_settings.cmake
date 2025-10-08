@@ -120,6 +120,7 @@ add_executable(Strecs3D
   UI/visualization/VisualizationManager.cpp
   UI/visualization/SceneDataController.cpp
   core/export/ExportManager.cpp
+  core/processing/3mf/slicers/prusa/ModelConverter.cpp
   resources/resources.qrc
 )
 

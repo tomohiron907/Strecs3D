@@ -9,6 +9,7 @@
     },
     "libzip",
     "lib3mf",
+    "pugixml",
     "libb2"
   ],
   "builtin-baseline": "fc5118086f5db341ee4ab3a7d4d64c0f39896270",

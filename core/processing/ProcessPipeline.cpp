@@ -4,6 +4,7 @@
 #include "3mf/slicers/cura/CuraLib3mfProcessor.h"
 #include "3mf/slicers/bambu/BambuLib3mfProcessor.h"
 #include "3mf/slicers/prusa/PrusaLib3mfProcessor.h"
+#include "3mf/slicers/prusa/ModelConverter.h"
 #include "../../utils/fileUtility.h"
 #include "../../utils/tempPathUtility.h"
 #include <QMessageBox>
@@ -148,11 +149,32 @@ bool ProcessPipeline::processBambuMode(BaseLib3mfProcessor& processor, double ma
 }
 
 bool ProcessPipeline::processPrusaMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings) {
-    const auto& meshInfos = vtkProcessor->getMeshInfos();
-    processor.setMetaData(maxStress, mappings, meshInfos);
-    const std::string tempFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
-    if (!processor.save3mf(tempFile)) {
-        throw std::runtime_error("Failed to save temporary 3MF file");
+    const std::string extractDir = TempPathUtility::getTempSubDirPath("3mf").string();
+    const std::string zipFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
+    const std::string outputFile = TempPathUtility::getTempFilePath("result/result.3mf").toStdString();
+    if (!FileUtility::unzipFile(zipFile, extractDir)) {
+        throw std::runtime_error("Failed to extract ZIP file");
+    }
+
+    // PrusaModelConverterを使用して3dmodel.modelを変換
+    const std::string modelInputPath = extractDir + "/3D/3dmodel.model";
+    const std::string modelOutputPath = extractDir + "/3D/3dmodel_converted.model";
+    
+    ModelConverter converter;
+    if (!converter.process(modelInputPath, modelOutputPath)) {
+        throw std::runtime_error("Failed to convert 3dmodel.model using PrusaModelConverter");
+    }
+    
+    // 変換済みファイルを元のファイル名に置き換え
+    try {
+        std::filesystem::remove(modelInputPath);
+        std::filesystem::rename(modelOutputPath, modelInputPath);
+    } catch (const std::filesystem::filesystem_error& e) {
+        throw std::runtime_error("Failed to replace original 3dmodel.model with converted version: " + std::string(e.what()));
+    }
+
+    if (!FileUtility::zipDirectory(extractDir, outputFile)) {
+        throw std::runtime_error("Failed to create output ZIP file");
     }
     return true;
 }
