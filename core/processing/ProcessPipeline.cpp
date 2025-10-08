@@ -3,6 +3,7 @@
 #include "3mf/BaseLib3mfProcessor.h"
 #include "3mf/slicers/cura/CuraLib3mfProcessor.h"
 #include "3mf/slicers/bambu/BambuLib3mfProcessor.h"
+#include "3mf/slicers/prusa/PrusaLib3mfProcessor.h"
 #include "../../utils/fileUtility.h"
 #include "../../utils/tempPathUtility.h"
 #include <QMessageBox>
@@ -82,6 +83,10 @@ bool ProcessPipeline::process3mfFile(const std::string& mode, const std::vector<
             if (!processBambuMode(*processor, maxStress, mappings)) {
                 throw std::runtime_error("Failed to process in bambu mode");
             }
+        } else if (currentMode == "prusa") {
+            if (!processPrusaMode(*processor, maxStress, mappings)) {
+                throw std::runtime_error("Failed to process in prusa mode");
+            }
         } else {
             throw std::runtime_error("Unknown mode: " + mode);
         }
@@ -109,6 +114,8 @@ std::unique_ptr<BaseLib3mfProcessor> ProcessPipeline::createProcessor(const QStr
         return std::make_unique<CuraLib3mfProcessor>();
     } else if (mode == "bambu") {
         return std::make_unique<BambuLib3mfProcessor>();
+    } else if (mode == "prusa") {
+        return std::make_unique<PrusaLib3mfProcessor>();
     }
     return nullptr;
 }
@@ -138,6 +145,16 @@ bool ProcessPipeline::processBambuMode(BaseLib3mfProcessor& processor, double ma
         throw std::runtime_error("Failed to save temporary 3MF file");
     }
     return processBambuZipFiles();
+}
+
+bool ProcessPipeline::processPrusaMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings) {
+    const auto& meshInfos = vtkProcessor->getMeshInfos();
+    processor.setMetaData(maxStress, mappings, meshInfos);
+    const std::string tempFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
+    if (!processor.save3mf(tempFile)) {
+        throw std::runtime_error("Failed to save temporary 3MF file");
+    }
+    return true;
 }
 
 bool ProcessPipeline::processBambuZipFiles() {

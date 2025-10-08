@@ -10,6 +10,7 @@ ModeComboBox::ModeComboBox(QWidget* parent)
 {
     addItem("cura");
     addItem("bambu");
+    addItem("prusa");
     setMinimumHeight(40); // Buttonと同じ高さ
     setEditable(false); // どこをクリックしてもドロップダウン
     setStyleSheet(

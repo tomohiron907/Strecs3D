@@ -109,6 +109,7 @@ add_executable(Strecs3D
   core/processing/3mf/BaseLib3mfProcessor.cpp
   core/processing/3mf/slicers/cura/CuraLib3mfProcessor.cpp
   core/processing/3mf/slicers/bambu/BambuLib3mfProcessor.cpp
+  core/processing/3mf/slicers/prusa/PrusaLib3mfProcessor.cpp
   utils/fileUtility.cpp
   utils/tempPathUtility.cpp
   utils/xmlConverter.cpp
