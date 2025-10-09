@@ -145,7 +145,16 @@ bool ProcessPipeline::processBambuMode(BaseLib3mfProcessor& processor, double ma
     if (!processor.save3mf(tempFile)) {
         throw std::runtime_error("Failed to save temporary 3MF file");
     }
-    return processBambuZipFiles();
+    const std::string extractDir = TempPathUtility::getTempSubDirPath("3mf").string();
+    const std::string zipFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
+    const std::string outputFile = TempPathUtility::getTempFilePath("result/result.3mf").toStdString();
+    if (!FileUtility::unzipFile(zipFile, extractDir)) {
+        throw std::runtime_error("Failed to extract ZIP file");
+    }
+    if (!FileUtility::zipDirectory(extractDir, outputFile)) {
+        throw std::runtime_error("Failed to create output ZIP file");
+    }
+    return true;
 }
 
 bool ProcessPipeline::processPrusaMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings) {
@@ -182,19 +191,6 @@ bool ProcessPipeline::processPrusaMode(BaseLib3mfProcessor& processor, double ma
         throw std::runtime_error("Failed to generate metadata for Prusa");
     }
     
-    if (!FileUtility::zipDirectory(extractDir, outputFile)) {
-        throw std::runtime_error("Failed to create output ZIP file");
-    }
-    return true;
-}
-
-bool ProcessPipeline::processBambuZipFiles() {
-    const std::string extractDir = TempPathUtility::getTempSubDirPath("3mf").string();
-    const std::string zipFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
-    const std::string outputFile = TempPathUtility::getTempFilePath("result/result.3mf").toStdString();
-    if (!FileUtility::unzipFile(zipFile, extractDir)) {
-        throw std::runtime_error("Failed to extract ZIP file");
-    }
     if (!FileUtility::zipDirectory(extractDir, outputFile)) {
         throw std::runtime_error("Failed to create output ZIP file");
     }

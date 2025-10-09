@@ -39,7 +39,6 @@ public:
                         double maxStress);
     bool processBambuMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings);
     bool processPrusaMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings);
-    bool processBambuZipFiles();
     
     // エラーハンドリング
     void handle3mfError(const std::exception& e, QWidget* parent = nullptr);
