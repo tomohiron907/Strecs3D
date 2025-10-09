@@ -152,6 +152,9 @@ bool ProcessPipeline::processPrusaMode(BaseLib3mfProcessor& processor, double ma
     const std::string extractDir = TempPathUtility::getTempSubDirPath("3mf").string();
     const std::string zipFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
     const std::string outputFile = TempPathUtility::getTempFilePath("result/result.3mf").toStdString();
+    if (!processor.save3mf(zipFile)) {
+        throw std::runtime_error("Failed to save 3MF file");
+    }
     if (!FileUtility::unzipFile(zipFile, extractDir)) {
         throw std::runtime_error("Failed to extract ZIP file");
     }
@@ -172,7 +175,13 @@ bool ProcessPipeline::processPrusaMode(BaseLib3mfProcessor& processor, double ma
     } catch (const std::filesystem::filesystem_error& e) {
         throw std::runtime_error("Failed to replace original 3dmodel.model with converted version: " + std::string(e.what()));
     }
-
+    // メタデータ設定
+    const auto& meshInfos = vtkProcessor->getMeshInfos();
+    PrusaLib3mfProcessor prusaProcessor;
+    if (!prusaProcessor.generateMetadata(extractDir, converter, meshInfos, mappings, maxStress)) {
+        throw std::runtime_error("Failed to generate metadata for Prusa");
+    }
+    
     if (!FileUtility::zipDirectory(extractDir, outputFile)) {
         throw std::runtime_error("Failed to create output ZIP file");
     }
