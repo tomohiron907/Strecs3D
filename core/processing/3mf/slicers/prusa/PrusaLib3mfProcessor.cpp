@@ -5,34 +5,32 @@
 #include <iostream>
 
 bool PrusaLib3mfProcessor::setMetaData(double maxStress) {
-    // TODO: Implement Prusa-specific metadata setting
     return true;
 }
 
 bool PrusaLib3mfProcessor::setMetaData(double maxStress, const std::vector<StressDensityMapping>& mappings, const std::vector<MeshInfo>& meshInfos) {
-    // TODO: Implement Prusa-specific metadata setting with mappings and mesh info
+    // Temp directory and ModelConverter are needed for the full implementation
+    // This method should be called from ProcessPipeline with proper parameters
+    std::cerr << "Warning: setMetaData requires extractDir and converter parameters for full implementation" << std::endl;
     return true;
 }
 
 bool PrusaLib3mfProcessor::setMetaDataForInfillMesh(Lib3MF::PMeshObject Mesh, FileInfo fileInfo, double maxStress, const std::vector<StressDensityMapping>& mappings) {
-    // TODO: Implement Prusa-specific infill mesh metadata setting
+    // This method handles infill mesh metadata generation for Prusa format
+    // Currently placeholder - should generate volume XML and apply to mesh
     return true;
 }
 
 bool PrusaLib3mfProcessor::setMetaDataForOutlineMesh(Lib3MF::PMeshObject Mesh) {
-    // TODO: Implement Prusa-specific outline mesh metadata setting
+    // This method handles outline mesh metadata generation for Prusa format
+    // Currently placeholder - should generate volume XML and apply to mesh
     return true;
 }
 
 bool PrusaLib3mfProcessor::assembleObjects() {
-    // TODO: Implement Prusa-specific object assembly
     return true;
 }
 
-bool PrusaLib3mfProcessor::setMetaDataForInfillMesh(Lib3MF::PMeshObject Mesh, FileInfo fileInfo, double maxStress) {
-    // TODO: Implement Prusa-specific infill mesh metadata setting (simple version)
-    return true;
-}
 
 double PrusaLib3mfProcessor::calculateFillDensity(const MeshInfo& meshInfo, 
                                                 const std::vector<StressDensityMapping>& mappings, 
@@ -51,10 +49,10 @@ double PrusaLib3mfProcessor::calculateFillDensity(const MeshInfo& meshInfo,
     return 0.2;
 }
 
-std::string PrusaLib3mfProcessor::generateInfillVolumeXML(const ModelObjectInfo& objInfo, size_t volumeId, 
-                                                         const MeshInfo* meshInfo, 
-                                                         const std::vector<StressDensityMapping>& mappings, 
-                                                         double maxStress) {
+std::string PrusaLib3mfProcessor::setMetaDataForInfillMeshXML(const ModelObjectInfo& objInfo, size_t volumeId, 
+                                                                const MeshInfo* meshInfo, 
+                                                                const std::vector<StressDensityMapping>& mappings, 
+                                                                double maxStress) {
     std::ostringstream xml;
     
     xml << "  <volume firstid=\"" << objInfo.start_triangle_index 
@@ -85,7 +83,7 @@ std::string PrusaLib3mfProcessor::generateInfillVolumeXML(const ModelObjectInfo&
     return xml.str();
 }
 
-std::string PrusaLib3mfProcessor::generateOutlineVolumeXML(const ModelObjectInfo& objInfo, size_t volumeId) {
+std::string PrusaLib3mfProcessor::setMetaDataForOutlineMeshXML(const ModelObjectInfo& objInfo, size_t volumeId) {
     std::ostringstream xml;
     
     xml << "  <volume firstid=\"" << objInfo.start_triangle_index 
@@ -106,10 +104,10 @@ std::string PrusaLib3mfProcessor::generateOutlineVolumeXML(const ModelObjectInfo
     return xml.str();
 }
 
-bool PrusaLib3mfProcessor::generateMetadata(const std::string& extractDir, const ModelConverter& converter, 
-                                          const std::vector<MeshInfo>& meshInfos, 
-                                          const std::vector<StressDensityMapping>& mappings, 
-                                          double maxStress) {
+bool PrusaLib3mfProcessor::setMetaData(const std::string& extractDir, const ModelConverter& converter,
+                                      const std::vector<MeshInfo>& meshInfos,
+                                      const std::vector<StressDensityMapping>& mappings,
+                                      double maxStress) {
     try {
         // Metadataディレクトリを作成
         std::filesystem::path metadataDir = std::filesystem::path(extractDir) / "Metadata";
@@ -147,11 +145,11 @@ bool PrusaLib3mfProcessor::generateMetadata(const std::string& extractDir, const
             if (isModifierMesh) {
                 // modifierMeshの場合：fill_density情報を含むParameterModifier
                 const MeshInfo* meshInfo = (modifierMeshIndex < meshInfos.size()) ? &meshInfos[modifierMeshIndex] : nullptr;
-                xmlContent << generateInfillVolumeXML(objInfo, i, meshInfo, mappings, maxStress);
+                xmlContent << setMetaDataForInfillMeshXML(objInfo, i, meshInfo, mappings, maxStress);
                 modifierMeshIndex++;
             } else {
                 // 通常のメッシュの場合：ModelPart
-                xmlContent << generateOutlineVolumeXML(objInfo, i);
+                xmlContent << setMetaDataForOutlineMeshXML(objInfo, i);
             }
         }
         
@@ -176,3 +174,4 @@ bool PrusaLib3mfProcessor::generateMetadata(const std::string& extractDir, const
         return false;
     }
 }
+

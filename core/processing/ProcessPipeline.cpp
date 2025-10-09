@@ -178,7 +178,7 @@ bool ProcessPipeline::processPrusaMode(BaseLib3mfProcessor& processor, double ma
     // メタデータ設定
     const auto& meshInfos = vtkProcessor->getMeshInfos();
     PrusaLib3mfProcessor prusaProcessor;
-    if (!prusaProcessor.generateMetadata(extractDir, converter, meshInfos, mappings, maxStress)) {
+    if (!prusaProcessor.setMetaData(extractDir, converter, meshInfos, mappings, maxStress)) {
         throw std::runtime_error("Failed to generate metadata for Prusa");
     }
     

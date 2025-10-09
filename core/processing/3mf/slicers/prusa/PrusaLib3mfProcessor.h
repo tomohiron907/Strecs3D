@@ -16,20 +16,21 @@ public:
     bool setMetaDataForOutlineMesh(Lib3MF::PMeshObject Mesh) override;
     bool assembleObjects() override;
 
-    // Prusa-specific metadata generation method
-    bool generateMetadata(const std::string& extractDir, const ModelConverter& converter, 
-                         const std::vector<MeshInfo>& meshInfos, 
-                         const std::vector<StressDensityMapping>& mappings, 
-                         double maxStress);
+    
+    // New method that takes extractDir and converter for full implementation
+    bool setMetaData(const std::string& extractDir, const ModelConverter& converter,
+                    const std::vector<MeshInfo>& meshInfos,
+                    const std::vector<StressDensityMapping>& mappings,
+                    double maxStress);
 
 private:
     // Prusa-specific helper methods
-    bool setMetaDataForInfillMesh(Lib3MF::PMeshObject Mesh, FileInfo fileInfo, double maxStress);
-    std::string generateInfillVolumeXML(const ModelObjectInfo& objInfo, size_t volumeId, 
-                                       const MeshInfo* meshInfo, 
-                                       const std::vector<StressDensityMapping>& mappings, 
-                                       double maxStress);
-    std::string generateOutlineVolumeXML(const ModelObjectInfo& objInfo, size_t volumeId);
+    std::string setMetaDataForInfillMeshXML(const ModelObjectInfo& objInfo, size_t volumeId, 
+                                           const MeshInfo* meshInfo, 
+                                           const std::vector<StressDensityMapping>& mappings, 
+                                           double maxStress);
+    std::string setMetaDataForOutlineMeshXML(const ModelObjectInfo& objInfo, size_t volumeId);
+    
     double calculateFillDensity(const MeshInfo& meshInfo, 
                                const std::vector<StressDensityMapping>& mappings, 
                                double maxStress);
