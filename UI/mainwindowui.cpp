@@ -134,6 +134,7 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
     QVBoxLayout* leftPaneLayout = new QVBoxLayout();
     
     rangeSlider = new DensitySlider(centralWidget);
+    stressRangeWidget = new StressRangeWidget(centralWidget);
     modeComboBox = new ModeComboBox(centralWidget);
     messageConsole = new MessageConsole(centralWidget);
     messageConsole->setMinimumHeight(CONSOLE_MIN_HEIGHT);
@@ -141,6 +142,7 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
     leftPaneLayout->addWidget(openStlButton);
     leftPaneLayout->addWidget(openVtkButton);
     leftPaneLayout->addWidget(rangeSlider);
+    leftPaneLayout->addWidget(stressRangeWidget);
     leftPaneLayout->addWidget(modeComboBox);
     leftPaneLayout->addWidget(processButton);
     leftPaneLayout->addWidget(messageConsole);

@@ -36,6 +36,7 @@ public slots:
     void onVtkObjectVisibilityChanged(bool visible);
     void onVtkObjectOpacityChanged(double opacity);
     void onParametersChanged(); // DensitySliderやModeComboBoxが変更された時の処理
+    void onStressRangeChanged(double minStress, double maxStress); // StressRangeWidgetが変更された時の処理
     void updateProcessButtonState(); // Processボタンの有効/無効状態を更新
 
 private:

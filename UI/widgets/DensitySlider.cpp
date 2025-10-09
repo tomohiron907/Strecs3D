@@ -78,6 +78,13 @@ void DensitySlider::setStressRange(double minStress, double maxStress) {
     update();
 }
 
+void DensitySlider::setOriginalStressRange(double minStress, double maxStress) {
+    m_originalMinStress = minStress;
+    m_originalMaxStress = maxStress;
+    // 初期表示用にスライダーの範囲も設定
+    setStressRange(minStress, maxStress);
+}
+
 void DensitySlider::paintEvent(QPaintEvent*) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -331,16 +338,35 @@ void DensitySlider::updateStressDensityMappings() {
     assert(m_handles.size() == 3);
     int top = m_margin;
     int bottom = height() - m_margin;
-    std::vector<int> positions = {bottom};
-    for (auto it = m_handles.rbegin(); it != m_handles.rend(); ++it) positions.push_back(*it);
-    positions.push_back(top);
+    
     m_stressDensityMappings.clear();
+    
+    // スライダーのハンドル位置から stress 値を計算
+    std::vector<double> handleStressValues;
+    for (int y : m_handles) {
+        double t = (double)(y - bottom) / (top - bottom);  // top=1, bottom=0に正規化
+        double stress = m_minStress + t * (m_maxStress - m_minStress);
+        handleStressValues.push_back(stress);
+    }
+    
+    // 4つの領域を作成
     for (int i = 0; i < 4; ++i) {
-        // y座標を0.0〜1.0に正規化（top=1, bottom=0）
-        double tMin = (double)(positions[i] - bottom) / (top - bottom);
-        double tMax = (double)(positions[i+1] - bottom) / (top - bottom);
-        double stressMin = m_minStress + tMin * (m_maxStress - m_minStress);
-        double stressMax = m_minStress + tMax * (m_maxStress - m_minStress);
+        double stressMin, stressMax;
+        
+        if (i == 0) {
+            // 最初の領域: vtuのmin_stress ～ スライダーの最初のハンドル値
+            stressMin = m_originalMinStress;
+            stressMax = handleStressValues[2];  // handles[2]は一番上のハンドル（最大stress）
+        } else if (i == 3) {
+            // 最後の領域: スライダーの最後のハンドル値 ～ vtuのmax_stress
+            stressMin = handleStressValues[0];  // handles[0]は一番下のハンドル（最小stress）
+            stressMax = m_originalMaxStress;
+        } else {
+            // 中間の領域: スライダーのハンドル値間
+            stressMin = handleStressValues[2 - i];      // 2番目の領域: handles[1] ～ handles[2]
+            stressMax = handleStressValues[2 - i + 1];  // 3番目の領域: handles[0] ～ handles[1]
+        }
+        
         double density = m_regionPercents[i];
         m_stressDensityMappings.push_back({stressMin, stressMax, density});
     }

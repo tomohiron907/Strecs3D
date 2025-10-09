@@ -127,7 +127,12 @@ void MainWindowUIAdapter::setStressRange(double minStress, double maxStress)
     if (!ui) return;
     auto slider = ui->getRangeSlider();
     if (slider) {
-        slider->setStressRange(minStress, maxStress);
+        slider->setOriginalStressRange(minStress, maxStress);
+    }
+    
+    auto stressRangeWidget = ui->getStressRangeWidget();
+    if (stressRangeWidget) {
+        stressRangeWidget->setStressRange(minStress, maxStress);
     }
 }
 

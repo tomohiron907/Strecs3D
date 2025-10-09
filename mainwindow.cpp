@@ -55,6 +55,7 @@ void MainWindow::connectUISignals()
     
     connect(ui->getRangeSlider(), &DensitySlider::handlePositionsChanged, this, &MainWindow::onParametersChanged);
     connect(ui->getRangeSlider(), &DensitySlider::regionPercentsChanged, this, &MainWindow::onParametersChanged);
+    connect(ui->getStressRangeWidget(), &StressRangeWidget::stressRangeChanged, this, &MainWindow::onStressRangeChanged);
     connect(ui->getModeComboBox(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onParametersChanged);
     
     connectDisplayWidgetSignals();
@@ -287,6 +288,15 @@ void MainWindow::onParametersChanged()
 {
     resetExportButton();
     updateProcessButtonState();
+}
+
+void MainWindow::onStressRangeChanged(double minStress, double maxStress)
+{
+    // DensitySliderのStressRangeを更新
+    ui->getRangeSlider()->setStressRange(minStress, maxStress);
+    
+    // パラメータ変更処理を呼び出し
+    onParametersChanged();
 }
 
 void MainWindow::resetExportButton()

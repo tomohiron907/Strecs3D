@@ -7,6 +7,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include "widgets/DensitySlider.h"
+#include "widgets/StressRangeWidget.h"
 #include "widgets/MessageConsole.h"
 #include "widgets/Button.h"
 #include <QVTKOpenGLNativeWidget.h>
@@ -36,6 +37,7 @@ public:
     Button* getExport3mfButton() const { return export3mfButton; }
     ModeComboBox* getModeComboBox() const { return modeComboBox; }
     DensitySlider* getRangeSlider() const { return rangeSlider; }
+    StressRangeWidget* getStressRangeWidget() const { return stressRangeWidget; }
     MessageConsole* getMessageConsole() const { return messageConsole; }
     DisplayOptionsContainer* getDisplayOptionsContainer() const { return displayOptionsContainer; }
     
@@ -94,6 +96,7 @@ private:
     Button* export3mfButton;
     ModeComboBox* modeComboBox;
     DensitySlider* rangeSlider;
+    StressRangeWidget* stressRangeWidget;
     MessageConsole* messageConsole;
     DisplayOptionsContainer* displayOptionsContainer;
 };

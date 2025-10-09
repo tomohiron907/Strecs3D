@@ -97,6 +97,7 @@ add_executable(Strecs3D
   UI/mainwindowui.cpp
   UI/widgets/MessageConsole.cpp
   UI/widgets/DensitySlider.cpp
+  UI/widgets/StressRangeWidget.cpp
   UI/ColorManager.cpp
   UI/widgets/Button.cpp
   UI/widgets/ModeComboBox.cpp

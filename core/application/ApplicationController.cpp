@@ -6,6 +6,8 @@
 #include "../processing/VtkProcessor.h"
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
+#include <vector>
 
 ApplicationController::ApplicationController(QObject* parent)
     : QObject(parent)
@@ -216,7 +218,29 @@ std::vector<int> ApplicationController::getStressThresholds(IUserInterface* ui)
 {
     if (!ui) return {};
     
-    return ui->getStressThresholds();
+    // StressDensityMappingから閾値を計算
+    auto mappings = ui->getStressDensityMappings();
+    if (mappings.empty()) return {};
+    
+    std::vector<double> thresholdValues;
+    
+    // 各マッピングからstressMin, stressMaxを収集
+    for (const auto& mapping : mappings) {
+        thresholdValues.push_back(mapping.stressMin);
+        thresholdValues.push_back(mapping.stressMax);
+    }
+    
+    // 重複を除去して昇順ソート
+    std::sort(thresholdValues.begin(), thresholdValues.end());
+    thresholdValues.erase(std::unique(thresholdValues.begin(), thresholdValues.end()), thresholdValues.end());
+    
+    // doubleからintに変換
+    std::vector<int> thresholds;
+    for (double val : thresholdValues) {
+        thresholds.push_back(static_cast<int>(val));
+    }
+    
+    return thresholds;
 }
 
 std::vector<StressDensityMapping> ApplicationController::getStressDensityMappings(IUserInterface* ui)
