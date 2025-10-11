@@ -71,6 +71,7 @@ private:
     // UI update methods
     void updateButtonsAfterProcessing(bool success);
     void resetExportButton();
+    void updateUIStateFromWidgets(); // UIウィジェットからUIStateを更新
     
     std::unique_ptr<ApplicationController> appController;
     std::unique_ptr<MainWindowUI> ui;

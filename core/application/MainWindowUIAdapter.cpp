@@ -2,6 +2,8 @@
 #include "ApplicationController.h"
 #include "../../UI/widgets/DensitySlider.h"
 #include "../../UI/visualization/VisualizationManager.h"
+#include <algorithm>
+#include <vector>
 
 MainWindowUIAdapter::MainWindowUIAdapter(MainWindowUI* ui, QObject* parent) 
     : IUserInterface(parent), ui(ui)
@@ -95,9 +97,33 @@ void MainWindowUIAdapter::setDividedMeshFileName(int meshIndex, const QString& f
 std::vector<int> MainWindowUIAdapter::getStressThresholds() const
 {
     if (!ui) return {};
-    auto slider = ui->getRangeSlider();
-    if (slider) {
-        return slider->stressThresholds();
+    
+    // UIStateから情報を取得
+    UIState* uiState = ui->getUIState();
+    if (uiState) {
+        // StressDensityMappingから閾値を計算
+        auto mappings = uiState->getStressDensityMappings();
+        if (mappings.empty()) return {};
+        
+        std::vector<double> thresholdValues;
+        
+        // 各マッピングからstressMin, stressMaxを収集
+        for (const auto& mapping : mappings) {
+            thresholdValues.push_back(mapping.stressMin);
+            thresholdValues.push_back(mapping.stressMax);
+        }
+        
+        // 重複を除去して昇順ソート
+        std::sort(thresholdValues.begin(), thresholdValues.end());
+        thresholdValues.erase(std::unique(thresholdValues.begin(), thresholdValues.end()), thresholdValues.end());
+        
+        // doubleからintに変換
+        std::vector<int> thresholds;
+        for (double val : thresholdValues) {
+            thresholds.push_back(static_cast<int>(val));
+        }
+        
+        return thresholds;
     }
     return {};
 }
@@ -105,9 +131,11 @@ std::vector<int> MainWindowUIAdapter::getStressThresholds() const
 std::vector<StressDensityMapping> MainWindowUIAdapter::getStressDensityMappings() const
 {
     if (!ui) return {};
-    auto slider = ui->getRangeSlider();
-    if (slider) {
-        return slider->stressDensityMappings();
+    
+    // UIStateから情報を取得
+    UIState* uiState = ui->getUIState();
+    if (uiState) {
+        return uiState->getStressDensityMappings();
     }
     return {};
 }
@@ -115,9 +143,17 @@ std::vector<StressDensityMapping> MainWindowUIAdapter::getStressDensityMappings(
 QString MainWindowUIAdapter::getCurrentMode() const
 {
     if (!ui) return "cura";
-    auto comboBox = ui->getModeComboBox();
-    if (comboBox) {
-        return comboBox->currentText();
+    
+    // UIStateから情報を取得
+    UIState* uiState = ui->getUIState();
+    if (uiState) {
+        ProcessingMode mode = uiState->getProcessingMode();
+        switch(mode) {
+            case ProcessingMode::BAMBU: return "bambu";
+            case ProcessingMode::CURA: return "cura";
+            case ProcessingMode::PRUSA: return "prusa";
+            default: return "cura";
+        }
     }
     return "cura";
 }

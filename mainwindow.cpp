@@ -44,6 +44,9 @@ void MainWindow::connectSignals()
 {
     setupSignalSlotConnections();
     connectUISignals();
+    
+    // 初期状態でUIStateを更新
+    updateUIStateFromWidgets();
 }
 
 void MainWindow::connectUISignals()
@@ -296,12 +299,20 @@ void MainWindow::connectMessageSignals()
 
 void MainWindow::onParametersChanged()
 {
+    // UIStateを更新
+    updateUIStateFromWidgets();
+    
     resetExportButton();
     updateProcessButtonState();
 }
 
 void MainWindow::onStressRangeChanged(double minStress, double maxStress)
 {
+    // UIStateのストレス範囲を更新
+    if (UIState* state = getUIState()) {
+        state->setStressRange(minStress, maxStress);
+    }
+    
     // DensitySliderのStressRangeを更新
     ui->getRangeSlider()->setStressRange(minStress, maxStress);
     
@@ -339,6 +350,33 @@ void MainWindow::printUIStateDebugInfo() const
         state->printDebugInfo();
     } else {
         qDebug() << "UIState is not available";
+    }
+}
+
+void MainWindow::updateUIStateFromWidgets()
+{
+    UIState* state = getUIState();
+    if (!state) return;
+    
+    // DensitySliderからStressDensityMappingsを更新
+    auto densitySlider = ui->getRangeSlider();
+    if (densitySlider) {
+        state->setStressDensityMappings(densitySlider->stressDensityMappings());
+    }
+    
+    // ModeComboBoxからProcessingModeを更新
+    auto modeComboBox = ui->getModeComboBox();
+    if (modeComboBox) {
+        QString currentText = modeComboBox->currentText().toLower();
+        ProcessingMode mode;
+        if (currentText == "bambu") {
+            mode = ProcessingMode::BAMBU;
+        } else if (currentText == "prusa") {
+            mode = ProcessingMode::PRUSA;
+        } else {
+            mode = ProcessingMode::CURA; // デフォルト
+        }
+        state->setProcessingMode(mode);
     }
 }
 
