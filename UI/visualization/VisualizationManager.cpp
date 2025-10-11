@@ -54,7 +54,7 @@ void VisualizationManager::displayStlFile(const std::string& stlFile, VtkProcess
     }
 }
 
-void VisualizationManager::showTempDividedStl(VtkProcessor* vtkProcessor, QWidget* parent) {
+void VisualizationManager::showTempDividedStl(VtkProcessor* vtkProcessor, QWidget* parent, UIState* uiState) {
     try {
         auto stlFiles = dataController_->fetchDividedStlFiles();
         if (stlFiles.empty()) {
@@ -65,7 +65,7 @@ void VisualizationManager::showTempDividedStl(VtkProcessor* vtkProcessor, QWidge
         const auto& meshInfos = vtkProcessor->getMeshInfos();
         auto widgets = renderer_->fetchMeshDisplayWidgets();
         
-        auto actors = dataController_->loadDividedStlFiles(stlFiles, vtkProcessor, minStress, maxStress, meshInfos);
+        auto actors = dataController_->loadDividedStlFiles(stlFiles, vtkProcessor, minStress, maxStress, meshInfos, uiState);
         
         int widgetIndex = 0;
         for (size_t i = 0; i < stlFiles.size() && i < actors.size(); ++i) {

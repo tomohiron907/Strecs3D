@@ -343,6 +343,9 @@ vtkSmartPointer<vtkActor> VtkProcessor::getColoredStlActor(const std::string& fi
     actor->SetMapper(mapper);
     actor->GetProperty()->SetColor(r, g, b); // 指定された色を設定
     actor->GetProperty()->SetOpacity(1.0); // 透明度100%（完全不透明）
+    actor->GetProperty()->SetEdgeVisibility(1); // エッジを表示
+    actor->GetProperty()->SetEdgeColor(0.1, 0.1, 0.1); // エッジの色を黒に設定
+    actor->GetProperty()->SetLineWidth(1.0); // エッジの線の太さを設定
     return actor;
 }
 

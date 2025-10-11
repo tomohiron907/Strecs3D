@@ -7,6 +7,8 @@
 #include <QLabel>
 #include <QPixmap>
 #include <QFrame>
+#include <QTimer>
+#include <iostream>
 #include "widgets/Button.h"
 #include "ColorManager.h"
 #include "widgets/ObjectDisplayOptionsWidget.h"
@@ -267,6 +269,10 @@ void MainWindowUI::connectUIStateSignals()
             this, [this](const std::vector<double>& percents) {
                 auto mappings = rangeSlider->stressDensityMappings();
                 uiState->setStressDensityMappings(mappings);
+                
+                // スライダーの色もUIStateに登録（regionPercentsChanged時も）
+                auto colors = rangeSlider->getRegionColors();
+                uiState->setDensitySliderColors(colors);
             });
     
     // DensitySliderのハンドル位置変更をUIStateに反映
@@ -279,6 +285,16 @@ void MainWindowUI::connectUIStateSignals()
                 auto colors = rangeSlider->getRegionColors();
                 uiState->setDensitySliderColors(colors);
             });
+    
+    // 初期色をUIStateに設定
+    QTimer::singleShot(0, this, [this]() {
+        auto colors = rangeSlider->getRegionColors();
+        std::cout << "Debug: Setting initial " << colors.size() << " colors to UIState" << std::endl;
+        for (size_t i = 0; i < colors.size(); ++i) {
+            std::cout << "  Color " << i << ": RGB(" << colors[i].red() << "," << colors[i].green() << "," << colors[i].blue() << ")" << std::endl;
+        }
+        uiState->setDensitySliderColors(colors);
+    });
 
     // ModeComboBoxの変更をUIStateに反映
     connect(modeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),

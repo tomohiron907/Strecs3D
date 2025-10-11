@@ -249,7 +249,9 @@ void MainWindowUIAdapter::displayStlFile(const std::string& stlFile, VtkProcesso
 void MainWindowUIAdapter::showTempDividedStl(VtkProcessor* vtkProcessor)
 {
     if (visualizationManager) {
-        visualizationManager->showTempDividedStl(vtkProcessor, qobject_cast<QWidget*>(ui));
+        // UIStateを取得してVisualizationManagerに渡す
+        UIState* uiState = ui ? ui->getUIState() : nullptr;
+        visualizationManager->showTempDividedStl(vtkProcessor, qobject_cast<QWidget*>(ui), uiState);
     }
 }
 

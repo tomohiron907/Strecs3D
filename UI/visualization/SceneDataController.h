@@ -16,6 +16,7 @@ struct ObjectInfo {
 
 class VtkProcessor;
 struct MeshInfo;
+class UIState;
 
 class SceneDataController {
 public:
@@ -51,7 +52,8 @@ public:
         VtkProcessor* vtkProcessor,
         double minStress,
         double maxStress,
-        const std::vector<MeshInfo>& meshInfos);
+        const std::vector<MeshInfo>& meshInfos,
+        UIState* uiState);
 
 private:
     std::vector<ObjectInfo> objectList_;
@@ -63,10 +65,7 @@ private:
         const std::pair<double, double>& stressValues,
         double minStress,
         double maxStress,
-        VtkProcessor* vtkProcessor);
-    vtkSmartPointer<vtkActor> createStlActorWithColor(
-        const std::filesystem::path& path,
-        int number,
-        size_t totalFiles,
-        VtkProcessor* vtkProcessor);
+        VtkProcessor* vtkProcessor,
+        int meshNumber,
+        UIState* uiState);
 };

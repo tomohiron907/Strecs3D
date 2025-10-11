@@ -1,5 +1,6 @@
 #include "SceneDataController.h"
 #include "../../core/processing/VtkProcessor.h"
+#include "../../core/ui/UIState.h"
 #include "../../utils/tempPathUtility.h"
 #include <regex>
 #include <algorithm>
@@ -135,7 +136,8 @@ std::vector<vtkSmartPointer<vtkActor>> SceneDataController::loadDividedStlFiles(
     VtkProcessor* vtkProcessor,
     double minStress,
     double maxStress,
-    const std::vector<MeshInfo>& meshInfos) {
+    const std::vector<MeshInfo>& meshInfos,
+    UIState* uiState) {
     
     std::vector<vtkSmartPointer<vtkActor>> actors;
     
@@ -144,9 +146,11 @@ std::vector<vtkSmartPointer<vtkActor>> SceneDataController::loadDividedStlFiles(
         vtkSmartPointer<vtkActor> actor = nullptr;
         
         if (auto stressValues = parseStressRange(filename, meshInfos)) {
-            actor = createStlActorWithStress(path, *stressValues, minStress, maxStress, vtkProcessor);
+            actor = createStlActorWithStress(path, *stressValues, minStress, maxStress, vtkProcessor, number, uiState);
         } else {
-            actor = createStlActorWithColor(path, number, stlFiles.size(), vtkProcessor);
+            // ストレス値がない場合はダミーのストレス値を使用
+            std::pair<double, double> dummyStressValues = {0.0, 1.0};
+            actor = createStlActorWithStress(path, dummyStressValues, minStress, maxStress, vtkProcessor, number, uiState);
         }
         
         if (actor) {
@@ -199,20 +203,37 @@ vtkSmartPointer<vtkActor> SceneDataController::createStlActorWithStress(
     const std::pair<double, double>& stressValues,
     double minStress,
     double maxStress,
-    VtkProcessor* vtkProcessor) {
+    VtkProcessor* vtkProcessor,
+    int meshNumber,
+    UIState* uiState) {
     
+    // UIStateから色を取得してSTLアクターに適用
+    if (uiState) {
+        auto colors = uiState->getDensitySliderColors();
+        std::cout << "Debug: UIState has " << colors.size() << " colors" << std::endl;
+        if (!colors.empty()) {
+            // インデックスを色配列のサイズに正規化
+            int colorIndex = meshNumber % colors.size();
+            QColor color = colors[colorIndex];
+            
+            std::cout << "Debug: Using color index " << colorIndex << " for mesh " << meshNumber 
+                      << " - RGB(" << color.red() << "," << color.green() << "," << color.blue() << ")" << std::endl;
+            
+            // QColorからRGB値を取得 (0-255の値を0-1に正規化)
+            double r = color.red() / 255.0;
+            double g = color.green() / 255.0;
+            double b = color.blue() / 255.0;
+            
+            return vtkProcessor->getColoredStlActor(path.string(), r, g, b);
+        } else {
+            std::cout << "Debug: UIState colors array is empty" << std::endl;
+        }
+    } else {
+        std::cout << "Debug: UIState is null" << std::endl;
+    }
+    
+    // フォールバック: ストレス値による色付け
     double stressValue = (stressValues.first + stressValues.second) / 2.0;
     return vtkProcessor->getColoredStlActorByStress(path.string(), stressValue, minStress, maxStress);
 }
 
-vtkSmartPointer<vtkActor> SceneDataController::createStlActorWithColor(
-    const std::filesystem::path& path,
-    int number,
-    size_t totalFiles,
-    VtkProcessor* vtkProcessor) {
-    
-    double r, g, b;
-    double normalizedPos = static_cast<double>(number) / totalFiles;
-    calculateColor(normalizedPos, r, g, b);
-    return vtkProcessor->getColoredStlActor(path.string(), r, g, b);
-}

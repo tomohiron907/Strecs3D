@@ -10,6 +10,7 @@ class VtkProcessor;
 class ObjectDisplayOptionsWidget;
 class SceneDataController;
 class SceneRenderer;
+class UIState;
 
 class VisualizationManager : public QObject {
     Q_OBJECT
@@ -20,7 +21,7 @@ public:
     // ファイル表示
     void displayVtkFile(const std::string& vtkFile, VtkProcessor* vtkProcessor);
     void displayStlFile(const std::string& stlFile, VtkProcessor* vtkProcessor);
-    void showTempDividedStl(VtkProcessor* vtkProcessor, QWidget* parent = nullptr);
+    void showTempDividedStl(VtkProcessor* vtkProcessor, QWidget* parent = nullptr, UIState* uiState = nullptr);
 
     // オブジェクト制御
     void setObjectVisible(const std::string& filename, bool visible);
