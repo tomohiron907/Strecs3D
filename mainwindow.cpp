@@ -135,6 +135,16 @@ void MainWindow::handleFileLoad(const QString& fileName, std::function<bool(cons
     try {
         if (loadFunction(file)) {
             logMessage(QString("%1 file loaded successfully").arg(fileType));
+            
+            // UIStateにファイルパスを設定
+            if (UIState* state = getUIState()) {
+                if (fileType == "STL") {
+                    state->setStlFilePath(fileName);
+                } else if (fileType == "VTK") {
+                    state->setVtkFilePath(fileName);
+                }
+            }
+            
             updateProcessButtonState();
         } else {
             logMessage(QString("Failed to load %1 file: Unknown error").arg(fileType));
@@ -315,5 +325,37 @@ void MainWindow::updateProcessButtonState()
         ui->getProcessButton()->setEmphasized(true);
     } else {
         ui->getProcessButton()->setEmphasized(false);
+    }
+}
+
+UIState* MainWindow::getUIState() const
+{
+    return ui ? ui->getUIState() : nullptr;
+}
+
+void MainWindow::printUIStateDebugInfo() const
+{
+    if (UIState* state = getUIState()) {
+        state->printDebugInfo();
+    } else {
+        qDebug() << "UIState is not available";
+    }
+}
+
+void MainWindow::showUIStateDebugInfo()
+{
+    if (UIState* state = getUIState()) {
+        QString debugInfo = state->getDebugString();
+        logMessage("=== UIState Debug Info ===");
+        
+        // Split the debug string into lines and log each one
+        QStringList lines = debugInfo.split('\n');
+        for (const QString& line : lines) {
+            if (!line.trimmed().isEmpty()) {
+                logMessage(line);
+            }
+        }
+    } else {
+        logMessage("UIState is not available for debugging");
     }
 }

@@ -15,7 +15,9 @@
 MainWindowUI::MainWindowUI(MainWindow* mainWindow)
     : mainWindow(mainWindow)
 {
+    uiState = new UIState(this);
     setupUI();
+    connectUIStateSignals();
 }
 
 void MainWindowUI::setupUI()
@@ -249,5 +251,187 @@ void MainWindowUI::setButtonIconSize(const QSize& size)
     }
     if (export3mfButton) {
         export3mfButton->setIconSize(size);
+    }
+}
+
+void MainWindowUI::connectUIStateSignals()
+{
+    // StressRangeWidgetの変更をUIStateに反映
+    connect(stressRangeWidget, &StressRangeWidget::stressRangeChanged,
+            this, [this](double minStress, double maxStress) {
+                uiState->setStressRange(minStress, maxStress);
+            });
+
+    // DensitySliderの変更をUIStateに反映
+    connect(rangeSlider, &DensitySlider::regionPercentsChanged,
+            this, [this](const std::vector<double>& percents) {
+                auto mappings = rangeSlider->stressDensityMappings();
+                uiState->setStressDensityMappings(mappings);
+            });
+    
+    // DensitySliderのハンドル位置変更をUIStateに反映
+    connect(rangeSlider, &DensitySlider::handlePositionsChanged,
+            this, [this](const std::vector<int>& positions) {
+                auto mappings = rangeSlider->stressDensityMappings();
+                uiState->setStressDensityMappings(mappings);
+            });
+
+    // ModeComboBoxの変更をUIStateに反映
+    connect(modeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [this](int index) {
+                ProcessingMode mode;
+                switch(index) {
+                    case 0: mode = ProcessingMode::CURA; break;
+                    case 1: mode = ProcessingMode::BAMBU; break;
+                    case 2: mode = ProcessingMode::PRUSA; break;
+                    default: mode = ProcessingMode::CURA; break;
+                }
+                uiState->setProcessingMode(mode);
+            });
+
+    // DisplayOptionsContainerの各ウィジェットの変更をUIStateに反映
+    if (displayOptionsContainer) {
+        auto widgets = displayOptionsContainer->getAllDisplayWidgets();
+        
+        // STL Display Widget (Mesh)
+        if (widgets.size() > 0 && widgets[0]) {
+            connect(widgets[0], &ObjectDisplayOptionsWidget::visibilityToggled,
+                    this, [this](bool visible) {
+                        DisplaySettings settings = uiState->getMeshDisplaySettings();
+                        settings.isVisible = visible;
+                        uiState->setMeshDisplaySettings(settings);
+                    });
+            connect(widgets[0], &ObjectDisplayOptionsWidget::opacityChanged,
+                    this, [this](double opacity) {
+                        DisplaySettings settings = uiState->getMeshDisplaySettings();
+                        settings.opacity = opacity;
+                        uiState->setMeshDisplaySettings(settings);
+                    });
+        }
+        
+        // VTK Display Widget (VTU)
+        if (widgets.size() > 1 && widgets[1]) {
+            connect(widgets[1], &ObjectDisplayOptionsWidget::visibilityToggled,
+                    this, [this](bool visible) {
+                        DisplaySettings settings = uiState->getVtuDisplaySettings();
+                        settings.isVisible = visible;
+                        uiState->setVtuDisplaySettings(settings);
+                    });
+            connect(widgets[1], &ObjectDisplayOptionsWidget::opacityChanged,
+                    this, [this](double opacity) {
+                        DisplaySettings settings = uiState->getVtuDisplaySettings();
+                        settings.opacity = opacity;
+                        uiState->setVtuDisplaySettings(settings);
+                    });
+        }
+        
+        // Divided Mesh Widgets
+        if (widgets.size() > 2 && widgets[2]) {
+            connect(widgets[2], &ObjectDisplayOptionsWidget::visibilityToggled,
+                    this, [this](bool visible) {
+                        DisplaySettings settings = uiState->getDividedMesh1Settings();
+                        settings.isVisible = visible;
+                        uiState->setDividedMesh1Settings(settings);
+                    });
+            connect(widgets[2], &ObjectDisplayOptionsWidget::opacityChanged,
+                    this, [this](double opacity) {
+                        DisplaySettings settings = uiState->getDividedMesh1Settings();
+                        settings.opacity = opacity;
+                        uiState->setDividedMesh1Settings(settings);
+                    });
+        }
+        
+        if (widgets.size() > 3 && widgets[3]) {
+            connect(widgets[3], &ObjectDisplayOptionsWidget::visibilityToggled,
+                    this, [this](bool visible) {
+                        DisplaySettings settings = uiState->getDividedMesh2Settings();
+                        settings.isVisible = visible;
+                        uiState->setDividedMesh2Settings(settings);
+                    });
+            connect(widgets[3], &ObjectDisplayOptionsWidget::opacityChanged,
+                    this, [this](double opacity) {
+                        DisplaySettings settings = uiState->getDividedMesh2Settings();
+                        settings.opacity = opacity;
+                        uiState->setDividedMesh2Settings(settings);
+                    });
+        }
+        
+        if (widgets.size() > 4 && widgets[4]) {
+            connect(widgets[4], &ObjectDisplayOptionsWidget::visibilityToggled,
+                    this, [this](bool visible) {
+                        DisplaySettings settings = uiState->getDividedMesh3Settings();
+                        settings.isVisible = visible;
+                        uiState->setDividedMesh3Settings(settings);
+                    });
+            connect(widgets[4], &ObjectDisplayOptionsWidget::opacityChanged,
+                    this, [this](double opacity) {
+                        DisplaySettings settings = uiState->getDividedMesh3Settings();
+                        settings.opacity = opacity;
+                        uiState->setDividedMesh3Settings(settings);
+                    });
+        }
+        
+        if (widgets.size() > 5 && widgets[5]) {
+            connect(widgets[5], &ObjectDisplayOptionsWidget::visibilityToggled,
+                    this, [this](bool visible) {
+                        DisplaySettings settings = uiState->getDividedMesh4Settings();
+                        settings.isVisible = visible;
+                        uiState->setDividedMesh4Settings(settings);
+                    });
+            connect(widgets[5], &ObjectDisplayOptionsWidget::opacityChanged,
+                    this, [this](double opacity) {
+                        DisplaySettings settings = uiState->getDividedMesh4Settings();
+                        settings.opacity = opacity;
+                        uiState->setDividedMesh4Settings(settings);
+                    });
+        }
+    }
+}
+
+void MainWindowUI::updateUIFromState()
+{
+    // UIStateの値をUIコンポーネントに反映
+    if (stressRangeWidget) {
+        stressRangeWidget->setStressRange(uiState->getMinStress(), uiState->getMaxStress());
+    }
+    
+    if (modeComboBox) {
+        int index = 0;
+        switch(uiState->getProcessingMode()) {
+            case ProcessingMode::BAMBU: index = 0; break;
+            case ProcessingMode::CURA: index = 1; break;
+            case ProcessingMode::PRUSA: index = 2; break;
+        }
+        modeComboBox->setCurrentIndex(index);
+    }
+    
+    if (displayOptionsContainer) {
+        auto widgets = displayOptionsContainer->getAllDisplayWidgets();
+        
+        // Update visibility and opacity settings
+        if (widgets.size() > 0 && widgets[0]) {
+            widgets[0]->setVisibleState(uiState->getMeshDisplaySettings().isVisible);
+            widgets[0]->setOpacity(uiState->getMeshDisplaySettings().opacity);
+        }
+        if (widgets.size() > 1 && widgets[1]) {
+            widgets[1]->setVisibleState(uiState->getVtuDisplaySettings().isVisible);
+            widgets[1]->setOpacity(uiState->getVtuDisplaySettings().opacity);
+        }
+        if (widgets.size() > 2 && widgets[2]) {
+            widgets[2]->setVisibleState(uiState->getDividedMesh1Settings().isVisible);
+            widgets[2]->setOpacity(uiState->getDividedMesh1Settings().opacity);
+        }
+        if (widgets.size() > 3 && widgets[3]) {
+            widgets[3]->setVisibleState(uiState->getDividedMesh2Settings().isVisible);
+            widgets[3]->setOpacity(uiState->getDividedMesh2Settings().opacity);
+        }
+        if (widgets.size() > 4 && widgets[4]) {
+            widgets[4]->setVisibleState(uiState->getDividedMesh3Settings().isVisible);
+            widgets[4]->setOpacity(uiState->getDividedMesh3Settings().opacity);
+        }
+        if (widgets.size() > 5 && widgets[5]) {
+            widgets[5]->setVisibleState(uiState->getDividedMesh4Settings().isVisible);
+            widgets[5]->setOpacity(uiState->getDividedMesh4Settings().opacity);
+        }
     }
 } 

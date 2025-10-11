@@ -16,6 +16,7 @@
 #include "widgets/ModeComboBox.h"
 #include "widgets/ObjectDisplayOptionsWidget.h"
 #include "widgets/DisplayOptionsContainer.h"
+#include "../core/ui/UIState.h"
 #include <QObject>
 #include <QTouchEvent>
 
@@ -40,6 +41,7 @@ public:
     StressRangeWidget* getStressRangeWidget() const { return stressRangeWidget; }
     MessageConsole* getMessageConsole() const { return messageConsole; }
     DisplayOptionsContainer* getDisplayOptionsContainer() const { return displayOptionsContainer; }
+    UIState* getUIState() const { return uiState; }
     
     // 個別のウィジェットへのアクセサー（後方互換性のため）
     ObjectDisplayOptionsWidget* getObjectDisplayOptionsWidget() const { return displayOptionsContainer->getStlDisplayWidget(); }
@@ -51,6 +53,10 @@ public:
 
     // アイコンサイズ一括設定
     void setButtonIconSize(const QSize& size);
+    
+    // UIState連携メソッド
+    void connectUIStateSignals();
+    void updateUIFromState();
     
 private:
 
@@ -99,6 +105,7 @@ private:
     StressRangeWidget* stressRangeWidget;
     MessageConsole* messageConsole;
     DisplayOptionsContainer* displayOptionsContainer;
+    UIState* uiState;
 };
 
 #endif // MAINWINDOWUI_H 

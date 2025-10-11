@@ -25,6 +25,10 @@ public:
     QString getCurrentMode() const;
     QString getCurrentStlFilename() const;
     void logMessage(const QString& message);
+    
+    // UIState access
+    UIState* getUIState() const;
+    void printUIStateDebugInfo() const;
 
 public slots:
     void openVTKFile();
@@ -38,6 +42,7 @@ public slots:
     void onParametersChanged(); // DensitySliderやModeComboBoxが変更された時の処理
     void onStressRangeChanged(double minStress, double maxStress); // StressRangeWidgetが変更された時の処理
     void updateProcessButtonState(); // Processボタンの有効/無効状態を更新
+    void showUIStateDebugInfo(); // UIStateのデバッグ情報をコンソールに表示
 
 private:
     // Initialization methods

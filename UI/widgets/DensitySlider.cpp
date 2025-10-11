@@ -363,8 +363,8 @@ void DensitySlider::updateStressDensityMappings() {
             stressMax = m_originalMaxStress;
         } else {
             // 中間の領域: スライダーのハンドル値間
-            stressMin = handleStressValues[2 - i];      // 2番目の領域: handles[1] ～ handles[2]
-            stressMax = handleStressValues[2 - i + 1];  // 3番目の領域: handles[0] ～ handles[1]
+            stressMax = handleStressValues[2 - i];      // 2番目の領域: handles[1] ～ handles[2]
+            stressMin = handleStressValues[2 - i + 1];  // 3番目の領域: handles[0] ～ handles[1]
         }
         
         double density = m_regionPercents[i];

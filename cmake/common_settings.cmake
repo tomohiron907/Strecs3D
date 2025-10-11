@@ -118,6 +118,7 @@ add_executable(Strecs3D
   core/application/MainWindowUIAdapter.cpp
   core/interfaces/IUserInterface.cpp
   core/processing/ProcessPipeline.cpp
+  core/ui/UIState.cpp
   UI/visualization/VisualizationManager.cpp
   UI/visualization/SceneDataController.cpp
   core/export/ExportManager.cpp
