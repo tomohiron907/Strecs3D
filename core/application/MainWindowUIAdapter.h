@@ -28,7 +28,7 @@ public:
     std::vector<int> getStressThresholds() const override;
     std::vector<StressDensityMapping> getStressDensityMappings() const override;
     QString getCurrentMode() const override;
-    void setStressRange(double minStress, double maxStress) override;
+    void initializeStressConfiguration(double minStress, double maxStress) override;
     
     // メッセージ表示
     void showWarningMessage(const QString& title, const QString& message) override;

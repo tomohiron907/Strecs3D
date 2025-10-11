@@ -158,7 +158,7 @@ QString MainWindowUIAdapter::getCurrentMode() const
     return "cura";
 }
 
-void MainWindowUIAdapter::setStressRange(double minStress, double maxStress)
+void MainWindowUIAdapter::initializeStressConfiguration(double minStress, double maxStress)
 {
     if (!ui) return;
     auto slider = ui->getRangeSlider();
@@ -169,6 +169,18 @@ void MainWindowUIAdapter::setStressRange(double minStress, double maxStress)
     auto stressRangeWidget = ui->getStressRangeWidget();
     if (stressRangeWidget) {
         stressRangeWidget->setStressRange(minStress, maxStress);
+    }
+    
+    // UIStateにストレス範囲とStressDensityMappingを登録
+    UIState* uiState = ui->getUIState();
+    if (uiState) {
+        uiState->setStressRange(minStress, maxStress);
+        
+        // DensitySliderからStressDensityMappingを取得してUIStateに登録
+        if (slider) {
+            auto mappings = slider->stressDensityMappings();
+            uiState->setStressDensityMappings(mappings);
+        }
     }
 }
 
