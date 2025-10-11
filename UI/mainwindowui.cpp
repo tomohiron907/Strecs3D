@@ -274,6 +274,10 @@ void MainWindowUI::connectUIStateSignals()
             this, [this](const std::vector<int>& positions) {
                 auto mappings = rangeSlider->stressDensityMappings();
                 uiState->setStressDensityMappings(mappings);
+                
+                // スライダーの色をUIStateに登録
+                auto colors = rangeSlider->getRegionColors();
+                uiState->setDensitySliderColors(colors);
             });
 
     // ModeComboBoxの変更をUIStateに反映

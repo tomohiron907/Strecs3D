@@ -396,4 +396,29 @@ void DensitySlider::updateInitialHandles() {
     m_handles[0] = top + segmentHeight;     // 1/4位置
     m_handles[1] = top + 2 * segmentHeight; // 2/4位置  
     m_handles[2] = top + 3 * segmentHeight; // 3/4位置
+}
+
+std::vector<QColor> DensitySlider::getRegionColors() const {
+    std::vector<QColor> colors;
+    int top = m_margin;
+    int bottom = height() - m_margin;
+    
+    // 4つの領域の位置を計算
+    std::vector<int> positions = {bottom};
+    for (auto it = m_handles.rbegin(); it != m_handles.rend(); ++it) {
+        positions.push_back(*it);
+    }
+    positions.push_back(top);
+    
+    // 各領域の色を計算
+    for (int i = 0; i < 4; ++i) {
+        // 領域の中心Y座標
+        int yCenter = (positions[i] + positions[i+1]) / 2;
+        // グラデーション範囲で正規化
+        double t = (double)(yCenter - top) / (bottom - top);
+        QColor regionColor = getGradientColor(t);
+        colors.push_back(regionColor);
+    }
+    
+    return colors;
 } 

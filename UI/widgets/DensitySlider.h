@@ -17,6 +17,7 @@ public:
     void setRegionPercents(const std::vector<double>& percents);
     std::vector<StressDensityMapping> stressDensityMappings() const;
     std::vector<int> stressThresholds() const;
+    std::vector<QColor> getRegionColors() const;
 
 signals:
     void handlePositionsChanged(const std::vector<int>& positions);
