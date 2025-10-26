@@ -68,6 +68,7 @@ std::string PrusaLib3mfProcessor::setMetaDataForInfillMeshXML(const ModelObjectI
     xml << "   <metadata type=\"volume\" key=\"source_offset_x\" value=\"0\"/>\n";
     xml << "   <metadata type=\"volume\" key=\"source_offset_y\" value=\"0\"/>\n";
     xml << "   <metadata type=\"volume\" key=\"source_offset_z\" value=\"0\"/>\n";
+    xml << "   <metadata type=\"volume\" key=\"solid_infill_below_area\" value=\"0\"/>\n";
     
     // fill_density情報を追加
     if (meshInfo) {
@@ -98,6 +99,7 @@ std::string PrusaLib3mfProcessor::setMetaDataForOutlineMeshXML(const ModelObject
     xml << "   <metadata type=\"volume\" key=\"source_offset_x\" value=\"0\"/>\n";
     xml << "   <metadata type=\"volume\" key=\"source_offset_y\" value=\"0\"/>\n";
     xml << "   <metadata type=\"volume\" key=\"source_offset_z\" value=\"0\"/>\n";
+    xml << "   <metadata type=\"volume\" key=\"solid_infill_below_area\" value=\"0\"/>\n";
     xml << "   <mesh edges_fixed=\"0\" degenerate_facets=\"0\" facets_removed=\"0\" facets_reversed=\"0\" backwards_edges=\"0\"/>\n";
     xml << "  </volume>\n";
     
