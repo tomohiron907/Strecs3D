@@ -44,6 +44,14 @@ else()
   message(FATAL_ERROR "lib3mf not found. Please install via vcpkg: vcpkg install lib3mf")
 endif()
 
+# vcpkgからpugixmlを検索
+find_package(pugixml REQUIRED)
+if(pugixml_FOUND)
+  message(STATUS "pugixml found")
+else()
+  message(FATAL_ERROR "pugixml not found. Please install via vcpkg: vcpkg install pugixml")
+endif()
+
 # vcpkgからVTKを検索（Qtサポート付き）
 find_package(VTK REQUIRED
   COMPONENTS

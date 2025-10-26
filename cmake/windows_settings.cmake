@@ -61,6 +61,7 @@ function(apply_windows_settings TARGET_NAME)
     ${VTK_LIBRARIES}
     ${LIB3MF_LIB}
     ${LIBZIP_LIBRARIES}
+    pugixml::pugixml
   )
 
   # MinGW環境での追加設定
