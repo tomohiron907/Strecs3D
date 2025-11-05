@@ -1,5 +1,24 @@
 # macOS specific settings for Strecs3D
 
+# vcpkgのみを使用するようにパス設定（Homebrewのパスを無視）
+# CMAKE_PREFIX_PATHをvcpkgのみに制限（プロジェクトルートのvcpkg_installedを使用）
+set(CMAKE_PREFIX_PATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}" CACHE PATH "" FORCE)
+
+# find_packageでシステム環境変数のパス（Homebrewなど）を無視
+set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH OFF)
+
+# Homebrewのパスを明示的に除外
+list(REMOVE_ITEM CMAKE_SYSTEM_PREFIX_PATH "/usr/local" "/opt/homebrew" "/opt/local")
+list(REMOVE_ITEM CMAKE_PREFIX_PATH "/usr/local" "/opt/homebrew" "/opt/local")
+
+# OpenGL/GLUの検索でHomebrewを無視
+set(CMAKE_IGNORE_PATH "/opt/homebrew" "/opt/homebrew/lib" "/opt/homebrew/include"
+    "/usr/local" "/usr/local/lib" "/usr/local/include")
+
+# macOSのフレームワークを優先
+set(CMAKE_FIND_FRAMEWORK FIRST)
+set(OpenGL_GL_PREFERENCE LEGACY)
+
 # macOS用のコンパイラフラグ設定
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
@@ -26,7 +45,7 @@ function(apply_macos_settings TARGET_NAME)
   )
 endfunction()
 
-# Qtプラグインパスを設定（vcpkgのQtを使用する場合）
+# Qtプラグインパスを設定（vcpkgのQtを使用）
 # vcpkgでインストールしたQtのプラグインパスを自動検出
 if(Qt6_DIR)
   get_filename_component(QT_INSTALL_PREFIX "${Qt6_DIR}/../../../" ABSOLUTE)
@@ -37,17 +56,5 @@ if(Qt6_DIR)
     message(WARNING "Qt plugins not found at ${QT_PLUGIN_PATH}")
   endif()
 else()
-  # フォールバック: HomebrewのQtパス
-  set(QT_PLUGIN_PATH "/opt/homebrew/Cellar/qt/6.9.1/share/qt/plugins")
-  if(EXISTS "${QT_PLUGIN_PATH}")
-    message(STATUS "Found Qt plugins at: ${QT_PLUGIN_PATH}")
-  else()
-    # 代替パスを試す
-    set(QT_PLUGIN_PATH "/opt/homebrew/share/qt/plugins")
-    if(EXISTS "${QT_PLUGIN_PATH}")
-      message(STATUS "Found Qt plugins at: ${QT_PLUGIN_PATH}")
-    else()
-      message(WARNING "Qt plugins not found. Please set QT_PLUGIN_PATH manually.")
-    endif()
-  endif()
+  message(WARNING "Qt6_DIR not set. Please ensure Qt6 is installed via vcpkg.")
 endif() 
