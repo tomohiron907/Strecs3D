@@ -10,10 +10,12 @@
 #include <vtkPolyData.h>
 #include "core/application/ApplicationController.h"
 #include "core/application/MainWindowUIAdapter.h"
+#include "core/commands/Command.h"
 #include "UI/mainwindowui.h"
 #include "UI/widgets/MessageConsole.h"
 #include <QString>
 #include <functional>
+#include <memory>
 
 class MainWindow : public QMainWindow
 {
@@ -31,16 +33,23 @@ public:
     void printUIStateDebugInfo() const;
 
 public slots:
-    void openVTKFile();
-    void openSTLFile();
-    void processFiles();
-    void export3mfFile();
+    // File operation slots (using commands)
+    void onOpenStlButtonClicked();
+    void onOpenVtkButtonClicked();
+    void onProcessButtonClicked();
+    void onExport3mfButtonClicked();
+
+    // Display control slots (using commands)
     void onObjectVisibilityChanged(bool visible);
     void onObjectOpacityChanged(double opacity);
     void onVtkObjectVisibilityChanged(bool visible);
     void onVtkObjectOpacityChanged(double opacity);
-    void onParametersChanged(); // DensitySliderやModeComboBoxが変更された時の処理
-    void onStressRangeChanged(double minStress, double maxStress); // StressRangeWidgetが変更された時の処理
+
+    // Parameter change slots (using commands)
+    void onStressRangeChanged(double minStress, double maxStress);
+    void onModeChanged(int index);
+    void onParametersChanged();
+
     void updateProcessButtonState(); // Processボタンの有効/無効状態を更新
     void showUIStateDebugInfo(); // UIStateのデバッグ情報をコンソールに表示
 
@@ -49,30 +58,20 @@ private:
     void initializeComponents();
     void setupWindow();
     void connectSignals();
-    
+
     // Signal connection methods
-    void setupSignalSlotConnections();
     void connectUISignals();
     void connectDisplayWidgetSignals();
-    void connectFileSignals();
-    void connectVisibilitySignals();
-    void connectOpacitySignals();
     void connectMessageSignals();
-    
-    // File operation methods
-    QString selectSTLFile();
-    QString selectVTKFile();
-    void handleFileLoad(const QString& fileName, std::function<bool(const std::string&)> loadFunction, const QString& fileType);
-    
-    // Processing methods
-    bool executeProcessing();
-    bool executeExport();
-    
+
     // UI update methods
     void updateButtonsAfterProcessing(bool success);
     void resetExportButton();
     void updateUIStateFromWidgets(); // UIウィジェットからUIStateを更新
-    
+
+    // Command execution
+    void executeCommand(std::unique_ptr<Command> command);
+
     std::unique_ptr<ApplicationController> appController;
     std::unique_ptr<MainWindowUI> ui;
     std::unique_ptr<MainWindowUIAdapter> uiAdapter;

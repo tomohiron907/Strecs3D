@@ -1,5 +1,13 @@
 #include "mainwindow.h"
 #include "core/application/MainWindowUIAdapter.h"
+#include "core/commands/ui/SetStressRangeCommand.h"
+#include "core/commands/ui/SetProcessingModeCommand.h"
+#include "core/commands/ui/SetMeshVisibilityCommand.h"
+#include "core/commands/ui/SetMeshOpacityCommand.h"
+#include "core/commands/business/OpenStlFileCommand.h"
+#include "core/commands/business/OpenVtkFileCommand.h"
+#include "core/commands/business/ProcessFilesCommand.h"
+#include "core/commands/business/Export3mfCommand.h"
 #include <QPushButton>
 #include <QFileDialog>
 #include <QVBoxLayout>
@@ -42,25 +50,27 @@ void MainWindow::setupWindow()
 
 void MainWindow::connectSignals()
 {
-    setupSignalSlotConnections();
+    connectMessageSignals();
     connectUISignals();
-    
+
     // 初期状態でUIStateを更新
     updateUIStateFromWidgets();
 }
 
 void MainWindow::connectUISignals()
 {
-    connect(ui->getOpenStlButton(), &QPushButton::clicked, this, &MainWindow::openSTLFile);
-    connect(ui->getOpenVtkButton(), &QPushButton::clicked, this, &MainWindow::openVTKFile);
-    connect(ui->getProcessButton(), &QPushButton::clicked, this, &MainWindow::processFiles);
-    connect(ui->getExport3mfButton(), &QPushButton::clicked, this, &MainWindow::export3mfFile);
-    
+    // File operation buttons - using command pattern
+    connect(ui->getOpenStlButton(), &QPushButton::clicked, this, &MainWindow::onOpenStlButtonClicked);
+    connect(ui->getOpenVtkButton(), &QPushButton::clicked, this, &MainWindow::onOpenVtkButtonClicked);
+    connect(ui->getProcessButton(), &QPushButton::clicked, this, &MainWindow::onProcessButtonClicked);
+    connect(ui->getExport3mfButton(), &QPushButton::clicked, this, &MainWindow::onExport3mfButtonClicked);
+
+    // Parameter changes - using command pattern
     connect(ui->getRangeSlider(), &DensitySlider::handlePositionsChanged, this, &MainWindow::onParametersChanged);
     connect(ui->getRangeSlider(), &DensitySlider::regionPercentsChanged, this, &MainWindow::onParametersChanged);
     connect(ui->getStressRangeWidget(), &StressRangeWidget::stressRangeChanged, this, &MainWindow::onStressRangeChanged);
-    connect(ui->getModeComboBox(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onParametersChanged);
-    
+    connect(ui->getModeComboBox(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onModeChanged);
+
     connectDisplayWidgetSignals();
 }
 
@@ -85,96 +95,6 @@ void MainWindow::connectDisplayWidgetSignals()
 
 MainWindow::~MainWindow() = default;
 
-void MainWindow::openVTKFile()
-{
-    QString fileName = selectVTKFile();
-    if (fileName.isEmpty()) {
-        return;
-    }
-    
-    handleFileLoad(fileName, [this](const std::string& file) {
-        return appController->openVtkFile(file, uiAdapter.get());
-    }, "VTK");
-}
-
-QString MainWindow::selectVTKFile()
-{
-    return QFileDialog::getOpenFileName(this,
-                                      "Open VTK File",
-                                      "",
-                                      "VTK Files (*.vtu)");
-}
-
-void MainWindow::openSTLFile()
-{
-    QString fileName = selectSTLFile();
-    if (fileName.isEmpty()) {
-        return;
-    }
-    
-    handleFileLoad(fileName, [this](const std::string& file) {
-        return appController->openStlFile(file, uiAdapter.get());
-    }, "STL");
-}
-
-QString MainWindow::selectSTLFile()
-{
-    return QFileDialog::getOpenFileName(this,
-                                      "Open STL File",
-                                      QDir::homePath(),
-                                      "STL Files (*.stl)");
-}
-
-void MainWindow::handleFileLoad(const QString& fileName, std::function<bool(const std::string&)> loadFunction, const QString& fileType)
-{
-    if (fileName.isEmpty()) {
-        logMessage(QString("No %1 file selected").arg(fileType));
-        return;
-    }
-    
-    std::string file = fileName.toStdString();
-    logMessage(QString("Loading %1 file: %2").arg(fileType, fileName));
-    
-    try {
-        if (loadFunction(file)) {
-            logMessage(QString("%1 file loaded successfully").arg(fileType));
-            
-            // UIStateにファイルパスを設定
-            if (UIState* state = getUIState()) {
-                if (fileType == "STL") {
-                    state->setStlFilePath(fileName);
-                } else if (fileType == "VTK") {
-                    state->setVtkFilePath(fileName);
-                }
-            }
-            
-            updateProcessButtonState();
-        } else {
-            logMessage(QString("Failed to load %1 file: Unknown error").arg(fileType));
-        }
-    } catch (const std::exception& e) {
-        logMessage(QString("Error loading %1 file: %2").arg(fileType, QString::fromStdString(e.what())));
-    }
-}
-
-void MainWindow::processFiles()
-{
-    logMessage("Starting file processing...");
-    
-    if (executeProcessing()) {
-        logMessage("File processing completed successfully");
-        updateButtonsAfterProcessing(true);
-    } else {
-        logMessage("File processing failed");
-        updateButtonsAfterProcessing(false);
-    }
-}
-
-bool MainWindow::executeProcessing()
-{
-    return appController->processFiles(uiAdapter.get());
-}
-
 void MainWindow::updateButtonsAfterProcessing(bool success)
 {
     if (success) {
@@ -183,22 +103,6 @@ void MainWindow::updateButtonsAfterProcessing(bool success)
         ui->getProcessButton()->setEnabled(false);
         ui->getProcessButton()->setEmphasized(false);
     }
-}
-
-void MainWindow::export3mfFile()
-{
-    logMessage("Starting 3MF export...");
-    
-    if (executeExport()) {
-        logMessage("3MF export completed successfully");
-    } else {
-        logMessage("3MF export failed");
-    }
-}
-
-bool MainWindow::executeExport()
-{
-    return appController->export3mfFile(uiAdapter.get());
 }
 
 QString MainWindow::getCurrentMode() const
@@ -247,46 +151,6 @@ void MainWindow::onVtkObjectOpacityChanged(double opacity)
     }
 }
 
-void MainWindow::setupSignalSlotConnections()
-{
-    connectFileSignals();
-    connectVisibilitySignals();
-    connectOpacitySignals();
-    connectMessageSignals();
-}
-
-void MainWindow::connectFileSignals()
-{
-    connect(appController.get(), &ApplicationController::vtkFileNameChanged,
-            uiAdapter.get(), &IUserInterface::onVtkFileNameChanged);
-    connect(appController.get(), &ApplicationController::stlFileNameChanged,
-            uiAdapter.get(), &IUserInterface::onStlFileNameChanged);
-    connect(appController.get(), &ApplicationController::dividedMeshFileNameChanged,
-            uiAdapter.get(), &IUserInterface::onDividedMeshFileNameChanged);
-    connect(appController.get(), &ApplicationController::stressRangeChanged,
-            uiAdapter.get(), &IUserInterface::onStressRangeChanged);
-}
-
-void MainWindow::connectVisibilitySignals()
-{
-    connect(appController.get(), &ApplicationController::vtkVisibilityChanged,
-            uiAdapter.get(), &IUserInterface::onVtkVisibilityChanged);
-    connect(appController.get(), &ApplicationController::stlVisibilityChanged,
-            uiAdapter.get(), &IUserInterface::onStlVisibilityChanged);
-    connect(appController.get(), &ApplicationController::dividedMeshVisibilityChanged,
-            uiAdapter.get(), &IUserInterface::onDividedMeshVisibilityChanged);
-}
-
-void MainWindow::connectOpacitySignals()
-{
-    connect(appController.get(), &ApplicationController::vtkOpacityChanged,
-            uiAdapter.get(), &IUserInterface::onVtkOpacityChanged);
-    connect(appController.get(), &ApplicationController::stlOpacityChanged,
-            uiAdapter.get(), &IUserInterface::onStlOpacityChanged);
-    connect(appController.get(), &ApplicationController::dividedMeshOpacityChanged,
-            uiAdapter.get(), &IUserInterface::onDividedMeshOpacityChanged);
-}
-
 void MainWindow::connectMessageSignals()
 {
     connect(appController.get(), &ApplicationController::showWarningMessage,
@@ -304,20 +168,6 @@ void MainWindow::onParametersChanged()
     
     resetExportButton();
     updateProcessButtonState();
-}
-
-void MainWindow::onStressRangeChanged(double minStress, double maxStress)
-{
-    // UIStateのストレス範囲を更新
-    if (UIState* state = getUIState()) {
-        state->setStressRange(minStress, maxStress);
-    }
-    
-    // DensitySliderのStressRangeを更新
-    ui->getRangeSlider()->setStressRange(minStress, maxStress);
-    
-    // パラメータ変更処理を呼び出し
-    onParametersChanged();
 }
 
 void MainWindow::resetExportButton()
@@ -385,7 +235,7 @@ void MainWindow::showUIStateDebugInfo()
     if (UIState* state = getUIState()) {
         QString debugInfo = state->getDebugString();
         logMessage("=== UIState Debug Info ===");
-        
+
         // Split the debug string into lines and log each one
         QStringList lines = debugInfo.split('\n');
         for (const QString& line : lines) {
@@ -396,4 +246,149 @@ void MainWindow::showUIStateDebugInfo()
     } else {
         logMessage("UIState is not available for debugging");
     }
+}
+
+// ==================== Command Pattern Implementation ====================
+
+void MainWindow::executeCommand(std::unique_ptr<Command> command)
+{
+    if (command) {
+        command->execute();
+    }
+}
+
+// ==================== File Operation Commands ====================
+
+void MainWindow::onOpenStlButtonClicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+        this,
+        "Open STL File",
+        QDir::homePath(),
+        "STL Files (*.stl)"
+    );
+
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    logMessage(QString("Opening STL file: %1").arg(fileName));
+
+    // Create and execute command
+    auto command = std::make_unique<OpenStlFileCommand>(
+        appController.get(),
+        uiAdapter.get(),
+        fileName
+    );
+
+    executeCommand(std::move(command));
+
+    // Update UI state
+    updateProcessButtonState();
+    logMessage("STL file loaded successfully");
+}
+
+void MainWindow::onOpenVtkButtonClicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+        this,
+        "Open VTK File",
+        "",
+        "VTK Files (*.vtu)"
+    );
+
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    logMessage(QString("Opening VTK file: %1").arg(fileName));
+
+    // Create and execute command
+    auto command = std::make_unique<OpenVtkFileCommand>(
+        appController.get(),
+        uiAdapter.get(),
+        fileName
+    );
+
+    executeCommand(std::move(command));
+
+    // Update UI state
+    updateProcessButtonState();
+    logMessage("VTK file loaded successfully");
+}
+
+void MainWindow::onProcessButtonClicked()
+{
+    logMessage("Starting file processing...");
+
+    // Create and execute command
+    auto command = std::make_unique<ProcessFilesCommand>(
+        appController.get(),
+        uiAdapter.get()
+    );
+
+    executeCommand(std::move(command));
+
+    // Update UI after processing
+    updateButtonsAfterProcessing(true);
+    logMessage("File processing completed successfully");
+}
+
+void MainWindow::onExport3mfButtonClicked()
+{
+    logMessage("Starting 3MF export...");
+
+    // Create and execute command
+    auto command = std::make_unique<Export3mfCommand>(
+        appController.get(),
+        uiAdapter.get()
+    );
+
+    executeCommand(std::move(command));
+
+    logMessage("3MF export completed successfully");
+}
+
+// ==================== Parameter Change Commands ====================
+
+void MainWindow::onStressRangeChanged(double minStress, double maxStress)
+{
+    // Create and execute command for UIState update
+    auto command = std::make_unique<SetStressRangeCommand>(
+        getUIState(),
+        minStress,
+        maxStress
+    );
+
+    executeCommand(std::move(command));
+
+    // Update DensitySlider's stress range
+    ui->getRangeSlider()->setStressRange(minStress, maxStress);
+
+    // Trigger parameter change handling
+    onParametersChanged();
+}
+
+void MainWindow::onModeChanged(int index)
+{
+    ProcessingMode mode;
+
+    // Convert index to ProcessingMode
+    switch (index) {
+        case 0: mode = ProcessingMode::BAMBU; break;
+        case 1: mode = ProcessingMode::CURA; break;
+        case 2: mode = ProcessingMode::PRUSA; break;
+        default: mode = ProcessingMode::CURA; break;
+    }
+
+    // Create and execute command
+    auto command = std::make_unique<SetProcessingModeCommand>(
+        getUIState(),
+        mode
+    );
+
+    executeCommand(std::move(command));
+
+    // Trigger parameter change handling
+    onParametersChanged();
 }
