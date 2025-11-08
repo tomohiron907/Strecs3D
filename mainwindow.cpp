@@ -1,5 +1,14 @@
 #include "mainwindow.h"
 #include "core/application/MainWindowUIAdapter.h"
+#include "core/commands/file/OpenStlFileCommand.h"
+#include "core/commands/file/OpenVtkFileCommand.h"
+#include "core/commands/processing/ProcessFilesCommand.h"
+#include "core/commands/processing/Export3mfCommand.h"
+#include "core/commands/state/SetStressRangeCommand.h"
+#include "core/commands/state/SetProcessingModeCommand.h"
+#include "core/commands/state/SetStressDensityMappingCommand.h"
+#include "core/commands/visualization/SetMeshVisibilityCommand.h"
+#include "core/commands/visualization/SetMeshOpacityCommand.h"
 #include <QPushButton>
 #include <QFileDialog>
 #include <QVBoxLayout>
@@ -8,6 +17,7 @@
 #include <QFileInfo>
 #include <iostream>
 #include <functional>
+#include <memory>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -91,10 +101,23 @@ void MainWindow::openVTKFile()
     if (fileName.isEmpty()) {
         return;
     }
-    
-    handleFileLoad(fileName, [this](const std::string& file) {
-        return appController->openVtkFile(file, uiAdapter.get());
-    }, "VTK");
+
+    logMessage(QString("Loading VTK file: %1").arg(fileName));
+
+    // コマンドパターンを使用してファイルを開く
+    auto command = std::make_unique<OpenVtkFileCommand>(
+        appController.get(),
+        uiAdapter.get(),
+        fileName
+    );
+    command->execute();
+
+    // UIStateにファイルパスを設定
+    if (UIState* state = getUIState()) {
+        state->setVtkFilePath(fileName);
+    }
+
+    updateProcessButtonState();
 }
 
 QString MainWindow::selectVTKFile()
@@ -111,10 +134,23 @@ void MainWindow::openSTLFile()
     if (fileName.isEmpty()) {
         return;
     }
-    
-    handleFileLoad(fileName, [this](const std::string& file) {
-        return appController->openStlFile(file, uiAdapter.get());
-    }, "STL");
+
+    logMessage(QString("Loading STL file: %1").arg(fileName));
+
+    // コマンドパターンを使用してファイルを開く
+    auto command = std::make_unique<OpenStlFileCommand>(
+        appController.get(),
+        uiAdapter.get(),
+        fileName
+    );
+    command->execute();
+
+    // UIStateにファイルパスを設定
+    if (UIState* state = getUIState()) {
+        state->setStlFilePath(fileName);
+    }
+
+    updateProcessButtonState();
 }
 
 QString MainWindow::selectSTLFile()
@@ -125,54 +161,20 @@ QString MainWindow::selectSTLFile()
                                       "STL Files (*.stl)");
 }
 
-void MainWindow::handleFileLoad(const QString& fileName, std::function<bool(const std::string&)> loadFunction, const QString& fileType)
-{
-    if (fileName.isEmpty()) {
-        logMessage(QString("No %1 file selected").arg(fileType));
-        return;
-    }
-    
-    std::string file = fileName.toStdString();
-    logMessage(QString("Loading %1 file: %2").arg(fileType, fileName));
-    
-    try {
-        if (loadFunction(file)) {
-            logMessage(QString("%1 file loaded successfully").arg(fileType));
-            
-            // UIStateにファイルパスを設定
-            if (UIState* state = getUIState()) {
-                if (fileType == "STL") {
-                    state->setStlFilePath(fileName);
-                } else if (fileType == "VTK") {
-                    state->setVtkFilePath(fileName);
-                }
-            }
-            
-            updateProcessButtonState();
-        } else {
-            logMessage(QString("Failed to load %1 file: Unknown error").arg(fileType));
-        }
-    } catch (const std::exception& e) {
-        logMessage(QString("Error loading %1 file: %2").arg(fileType, QString::fromStdString(e.what())));
-    }
-}
 
 void MainWindow::processFiles()
 {
     logMessage("Starting file processing...");
-    
-    if (executeProcessing()) {
-        logMessage("File processing completed successfully");
-        updateButtonsAfterProcessing(true);
-    } else {
-        logMessage("File processing failed");
-        updateButtonsAfterProcessing(false);
-    }
-}
 
-bool MainWindow::executeProcessing()
-{
-    return appController->processFiles(uiAdapter.get());
+    // コマンドパターンを使用してファイルを処理
+    auto command = std::make_unique<ProcessFilesCommand>(
+        appController.get(),
+        uiAdapter.get()
+    );
+    command->execute();
+
+    logMessage("File processing completed successfully");
+    updateButtonsAfterProcessing(true);
 }
 
 void MainWindow::updateButtonsAfterProcessing(bool success)
@@ -188,17 +190,15 @@ void MainWindow::updateButtonsAfterProcessing(bool success)
 void MainWindow::export3mfFile()
 {
     logMessage("Starting 3MF export...");
-    
-    if (executeExport()) {
-        logMessage("3MF export completed successfully");
-    } else {
-        logMessage("3MF export failed");
-    }
-}
 
-bool MainWindow::executeExport()
-{
-    return appController->export3mfFile(uiAdapter.get());
+    // コマンドパターンを使用して3MFファイルをエクスポート
+    auto command = std::make_unique<Export3mfCommand>(
+        appController.get(),
+        uiAdapter.get()
+    );
+    command->execute();
+
+    logMessage("3MF export completed successfully");
 }
 
 QString MainWindow::getCurrentMode() const
@@ -214,37 +214,77 @@ QString MainWindow::getCurrentStlFilename() const
 void MainWindow::onObjectVisibilityChanged(bool visible)
 {
     auto objectDisplayWidget = ui->getObjectDisplayOptionsWidget();
-    if (objectDisplayWidget) {
-        QString fileName = objectDisplayWidget->getFileName();
-        uiAdapter->setVisualizationObjectVisible(fileName.toStdString(), visible);
-    }
+    if (!objectDisplayWidget) return;
+
+    QString fileName = objectDisplayWidget->getFileName();
+
+    // コマンドパターンを使用してメッシュの表示/非表示を設定
+    auto command = std::make_unique<SetMeshVisibilityCommand>(
+        getUIState(),
+        appController.get(),
+        uiAdapter.get(),
+        SetMeshVisibilityCommand::MeshType::STL_MESH,
+        fileName,
+        visible
+    );
+    command->execute();
 }
 
 void MainWindow::onObjectOpacityChanged(double opacity)
 {
     auto objectDisplayWidget = ui->getObjectDisplayOptionsWidget();
-    if (objectDisplayWidget) {
-        QString fileName = objectDisplayWidget->getFileName();
-        uiAdapter->setVisualizationObjectOpacity(fileName.toStdString(), opacity);
-    }
+    if (!objectDisplayWidget) return;
+
+    QString fileName = objectDisplayWidget->getFileName();
+
+    // コマンドパターンを使用してメッシュの不透明度を設定
+    auto command = std::make_unique<SetMeshOpacityCommand>(
+        getUIState(),
+        appController.get(),
+        uiAdapter.get(),
+        SetMeshOpacityCommand::MeshType::STL_MESH,
+        fileName,
+        opacity
+    );
+    command->execute();
 }
 
 void MainWindow::onVtkObjectVisibilityChanged(bool visible)
 {
     auto vtkDisplayWidget = ui->getVtkDisplayOptionsWidget();
-    if (vtkDisplayWidget) {
-        QString fileName = vtkDisplayWidget->getFileName();
-        uiAdapter->setVisualizationObjectVisible(fileName.toStdString(), visible);
-    }
+    if (!vtkDisplayWidget) return;
+
+    QString fileName = vtkDisplayWidget->getFileName();
+
+    // コマンドパターンを使用してメッシュの表示/非表示を設定
+    auto command = std::make_unique<SetMeshVisibilityCommand>(
+        getUIState(),
+        appController.get(),
+        uiAdapter.get(),
+        SetMeshVisibilityCommand::MeshType::VTU_MESH,
+        fileName,
+        visible
+    );
+    command->execute();
 }
 
 void MainWindow::onVtkObjectOpacityChanged(double opacity)
 {
     auto vtkDisplayWidget = ui->getVtkDisplayOptionsWidget();
-    if (vtkDisplayWidget) {
-        QString fileName = vtkDisplayWidget->getFileName();
-        uiAdapter->setVisualizationObjectOpacity(fileName.toStdString(), opacity);
-    }
+    if (!vtkDisplayWidget) return;
+
+    QString fileName = vtkDisplayWidget->getFileName();
+
+    // コマンドパターンを使用してメッシュの不透明度を設定
+    auto command = std::make_unique<SetMeshOpacityCommand>(
+        getUIState(),
+        appController.get(),
+        uiAdapter.get(),
+        SetMeshOpacityCommand::MeshType::VTU_MESH,
+        fileName,
+        opacity
+    );
+    command->execute();
 }
 
 void MainWindow::setupSignalSlotConnections()
@@ -308,14 +348,17 @@ void MainWindow::onParametersChanged()
 
 void MainWindow::onStressRangeChanged(double minStress, double maxStress)
 {
-    // UIStateのストレス範囲を更新
-    if (UIState* state = getUIState()) {
-        state->setStressRange(minStress, maxStress);
-    }
-    
+    // コマンドパターンを使用してストレス範囲を設定
+    auto command = std::make_unique<SetStressRangeCommand>(
+        getUIState(),
+        minStress,
+        maxStress
+    );
+    command->execute();
+
     // DensitySliderのStressRangeを更新
     ui->getRangeSlider()->setStressRange(minStress, maxStress);
-    
+
     // パラメータ変更処理を呼び出し
     onParametersChanged();
 }
@@ -357,14 +400,18 @@ void MainWindow::updateUIStateFromWidgets()
 {
     UIState* state = getUIState();
     if (!state) return;
-    
-    // DensitySliderからStressDensityMappingsを更新
+
+    // DensitySliderからStressDensityMappingsを更新（コマンドパターン使用）
     auto densitySlider = ui->getRangeSlider();
     if (densitySlider) {
-        state->setStressDensityMappings(densitySlider->stressDensityMappings());
+        auto mappingCommand = std::make_unique<SetStressDensityMappingCommand>(
+            state,
+            densitySlider->stressDensityMappings()
+        );
+        mappingCommand->execute();
     }
-    
-    // ModeComboBoxからProcessingModeを更新
+
+    // ModeComboBoxからProcessingModeを更新（コマンドパターン使用）
     auto modeComboBox = ui->getModeComboBox();
     if (modeComboBox) {
         QString currentText = modeComboBox->currentText().toLower();
@@ -376,7 +423,12 @@ void MainWindow::updateUIStateFromWidgets()
         } else {
             mode = ProcessingMode::CURA; // デフォルト
         }
-        state->setProcessingMode(mode);
+
+        auto modeCommand = std::make_unique<SetProcessingModeCommand>(
+            state,
+            mode
+        );
+        modeCommand->execute();
     }
 }
 

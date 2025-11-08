@@ -30,7 +30,9 @@ public:
     
     // 可視化
     void loadAndDisplayTempStlFiles(IUserInterface* ui);
-    
+    void setMeshVisibility(const std::string& fileName, bool visible, IUserInterface* ui);
+    void setMeshOpacity(const std::string& fileName, double opacity, IUserInterface* ui);
+
     // 状態管理
     void setVtkFile(const std::string& vtkFile) { this->vtkFile = vtkFile; }
     void setStlFile(const std::string& stlFile) { this->stlFile = stlFile; }

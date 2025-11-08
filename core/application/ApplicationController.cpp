@@ -266,4 +266,20 @@ void ApplicationController::resetDividedMeshWidgets(IUserInterface* ui)
         emit dividedMeshFileNameChanged(i, QString("Divided Mesh %1").arg(i + 1));
         emit dividedMeshOpacityChanged(i, 1.0);
     }
+}
+
+void ApplicationController::setMeshVisibility(const std::string& fileName, bool visible, IUserInterface* ui)
+{
+    if (!ui || fileName.empty()) return;
+
+    // IUserInterface経由で実際の可視化を更新
+    ui->setVisualizationObjectVisible(fileName, visible);
+}
+
+void ApplicationController::setMeshOpacity(const std::string& fileName, double opacity, IUserInterface* ui)
+{
+    if (!ui || fileName.empty()) return;
+
+    // IUserInterface経由で実際の可視化を更新
+    ui->setVisualizationObjectOpacity(fileName, opacity);
 } 

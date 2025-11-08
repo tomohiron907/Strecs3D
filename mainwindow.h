@@ -49,7 +49,7 @@ private:
     void initializeComponents();
     void setupWindow();
     void connectSignals();
-    
+
     // Signal connection methods
     void setupSignalSlotConnections();
     void connectUISignals();
@@ -58,20 +58,15 @@ private:
     void connectVisibilitySignals();
     void connectOpacitySignals();
     void connectMessageSignals();
-    
-    // File operation methods
+
+    // File selection helpers
     QString selectSTLFile();
     QString selectVTKFile();
-    void handleFileLoad(const QString& fileName, std::function<bool(const std::string&)> loadFunction, const QString& fileType);
-    
-    // Processing methods
-    bool executeProcessing();
-    bool executeExport();
-    
+
     // UI update methods
     void updateButtonsAfterProcessing(bool success);
     void resetExportButton();
-    void updateUIStateFromWidgets(); // UIウィジェットからUIStateを更新
+    void updateUIStateFromWidgets();
     
     std::unique_ptr<ApplicationController> appController;
     std::unique_ptr<MainWindowUI> ui;
