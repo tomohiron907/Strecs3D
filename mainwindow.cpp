@@ -52,52 +52,46 @@ void MainWindow::setupWindow()
 
 void MainWindow::connectSignals()
 {
-    setupSignalSlotConnections();
-    connectUISignals();
-    
-    // 初期状態でUIStateを更新
-    updateUIStateFromWidgets();
-}
-
-void MainWindow::connectUISignals()
-{
+    // UI要素のシグナル接続
     connect(ui->getOpenStlButton(), &QPushButton::clicked, this, &MainWindow::openSTLFile);
     connect(ui->getOpenVtkButton(), &QPushButton::clicked, this, &MainWindow::openVTKFile);
     connect(ui->getProcessButton(), &QPushButton::clicked, this, &MainWindow::processFiles);
     connect(ui->getExport3mfButton(), &QPushButton::clicked, this, &MainWindow::export3mfFile);
-    
+
     connect(ui->getRangeSlider(), &DensitySlider::handlePositionsChanged, this, &MainWindow::onParametersChanged);
     connect(ui->getRangeSlider(), &DensitySlider::regionPercentsChanged, this, &MainWindow::onParametersChanged);
     connect(ui->getStressRangeWidget(), &StressRangeWidget::stressRangeChanged, this, &MainWindow::onStressRangeChanged);
     connect(ui->getModeComboBox(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onParametersChanged);
-    
-    connectDisplayWidgetSignals();
-}
 
-void MainWindow::connectDisplayWidgetSignals()
-{
+    // Display Widgetのシグナル接続
     auto objectDisplayWidget = ui->getObjectDisplayOptionsWidget();
     if (objectDisplayWidget) {
-        connect(objectDisplayWidget, &ObjectDisplayOptionsWidget::visibilityToggled, 
+        connect(objectDisplayWidget, &ObjectDisplayOptionsWidget::visibilityToggled,
                 this, &MainWindow::onObjectVisibilityChanged);
-        connect(objectDisplayWidget, &ObjectDisplayOptionsWidget::opacityChanged, 
+        connect(objectDisplayWidget, &ObjectDisplayOptionsWidget::opacityChanged,
                 this, &MainWindow::onObjectOpacityChanged);
     }
 
     auto vtkDisplayWidget = ui->getVtkDisplayOptionsWidget();
     if (vtkDisplayWidget) {
-        connect(vtkDisplayWidget, &ObjectDisplayOptionsWidget::visibilityToggled, 
+        connect(vtkDisplayWidget, &ObjectDisplayOptionsWidget::visibilityToggled,
                 this, &MainWindow::onVtkObjectVisibilityChanged);
-        connect(vtkDisplayWidget, &ObjectDisplayOptionsWidget::opacityChanged, 
+        connect(vtkDisplayWidget, &ObjectDisplayOptionsWidget::opacityChanged,
                 this, &MainWindow::onVtkObjectOpacityChanged);
     }
+
+    // 初期状態でUIStateを更新
+    updateUIStateFromWidgets();
 }
 
 MainWindow::~MainWindow() = default;
 
 void MainWindow::openVTKFile()
 {
-    QString fileName = selectVTKFile();
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                     "Open VTK File",
+                                                     "",
+                                                     "VTK Files (*.vtu)");
     if (fileName.isEmpty()) {
         return;
     }
@@ -120,17 +114,12 @@ void MainWindow::openVTKFile()
     updateProcessButtonState();
 }
 
-QString MainWindow::selectVTKFile()
-{
-    return QFileDialog::getOpenFileName(this,
-                                      "Open VTK File",
-                                      "",
-                                      "VTK Files (*.vtu)");
-}
-
 void MainWindow::openSTLFile()
 {
-    QString fileName = selectSTLFile();
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                     "Open STL File",
+                                                     QDir::homePath(),
+                                                     "STL Files (*.stl)");
     if (fileName.isEmpty()) {
         return;
     }
@@ -151,14 +140,6 @@ void MainWindow::openSTLFile()
     }
 
     updateProcessButtonState();
-}
-
-QString MainWindow::selectSTLFile()
-{
-    return QFileDialog::getOpenFileName(this,
-                                      "Open STL File",
-                                      QDir::homePath(),
-                                      "STL Files (*.stl)");
 }
 
 
@@ -287,56 +268,6 @@ void MainWindow::onVtkObjectOpacityChanged(double opacity)
     command->execute();
 }
 
-void MainWindow::setupSignalSlotConnections()
-{
-    connectFileSignals();
-    connectVisibilitySignals();
-    connectOpacitySignals();
-    connectMessageSignals();
-}
-
-void MainWindow::connectFileSignals()
-{
-    connect(appController.get(), &ApplicationController::vtkFileNameChanged,
-            uiAdapter.get(), &IUserInterface::onVtkFileNameChanged);
-    connect(appController.get(), &ApplicationController::stlFileNameChanged,
-            uiAdapter.get(), &IUserInterface::onStlFileNameChanged);
-    connect(appController.get(), &ApplicationController::dividedMeshFileNameChanged,
-            uiAdapter.get(), &IUserInterface::onDividedMeshFileNameChanged);
-    connect(appController.get(), &ApplicationController::stressRangeChanged,
-            uiAdapter.get(), &IUserInterface::onStressRangeChanged);
-}
-
-void MainWindow::connectVisibilitySignals()
-{
-    connect(appController.get(), &ApplicationController::vtkVisibilityChanged,
-            uiAdapter.get(), &IUserInterface::onVtkVisibilityChanged);
-    connect(appController.get(), &ApplicationController::stlVisibilityChanged,
-            uiAdapter.get(), &IUserInterface::onStlVisibilityChanged);
-    connect(appController.get(), &ApplicationController::dividedMeshVisibilityChanged,
-            uiAdapter.get(), &IUserInterface::onDividedMeshVisibilityChanged);
-}
-
-void MainWindow::connectOpacitySignals()
-{
-    connect(appController.get(), &ApplicationController::vtkOpacityChanged,
-            uiAdapter.get(), &IUserInterface::onVtkOpacityChanged);
-    connect(appController.get(), &ApplicationController::stlOpacityChanged,
-            uiAdapter.get(), &IUserInterface::onStlOpacityChanged);
-    connect(appController.get(), &ApplicationController::dividedMeshOpacityChanged,
-            uiAdapter.get(), &IUserInterface::onDividedMeshOpacityChanged);
-}
-
-void MainWindow::connectMessageSignals()
-{
-    connect(appController.get(), &ApplicationController::showWarningMessage,
-            uiAdapter.get(), &IUserInterface::onShowWarningMessage);
-    connect(appController.get(), &ApplicationController::showCriticalMessage,
-            uiAdapter.get(), &IUserInterface::onShowCriticalMessage);
-    connect(appController.get(), &ApplicationController::showInfoMessage,
-            uiAdapter.get(), &IUserInterface::onShowInfoMessage);
-}
-
 void MainWindow::onParametersChanged()
 {
     // UIStateを更新
@@ -385,15 +316,6 @@ void MainWindow::updateProcessButtonState()
 UIState* MainWindow::getUIState() const
 {
     return ui ? ui->getUIState() : nullptr;
-}
-
-void MainWindow::printUIStateDebugInfo() const
-{
-    if (UIState* state = getUIState()) {
-        state->printDebugInfo();
-    } else {
-        qDebug() << "UIState is not available";
-    }
 }
 
 void MainWindow::updateUIStateFromWidgets()

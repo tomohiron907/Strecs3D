@@ -73,27 +73,4 @@ private:
     void handleProcessingError(const std::exception& e, IUserInterface* ui);
     void resetDividedMeshWidgets(IUserInterface* ui);
 
-signals:
-    // ファイル名設定シグナル
-    void vtkFileNameChanged(const QString& fileName);
-    void stlFileNameChanged(const QString& fileName);
-    void dividedMeshFileNameChanged(int meshIndex, const QString& fileName);
-    
-    // 表示状態制御シグナル
-    void vtkVisibilityChanged(bool visible);
-    void stlVisibilityChanged(bool visible);
-    void dividedMeshVisibilityChanged(int meshIndex, bool visible);
-    
-    // 不透明度制御シグナル
-    void vtkOpacityChanged(double opacity);
-    void stlOpacityChanged(double opacity);
-    void dividedMeshOpacityChanged(int meshIndex, double opacity);
-    
-    // ストレス範囲設定シグナル
-    void stressRangeChanged(double minStress, double maxStress);
-    
-    // メッセージ表示シグナル
-    void showWarningMessage(const QString& title, const QString& message);
-    void showCriticalMessage(const QString& title, const QString& message);
-    void showInfoMessage(const QString& title, const QString& message);
 }; 

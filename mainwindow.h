@@ -28,7 +28,6 @@ public:
     
     // UIState access
     UIState* getUIState() const;
-    void printUIStateDebugInfo() const;
 
 public slots:
     void openVTKFile();
@@ -49,19 +48,6 @@ private:
     void initializeComponents();
     void setupWindow();
     void connectSignals();
-
-    // Signal connection methods
-    void setupSignalSlotConnections();
-    void connectUISignals();
-    void connectDisplayWidgetSignals();
-    void connectFileSignals();
-    void connectVisibilitySignals();
-    void connectOpacitySignals();
-    void connectMessageSignals();
-
-    // File selection helpers
-    QString selectSTLFile();
-    QString selectVTKFile();
 
     // UI update methods
     void updateButtonsAfterProcessing(bool success);

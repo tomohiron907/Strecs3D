@@ -79,9 +79,9 @@ void UIState::setProcessingMode(ProcessingMode mode)
     }
 }
 
-void UIState::setMeshDisplaySettings(const DisplaySettings& setings)
+void UIState::setMeshDisplaySettings(const DisplaySettings& settings)
 {
-    if (m_meshDisplaySettings.isVisible != settings.isVisible || 
+    if (m_meshDisplaySettings.isVisible != settings.isVisible ||
         m_meshDisplaySettings.opacity != settings.opacity) {
         m_meshDisplaySettings = settings;
         emit meshDisplaySettingsChanged(settings);
