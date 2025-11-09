@@ -52,6 +52,14 @@ else()
   message(FATAL_ERROR "pugixml not found. Please install via vcpkg: vcpkg install pugixml")
 endif()
 
+# vcpkgからgmshを検索
+find_package(gmsh REQUIRED)
+if(gmsh_FOUND)
+  message(STATUS "gmsh found: ${gmsh_VERSION}")
+else()
+  message(FATAL_ERROR "gmsh not found. Please install via vcpkg: vcpkg install gmsh")
+endif()
+
 # vcpkgからVTKを検索（Qtサポート付き）
 find_package(VTK REQUIRED
   COMPONENTS
@@ -147,4 +155,4 @@ if(VTK_VERSION VERSION_GREATER_EQUAL "8.90.0")
     TARGETS Strecs3D
     MODULES ${VTK_LIBRARIES}
   )
-endif() 
+endif()

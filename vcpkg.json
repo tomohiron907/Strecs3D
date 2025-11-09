@@ -10,6 +10,7 @@
     "libzip",
     "lib3mf",
     "pugixml",
-    "libb2"
+    "libb2",
+    "gmsh"
   ]
 }

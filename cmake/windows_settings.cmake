@@ -62,6 +62,7 @@ function(apply_windows_settings TARGET_NAME)
     ${LIB3MF_LIB}
     ${LIBZIP_LIBRARIES}
     pugixml::pugixml
+    gmsh::lib
   )
 
   # MinGW環境での追加設定

@@ -36,6 +36,7 @@ function(apply_macos_settings TARGET_NAME)
     ${VTK_LIBRARIES}
     lib3mf::lib3mf
     libzip::zip
+    gmsh::lib
   )
 
   # macOSでのQtプラグインパス設定
