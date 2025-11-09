@@ -25,9 +25,6 @@ public:
     void setDividedMeshVisibility(int meshIndex, bool visible) override;
     void setDividedMeshOpacity(int meshIndex, double opacity) override;
     void setDividedMeshFileName(int meshIndex, const QString& fileName) override;
-    std::vector<int> getStressThresholds() const override;
-    std::vector<StressDensityMapping> getStressDensityMappings() const override;
-    QString getCurrentMode() const override;
     void initializeStressConfiguration(double minStress, double maxStress) override;
     
     // メッセージ表示

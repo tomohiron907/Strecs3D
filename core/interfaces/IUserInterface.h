@@ -28,12 +28,7 @@ public:
     virtual void setDividedMeshVisibility(int meshIndex, bool visible) = 0;
     virtual void setDividedMeshOpacity(int meshIndex, double opacity) = 0;
     virtual void setDividedMeshFileName(int meshIndex, const QString& fileName) = 0;
-    
-    // データ取得
-    virtual std::vector<int> getStressThresholds() const = 0;
-    virtual std::vector<StressDensityMapping> getStressDensityMappings() const = 0;
-    virtual QString getCurrentMode() const = 0;
-    
+
     // ストレス範囲設定
     virtual void initializeStressConfiguration(double minStress, double maxStress) = 0;
     
