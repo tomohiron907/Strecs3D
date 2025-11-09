@@ -267,20 +267,14 @@ void MainWindowUI::connectUIStateSignals()
     // DensitySliderの変更をUIStateに反映
     connect(rangeSlider, &DensitySlider::regionPercentsChanged,
             this, [this](const std::vector<double>& percents) {
-                auto mappings = rangeSlider->stressDensityMappings();
-                uiState->setStressDensityMappings(mappings);
-                
-                // スライダーの色もUIStateに登録（regionPercentsChanged時も）
+                // スライダーの色をUIStateに登録
                 auto colors = rangeSlider->getRegionColors();
                 uiState->setDensitySliderColors(colors);
             });
-    
-    // DensitySliderのハンドル位置変更をUIStateに反映
+
+    // DensitySliderのハンドル位置変更時も色を更新
     connect(rangeSlider, &DensitySlider::handlePositionsChanged,
             this, [this](const std::vector<int>& positions) {
-                auto mappings = rangeSlider->stressDensityMappings();
-                uiState->setStressDensityMappings(mappings);
-                
                 // スライダーの色をUIStateに登録
                 auto colors = rangeSlider->getRegionColors();
                 uiState->setDensitySliderColors(colors);

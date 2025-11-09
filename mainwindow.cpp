@@ -58,10 +58,10 @@ void MainWindow::connectSignals()
     connect(ui->getProcessButton(), &QPushButton::clicked, this, &MainWindow::processFiles);
     connect(ui->getExport3mfButton(), &QPushButton::clicked, this, &MainWindow::export3mfFile);
 
-    connect(ui->getRangeSlider(), &DensitySlider::handlePositionsChanged, this, &MainWindow::onParametersChanged);
-    connect(ui->getRangeSlider(), &DensitySlider::regionPercentsChanged, this, &MainWindow::onParametersChanged);
+    connect(ui->getRangeSlider(), &DensitySlider::handlePositionsChanged, this, &MainWindow::onDensitySliderChanged);
+    connect(ui->getRangeSlider(), &DensitySlider::regionPercentsChanged, this, &MainWindow::onDensitySliderChanged);
     connect(ui->getStressRangeWidget(), &StressRangeWidget::stressRangeChanged, this, &MainWindow::onStressRangeChanged);
-    connect(ui->getModeComboBox(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onParametersChanged);
+    connect(ui->getModeComboBox(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onModeComboBoxChanged);
 
     // Display Widgetのシグナル接続
     auto objectDisplayWidget = ui->getObjectDisplayOptionsWidget();
@@ -268,11 +268,48 @@ void MainWindow::onVtkObjectOpacityChanged(double opacity)
     command->execute();
 }
 
-void MainWindow::onParametersChanged()
+void MainWindow::onDensitySliderChanged()
 {
-    // UIStateを更新
-    updateUIStateFromWidgets();
-    
+    // コマンドパターンを使用してDensity Mappingを設定
+    auto densitySlider = ui->getRangeSlider();
+    if (!densitySlider) return;
+
+
+    auto command = std::make_unique<SetStressDensityMappingCommand>(
+        getUIState(),
+        densitySlider->stressDensityMappings()
+    );
+    command->execute();
+
+    resetExportButton();
+    updateProcessButtonState();
+}
+
+void MainWindow::onModeComboBoxChanged()
+{
+    UIState* state = getUIState();
+    if (!state) return;
+
+    // ModeComboBoxからProcessingModeを取得（コマンドパターン使用）
+    auto modeComboBox = ui->getModeComboBox();
+    if (!modeComboBox) return;
+
+    QString currentText = modeComboBox->currentText().toLower();
+    ProcessingMode mode;
+    if (currentText == "bambu") {
+        mode = ProcessingMode::BAMBU;
+    } else if (currentText == "prusa") {
+        mode = ProcessingMode::PRUSA;
+    } else {
+        mode = ProcessingMode::CURA; // デフォルト
+    }
+
+    auto command = std::make_unique<SetProcessingModeCommand>(
+        state,
+        mode
+    );
+    command->execute();
+
     resetExportButton();
     updateProcessButtonState();
 }
@@ -290,8 +327,8 @@ void MainWindow::onStressRangeChanged(double minStress, double maxStress)
     // DensitySliderのStressRangeを更新
     ui->getRangeSlider()->setStressRange(minStress, maxStress);
 
-    // パラメータ変更処理を呼び出し
-    onParametersChanged();
+    // DensitySliderの更新に伴い、Density Mappingも更新
+    onDensitySliderChanged();
 }
 
 void MainWindow::resetExportButton()
