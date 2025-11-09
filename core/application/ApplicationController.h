@@ -10,6 +10,8 @@
 #include "../export/ExportManager.h"
 #include "../interfaces/IUserInterface.h"
 
+class UIState;
+
 class ApplicationController : public QObject {
     Q_OBJECT
 public:
@@ -60,9 +62,9 @@ private:
     
     // ヘルパーメソッド
     bool validateFiles(IUserInterface* ui);
-    std::vector<int> getStressThresholds(IUserInterface* ui);
-    std::vector<StressDensityMapping> getStressDensityMappings(IUserInterface* ui);
-    QString getCurrentMode(IUserInterface* ui);
+    std::vector<int> getStressThresholds(UIState* uiState);
+    std::vector<StressDensityMapping> getStressDensityMappings(UIState* uiState);
+    QString getCurrentMode(UIState* uiState);
     
     // ファイル処理のヘルパーメソッド
     bool initializeVtkProcessor(IUserInterface* ui);

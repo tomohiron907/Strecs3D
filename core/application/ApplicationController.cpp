@@ -4,6 +4,7 @@
 #include "../../utils/fileUtility.h"
 #include "../../utils/tempPathUtility.h"
 #include "../processing/VtkProcessor.h"
+#include "../ui/UIState.h"
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
@@ -130,7 +131,16 @@ bool ApplicationController::initializeVtkProcessor(IUserInterface* ui)
 {
     if (!ui) return false;
 
-    auto thresholds = getStressThresholds(ui);
+    auto* adapter = dynamic_cast<MainWindowUIAdapter*>(ui);
+    if (!adapter) return false;
+
+    auto* mainWindowUI = adapter->getMainWindowUI();
+    if (!mainWindowUI) return false;
+
+    auto* uiState = mainWindowUI->getUIState();
+    if (!uiState) return false;
+
+    auto thresholds = getStressThresholds(uiState);
     if (!fileProcessor->initializeVtkProcessor(vtkFile, stlFile, thresholds, nullptr)) {
         ui->showCriticalMessage("Error", "Failed to initialize VTK processor");
         return false;
@@ -156,8 +166,18 @@ bool ApplicationController::process3mfGeneration(IUserInterface* ui)
 {
     if (!ui) return false;
 
-    auto mappings = getStressDensityMappings(ui);
-    auto currentMode = getCurrentMode(ui);
+    // MainWindowUIAdapterからUIStateを取得
+    auto* adapter = dynamic_cast<MainWindowUIAdapter*>(ui);
+    if (!adapter) return false;
+
+    auto* mainWindowUI = adapter->getMainWindowUI();
+    if (!mainWindowUI) return false;
+
+    auto* uiState = mainWindowUI->getUIState();
+    if (!uiState) return false;
+
+    auto mappings = getStressDensityMappings(uiState);
+    auto currentMode = getCurrentMode(uiState);
     double maxStress = fileProcessor->getMaxStress();
 
     if (!fileProcessor->process3mfFile(currentMode.toStdString(), mappings, maxStress, nullptr)) {
@@ -215,12 +235,12 @@ bool ApplicationController::export3mfFile(IUserInterface* ui)
     return exportManager->export3mfFile(stlFile, nullptr);
 }
 
-std::vector<int> ApplicationController::getStressThresholds(IUserInterface* ui)
+std::vector<int> ApplicationController::getStressThresholds(UIState* uiState)
 {
-    if (!ui) return {};
-    
+    if (!uiState) return {};
+
     // StressDensityMappingから閾値を計算
-    auto mappings = ui->getStressDensityMappings();
+    auto mappings = uiState->getStressDensityMappings();
     if (mappings.empty()) return {};
     
     std::vector<double> thresholdValues;
@@ -244,18 +264,24 @@ std::vector<int> ApplicationController::getStressThresholds(IUserInterface* ui)
     return thresholds;
 }
 
-std::vector<StressDensityMapping> ApplicationController::getStressDensityMappings(IUserInterface* ui)
+std::vector<StressDensityMapping> ApplicationController::getStressDensityMappings(UIState* uiState)
 {
-    if (!ui) return {};
-    
-    return ui->getStressDensityMappings();
+    if (!uiState) return {};
+
+    return uiState->getStressDensityMappings();
 }
 
-QString ApplicationController::getCurrentMode(IUserInterface* ui)
+QString ApplicationController::getCurrentMode(UIState* uiState)
 {
-    if (!ui) return "cura";
-    
-    return ui->getCurrentMode();
+    if (!uiState) return "cura";
+
+    ProcessingMode mode = uiState->getProcessingMode();
+    switch(mode) {
+        case ProcessingMode::BAMBU: return "bambu";
+        case ProcessingMode::CURA: return "cura";
+        case ProcessingMode::PRUSA: return "prusa";
+        default: return "cura";
+    }
 }
 
 void ApplicationController::resetDividedMeshWidgets(IUserInterface* ui)
