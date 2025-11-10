@@ -9,9 +9,11 @@
 #include "core/commands/state/SetProcessingModeCommand.h"
 #include "core/commands/state/SetStressDensityMappingCommand.h"
 #include "core/commands/state/SetConstrainConditionCommand.h"
+#include "core/commands/state/SetLoadConditionCommand.h"
 #include "core/commands/visualization/SetMeshVisibilityCommand.h"
 #include "core/commands/visualization/SetMeshOpacityCommand.h"
 #include "UI/dialogs/ConstrainDialog.h"
+#include "UI/dialogs/LoadDialog.h"
 #include <QPushButton>
 #include <QFileDialog>
 #include <QVBoxLayout>
@@ -60,6 +62,7 @@ void MainWindow::connectSignals()
     connect(ui->getOpenVtkButton(), &QPushButton::clicked, this, &MainWindow::openVTKFile);
     connect(ui->getOpenStepButton(), &QPushButton::clicked, this, &MainWindow::openSTEPFile);
     connect(ui->getConstrainButton(), &QPushButton::clicked, this, &MainWindow::onConstrainButtonClicked);
+    connect(ui->getLoadButton(), &QPushButton::clicked, this, &MainWindow::onLoadButtonClicked);
     connect(ui->getProcessButton(), &QPushButton::clicked, this, &MainWindow::processFiles);
     connect(ui->getExport3mfButton(), &QPushButton::clicked, this, &MainWindow::export3mfFile);
 
@@ -495,6 +498,65 @@ void MainWindow::onConstrainButtonClicked()
             logMessage(QString("Total %1 constrain condition(s) set.").arg(surfaceIds.size()));
         } else {
             logMessage("All constrain conditions cleared.");
+        }
+
+        dialog->deleteLater();
+    });
+
+    // ダイアログがキャンセルされたときの処理
+    connect(dialog, &QDialog::rejected, this, [dialog]() {
+        dialog->deleteLater();
+    });
+
+    // モーダルレスで表示
+    dialog->show();
+}
+
+void MainWindow::onLoadButtonClicked()
+{
+    // LoadDialogを開く（モーダルレス）
+    LoadDialog* dialog = new LoadDialog(this);
+
+    // UIStateから既存の荷重条件を取得してダイアログにロード
+    UIState* state = getUIState();
+    if (state) {
+        BoundaryCondition boundaryCondition = state->getBoundaryCondition();
+        dialog->loadLoadConditions(boundaryCondition.loads);
+    }
+
+    // ダイアログが閉じられたときの処理
+    connect(dialog, &QDialog::accepted, this, [this, dialog]() {
+        // OKが押された場合、選択された荷重条件を取得
+        std::vector<LoadCondition> loadConditions = dialog->getSelectedLoadConditions();
+
+        // 各荷重条件に対してSetLoadConditionCommandを実行
+        UIState* state = getUIState();
+        if (!state) {
+            dialog->deleteLater();
+            return;
+        }
+
+        // 既存の荷重条件をクリア（新しいデータで上書き）
+        state->clearLoadConditions();
+
+        // テーブルIDは1から始まる
+        int tableId = 1;
+        for (LoadCondition& load : loadConditions) {
+            load.name = "Load_" + std::to_string(tableId);
+
+            auto command = std::make_unique<SetLoadConditionCommand>(
+                state,
+                load
+            );
+            command->execute();
+
+            tableId++;
+        }
+
+        if (!loadConditions.empty()) {
+            logMessage(QString("Total %1 load condition(s) set.").arg(loadConditions.size()));
+        } else {
+            logMessage("All load conditions cleared.");
         }
 
         dialog->deleteLater();

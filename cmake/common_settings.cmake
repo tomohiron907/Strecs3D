@@ -130,6 +130,7 @@ add_executable(Strecs3D
   UI/widgets/DisplayOptionsContainer.cpp
   UI/widgets/CustomCheckBox.cpp
   UI/dialogs/ConstrainDialog.cpp
+  UI/dialogs/LoadDialog.cpp
   UI/visualization/SceneRenderer.cpp
   UI/visualization/TurntableInteractorStyle.cpp
   UI/visualization/StepFacePickerStyle.cpp
