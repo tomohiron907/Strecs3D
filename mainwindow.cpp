@@ -5,7 +5,7 @@
 #include "core/commands/file/OpenStepFileCommand.h"
 #include "core/commands/processing/ProcessFilesCommand.h"
 #include "core/commands/processing/Export3mfCommand.h"
-#include "core/commands/processing/GenerateSimulationConditionCommand.h"
+#include "core/commands/processing/RunFEMPipelineCommand.h"
 #include "core/commands/state/SetStressRangeCommand.h"
 #include "core/commands/state/SetProcessingModeCommand.h"
 #include "core/commands/state/SetStressDensityMappingCommand.h"
@@ -576,7 +576,7 @@ void MainWindow::onLoadButtonClicked()
 
 void MainWindow::onSimulateButtonClicked()
 {
-    logMessage("Generating simulation condition JSON...");
+    logMessage("Starting FEM analysis pipeline...");
 
     UIState* uiState = getUIState();
     if (!uiState) {
@@ -598,8 +598,9 @@ void MainWindow::onSimulateButtonClicked()
     // 一時ファイルパスを生成
     QString outputPath = femTempDir + "/simulation_condition.json";
 
-    // コマンドパターンを使用してシミュレーション条件をエクスポート
-    auto command = std::make_unique<GenerateSimulationConditionCommand>(
+    // コマンドパターンを使用してFEM解析パイプライン全体を実行
+    // (設定ファイルのエクスポート → FEM解析の実行)
+    auto command = std::make_unique<RunFEMPipelineCommand>(
         appController.get(),
         uiAdapter.get(),
         uiState,
@@ -607,5 +608,5 @@ void MainWindow::onSimulateButtonClicked()
     );
     command->execute();
 
-    logMessage("Simulation condition JSON generated: " + outputPath);
+    logMessage("FEM analysis pipeline completed.");
 }
