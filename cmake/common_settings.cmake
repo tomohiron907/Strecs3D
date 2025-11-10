@@ -60,6 +60,15 @@ else()
   message(FATAL_ERROR "gmsh not found. Please install via vcpkg: vcpkg install gmsh")
 endif()
 
+# vcpkgからOpenCASCADEを検索
+find_package(OpenCASCADE CONFIG REQUIRED)
+if(OpenCASCADE_FOUND)
+  message(STATUS "OpenCASCADE found: ${OpenCASCADE_VERSION}")
+  message(STATUS "OpenCASCADE include dirs: ${OpenCASCADE_INCLUDE_DIR}")
+else()
+  message(FATAL_ERROR "OpenCASCADE not found. Please install via vcpkg: vcpkg install opencascade")
+endif()
+
 # vcpkgからVTKを検索（Qtサポート付き）
 find_package(VTK REQUIRED
   COMPONENTS

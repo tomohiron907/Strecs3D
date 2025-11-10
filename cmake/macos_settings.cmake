@@ -29,6 +29,9 @@ set(CMAKE_INSTALL_RPATH "@executable_path;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_
 
 # macOS用の設定を適用する関数
 function(apply_macos_settings TARGET_NAME)
+  # OpenCASCADEのインクルードディレクトリを追加
+  target_include_directories(${TARGET_NAME} PRIVATE ${OpenCASCADE_INCLUDE_DIR})
+
   # macOS用のリンクライブラリ設定（vcpkgから取得したライブラリを使用）
   target_link_libraries(${TARGET_NAME} PRIVATE
     Qt6::Core
@@ -37,6 +40,7 @@ function(apply_macos_settings TARGET_NAME)
     lib3mf::lib3mf
     libzip::zip
     gmsh::lib
+    ${OpenCASCADE_LIBRARIES}
   )
 
   # macOSでのQtプラグインパス設定

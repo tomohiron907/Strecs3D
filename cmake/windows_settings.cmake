@@ -48,6 +48,9 @@ endif()
 function(apply_windows_settings TARGET_NAME)
   # Windows用のインクルードパス設定
   # lib3mfはcommon_settings.cmakeで検索済みのため、vcpkgの設定を使用
+  # OpenCASCADEのインクルードディレクトリを追加
+  target_include_directories(${TARGET_NAME} PRIVATE ${OpenCASCADE_INCLUDE_DIR})
+
   if(NOT libzip_FOUND)
     target_include_directories(${TARGET_NAME} PRIVATE
       ${LIBZIP_INCLUDE_DIRS}
@@ -63,6 +66,7 @@ function(apply_windows_settings TARGET_NAME)
     ${LIBZIP_LIBRARIES}
     pugixml::pugixml
     gmsh::lib
+    ${OpenCASCADE_LIBRARIES}
   )
 
   # MinGW環境での追加設定

@@ -11,6 +11,7 @@
     "lib3mf",
     "pugixml",
     "libb2",
-    "gmsh"
+    "gmsh",
+    "opencascade"
   ]
 }
