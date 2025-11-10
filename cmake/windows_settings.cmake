@@ -67,6 +67,7 @@ function(apply_windows_settings TARGET_NAME)
     pugixml::pugixml
     gmsh::lib
     ${OpenCASCADE_LIBRARIES}
+    nlohmann_json::nlohmann_json
   )
 
   # MinGW環境での追加設定

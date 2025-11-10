@@ -41,6 +41,7 @@ function(apply_macos_settings TARGET_NAME)
     libzip::zip
     gmsh::lib
     ${OpenCASCADE_LIBRARIES}
+    nlohmann_json::nlohmann_json
   )
 
   # macOSでのQtプラグインパス設定

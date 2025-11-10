@@ -69,6 +69,14 @@ else()
   message(FATAL_ERROR "OpenCASCADE not found. Please install via vcpkg: vcpkg install opencascade")
 endif()
 
+# vcpkgからnlohmann_jsonを検索（FEM用）
+find_package(nlohmann_json 3.2.0 REQUIRED)
+if(nlohmann_json_FOUND)
+  message(STATUS "nlohmann_json found: ${nlohmann_json_VERSION}")
+else()
+  message(FATAL_ERROR "nlohmann_json not found. Please install via vcpkg: vcpkg install nlohmann-json")
+endif()
+
 # vcpkgからVTKを検索（Qtサポート付き）
 find_package(VTK REQUIRED
   COMPONENTS
@@ -153,6 +161,15 @@ add_executable(Strecs3D
   core/export/ExportManager.cpp
   core/processing/3mf/slicers/prusa/ModelConverter.cpp
   FEM/SimulationConditionExporter.cpp
+  FEM/fem_pipeline.cpp
+  FEM/frd2vtu.cpp
+  FEM/step2inp.cpp
+  FEM/step2inp/MeshGenerator.cpp
+  FEM/step2inp/ConstraintSetter.cpp
+  FEM/step2inp/MaterialSetter.cpp
+  FEM/step2inp/LoadConditionSetter.cpp
+  FEM/step2inp/InpWriter.cpp
+  FEM/simulation_config.cpp
   resources/resources.qrc
 )
 
