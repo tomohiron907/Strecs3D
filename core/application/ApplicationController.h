@@ -30,7 +30,8 @@ public:
     
     // エクスポート
     bool export3mfFile(IUserInterface* ui);
-    
+    bool exportSimulationCondition(IUserInterface* ui, UIState* uiState, const QString& outputPath);
+
     // 可視化
     void loadAndDisplayTempStlFiles(IUserInterface* ui);
     void setMeshVisibility(const std::string& fileName, bool visible, IUserInterface* ui);

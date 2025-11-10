@@ -5,6 +5,7 @@
 #include "../../utils/tempPathUtility.h"
 #include "../processing/VtkProcessor.h"
 #include "../ui/UIState.h"
+#include "../../FEM/SimulationConditionExporter.h"
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
@@ -324,4 +325,32 @@ void ApplicationController::setMeshOpacity(const std::string& fileName, double o
 
     // IUserInterface経由で実際の可視化を更新
     ui->setVisualizationObjectOpacity(fileName, opacity);
+}
+
+bool ApplicationController::exportSimulationCondition(IUserInterface* ui, UIState* uiState, const QString& outputPath)
+{
+    if (!ui || !uiState) {
+        return false;
+    }
+
+    // STEPファイルが読み込まれているか確認
+    QString stepFilePath = uiState->getStepFilePath();
+    if (stepFilePath.isEmpty()) {
+        std::cerr << "Error: STEP file is not loaded" << std::endl;
+        ui->showWarningMessage("警告", "STEPファイルが読み込まれていません");
+        return false;
+    }
+
+    // SimulationConditionExporterを使用してJSONを出力
+    SimulationConditionExporter exporter;
+    bool success = exporter.exportToJson(uiState, outputPath);
+
+    if (success) {
+        ui->showInfoMessage("成功", "シミュレーション条件を出力しました: " + outputPath);
+    } else {
+        std::cerr << "Error: Failed to export simulation condition" << std::endl;
+        ui->showCriticalMessage("エラー", "シミュレーション条件の出力に失敗しました");
+    }
+
+    return success;
 } 

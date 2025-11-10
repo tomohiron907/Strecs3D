@@ -5,6 +5,7 @@
 #include "core/commands/file/OpenStepFileCommand.h"
 #include "core/commands/processing/ProcessFilesCommand.h"
 #include "core/commands/processing/Export3mfCommand.h"
+#include "core/commands/processing/GenerateSimulationConditionCommand.h"
 #include "core/commands/state/SetStressRangeCommand.h"
 #include "core/commands/state/SetProcessingModeCommand.h"
 #include "core/commands/state/SetStressDensityMappingCommand.h"
@@ -14,6 +15,7 @@
 #include "core/commands/visualization/SetMeshOpacityCommand.h"
 #include "UI/dialogs/ConstrainDialog.h"
 #include "UI/dialogs/LoadDialog.h"
+#include "utils/tempPathUtility.h"
 #include <QPushButton>
 #include <QFileDialog>
 #include <QVBoxLayout>
@@ -63,6 +65,7 @@ void MainWindow::connectSignals()
     connect(ui->getOpenStepButton(), &QPushButton::clicked, this, &MainWindow::openSTEPFile);
     connect(ui->getConstrainButton(), &QPushButton::clicked, this, &MainWindow::onConstrainButtonClicked);
     connect(ui->getLoadButton(), &QPushButton::clicked, this, &MainWindow::onLoadButtonClicked);
+    connect(ui->getSimulateButton(), &QPushButton::clicked, this, &MainWindow::onSimulateButtonClicked);
     connect(ui->getProcessButton(), &QPushButton::clicked, this, &MainWindow::processFiles);
     connect(ui->getExport3mfButton(), &QPushButton::clicked, this, &MainWindow::export3mfFile);
 
@@ -569,4 +572,40 @@ void MainWindow::onLoadButtonClicked()
 
     // モーダルレスで表示
     dialog->show();
+}
+
+void MainWindow::onSimulateButtonClicked()
+{
+    logMessage("Generating simulation condition JSON...");
+
+    UIState* uiState = getUIState();
+    if (!uiState) {
+        logMessage("Error: UIState is null");
+        QMessageBox::critical(this, "エラー", "UIStateが取得できませんでした");
+        return;
+    }
+
+    // 一時ディレクトリのFEMサブディレクトリに保存
+    QString femTempDir = TempPathUtility::getTempSubDir("FEM");
+
+    // FEMディレクトリが存在しない場合は作成
+    QDir dir;
+    if (!dir.exists(femTempDir)) {
+        dir.mkpath(femTempDir);
+        logMessage("Created FEM temp directory: " + femTempDir);
+    }
+
+    // 一時ファイルパスを生成
+    QString outputPath = femTempDir + "/simulation_condition.json";
+
+    // コマンドパターンを使用してシミュレーション条件をエクスポート
+    auto command = std::make_unique<GenerateSimulationConditionCommand>(
+        appController.get(),
+        uiAdapter.get(),
+        uiState,
+        outputPath
+    );
+    command->execute();
+
+    logMessage("Simulation condition JSON generated: " + outputPath);
 }

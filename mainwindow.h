@@ -46,6 +46,7 @@ public slots:
     void showUIStateDebugInfo(); // UIStateのデバッグ情報をコンソールに表示
     void onConstrainButtonClicked(); // Constrainボタンが押された時の処理
     void onLoadButtonClicked(); // Loadボタンが押された時の処理
+    void onSimulateButtonClicked(); // Simulateボタンが押された時の処理
 
 private:
     // Initialization methods
