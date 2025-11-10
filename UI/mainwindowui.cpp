@@ -129,6 +129,8 @@ void MainWindowUI::createButtons()
     constrainButton = new Button("Constrain", centralWidget);
     loadButton = new Button("Load", centralWidget);
 
+    simulateButton = new Button("Simulate", centralWidget);
+
     processButton = new Button("Process", centralWidget);
     processButton->setIcon(":/resources/icons/process.png");
     processButton->setIconDark(":/resources/icons/process_dark.png");
@@ -159,6 +161,8 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
     buttonRowLayout->addWidget(loadButton);
     buttonRowLayout->setSpacing(LAYOUT_SPACING);
     leftPaneLayout->addLayout(buttonRowLayout);
+
+    leftPaneLayout->addWidget(simulateButton);
 
     leftPaneLayout->addWidget(rangeSlider);
     leftPaneLayout->addWidget(stressRangeWidget);
@@ -271,6 +275,9 @@ void MainWindowUI::setButtonIconSize(const QSize& size)
     }
     if (loadButton) {
         loadButton->setIconSize(size);
+    }
+    if (simulateButton) {
+        simulateButton->setIconSize(size);
     }
     if (processButton) {
         processButton->setIconSize(size);

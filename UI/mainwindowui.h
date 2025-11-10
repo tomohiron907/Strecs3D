@@ -37,6 +37,7 @@ public:
     Button* getOpenStepButton() const { return openStepButton; }
     Button* getConstrainButton() const { return constrainButton; }
     Button* getLoadButton() const { return loadButton; }
+    Button* getSimulateButton() const { return simulateButton; }
     Button* getProcessButton() const { return processButton; }
     Button* getExport3mfButton() const { return export3mfButton; }
     ModeComboBox* getModeComboBox() const { return modeComboBox; }
@@ -104,6 +105,7 @@ private:
     Button* openStepButton;
     Button* constrainButton;
     Button* loadButton;
+    Button* simulateButton;
     Button* processButton;
     Button* export3mfButton;
     ModeComboBox* modeComboBox;
