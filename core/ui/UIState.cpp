@@ -40,6 +40,15 @@ void UIState::setVtkFilePath(const QString& path)
     }
 }
 
+void UIState::setStepFilePath(const QString& path)
+{
+    if (m_stepFilePath != path) {
+        m_stepFilePath = path;
+        emit stepFilePathChanged(path);
+        qDebug() << "UIState: STEP file path changed to:" << path;
+    }
+}
+
 void UIState::setStressRange(double minStress, double maxStress)
 {
     if (m_minStress != minStress || m_maxStress != maxStress) {
@@ -144,6 +153,7 @@ void UIState::printDebugInfo() const
     qDebug() << "=== UIState Debug Information ===";
     qDebug() << "STL File Path:" << m_stlFilePath;
     qDebug() << "VTK File Path:" << m_vtkFilePath;
+    qDebug() << "STEP File Path:" << m_stepFilePath;
     qDebug() << "Stress Range:" << m_minStress << "to" << m_maxStress;
     
     QString modeStr;
@@ -182,6 +192,7 @@ QString UIState::getDebugString() const
     debug += "=== UIState Debug Information ===\n";
     debug += QString("STL File Path: %1\n").arg(m_stlFilePath);
     debug += QString("VTK File Path: %1\n").arg(m_vtkFilePath);
+    debug += QString("STEP File Path: %1\n").arg(m_stepFilePath);
     debug += QString("Stress Range: %1 to %2\n").arg(m_minStress).arg(m_maxStress);
     
     QString modeStr;

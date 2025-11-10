@@ -32,6 +32,7 @@ public:
 public slots:
     void openVTKFile();
     void openSTLFile();
+    void openSTEPFile();
     void processFiles();
     void export3mfFile();
     void onObjectVisibilityChanged(bool visible);

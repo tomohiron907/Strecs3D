@@ -31,6 +31,9 @@ public:
     void setVtkFilePath(const QString& path);
     QString getVtkFilePath() const { return m_vtkFilePath; }
 
+    void setStepFilePath(const QString& path);
+    QString getStepFilePath() const { return m_stepFilePath; }
+
     // Stress Range
     void setStressRange(double minStress, double maxStress);
     double getMinStress() const { return m_minStress; }
@@ -74,6 +77,7 @@ public:
 signals:
     void stlFilePathChanged(const QString& path);
     void vtkFilePathChanged(const QString& path);
+    void stepFilePathChanged(const QString& path);
     void stressRangeChanged(double minStress, double maxStress);
     void stressDensityMappingsChanged(const std::vector<StressDensityMapping>& mappings);
     void densitySliderColorsChanged(const std::vector<QColor>& colors);
@@ -89,6 +93,7 @@ private:
     // File paths
     QString m_stlFilePath;
     QString m_vtkFilePath;
+    QString m_stepFilePath;
 
     // Stress range
     double m_minStress = 0.0;

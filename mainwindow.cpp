@@ -2,6 +2,7 @@
 #include "core/application/MainWindowUIAdapter.h"
 #include "core/commands/file/OpenStlFileCommand.h"
 #include "core/commands/file/OpenVtkFileCommand.h"
+#include "core/commands/file/OpenStepFileCommand.h"
 #include "core/commands/processing/ProcessFilesCommand.h"
 #include "core/commands/processing/Export3mfCommand.h"
 #include "core/commands/state/SetStressRangeCommand.h"
@@ -55,6 +56,7 @@ void MainWindow::connectSignals()
     // UI要素のシグナル接続
     connect(ui->getOpenStlButton(), &QPushButton::clicked, this, &MainWindow::openSTLFile);
     connect(ui->getOpenVtkButton(), &QPushButton::clicked, this, &MainWindow::openVTKFile);
+    connect(ui->getOpenStepButton(), &QPushButton::clicked, this, &MainWindow::openSTEPFile);
     connect(ui->getProcessButton(), &QPushButton::clicked, this, &MainWindow::processFiles);
     connect(ui->getExport3mfButton(), &QPushButton::clicked, this, &MainWindow::export3mfFile);
 
@@ -137,6 +139,34 @@ void MainWindow::openSTLFile()
     // UIStateにファイルパスを設定
     if (UIState* state = getUIState()) {
         state->setStlFilePath(fileName);
+    }
+
+    updateProcessButtonState();
+}
+
+void MainWindow::openSTEPFile()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                     "Open STEP File",
+                                                     QDir::homePath(),
+                                                     "STEP Files (*.step *.stp)");
+    if (fileName.isEmpty()) {
+        return;
+    }
+
+    logMessage(QString("Loading STEP file: %1").arg(fileName));
+
+    // コマンドパターンを使用してファイルを開く
+    auto command = std::make_unique<OpenStepFileCommand>(
+        appController.get(),
+        uiAdapter.get(),
+        fileName
+    );
+    command->execute();
+
+    // UIStateにファイルパスを設定
+    if (UIState* state = getUIState()) {
+        state->setStepFilePath(fileName);
     }
 
     updateProcessButtonState();
