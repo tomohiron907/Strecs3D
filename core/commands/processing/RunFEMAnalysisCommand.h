@@ -6,12 +6,12 @@
 #include <QString>
 
 /**
- * FEMシミュレーションを実行するコマンド
+ * FEM解析を実行するコマンド
  * 処理カテゴリ
  */
-class RunSimulationCommand : public Command {
+class RunFEMAnalysisCommand : public Command {
 public:
-    RunSimulationCommand(
+    RunFEMAnalysisCommand(
         ApplicationController* controller,
         IUserInterface* ui,
         const QString& configFilePath
@@ -24,7 +24,7 @@ public:
             return;
         }
 
-        // FEMシミュレーションの実行
+        // FEM解析の実行
         controller_->runSimulation(ui_, configFilePath_);
     }
 

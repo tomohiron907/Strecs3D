@@ -7,12 +7,12 @@
 #include <QString>
 
 /**
- * シミュレーション条件をJSONファイルにエクスポートするコマンド
+ * FEM設定ファイル（JSON）をエクスポートするコマンド
  * 処理カテゴリ
  */
-class GenerateSimulationConditionCommand : public Command {
+class ExportFEMConfigCommand : public Command {
 public:
-    GenerateSimulationConditionCommand(
+    ExportFEMConfigCommand(
         ApplicationController* controller,
         IUserInterface* ui,
         UIState* uiState,
@@ -27,7 +27,7 @@ public:
             return;
         }
 
-        // シミュレーション条件のエクスポートを実行
+        // FEM設定ファイルのエクスポートを実行
         controller_->exportSimulationCondition(ui_, uiState_, outputPath_);
     }
 
