@@ -6,6 +6,7 @@
 #include "../processing/VtkProcessor.h"
 #include "../ui/UIState.h"
 #include "../../FEM/SimulationConditionExporter.h"
+#include "../../FEM/fem_pipeline.h"
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
@@ -353,4 +354,37 @@ bool ApplicationController::exportSimulationCondition(IUserInterface* ui, UIStat
     }
 
     return success;
+}
+
+bool ApplicationController::runSimulation(IUserInterface* ui, const QString& configFilePath)
+{
+    if (!ui) {
+        return false;
+    }
+
+    // 設定ファイルのパスを確認
+    if (configFilePath.isEmpty()) {
+        std::cerr << "Error: Configuration file path is empty" << std::endl;
+        ui->showWarningMessage("警告", "設定ファイルのパスが指定されていません");
+        return false;
+    }
+
+    try {
+        // FEM解析パイプラインを実行
+        std::string configFilePathStd = configFilePath.toStdString();
+        int result = runFEMAnalysis(configFilePathStd);
+
+        if (result == 0) {
+            ui->showInfoMessage("成功", "FEMシミュレーションが正常に完了しました");
+            return true;
+        } else {
+            std::cerr << "Error: FEM simulation failed with code: " << result << std::endl;
+            ui->showCriticalMessage("エラー", QString("FEMシミュレーションが失敗しました (エラーコード: %1)").arg(result));
+            return false;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error running FEM simulation: " << e.what() << std::endl;
+        ui->showCriticalMessage("エラー", QString("FEMシミュレーションの実行中にエラーが発生しました: ") + e.what());
+        return false;
+    }
 } 
