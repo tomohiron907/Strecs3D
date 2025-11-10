@@ -45,6 +45,7 @@ public:
     // 3D可視化制御
     virtual void displayVtkFile(const std::string& vtkFile, VtkProcessor* vtkProcessor) = 0;
     virtual void displayStlFile(const std::string& stlFile, VtkProcessor* vtkProcessor) = 0;
+    virtual void displayStepFile(const std::string& stepFile) = 0;
     virtual void showTempDividedStl(VtkProcessor* vtkProcessor) = 0;
     virtual void setVisualizationObjectVisible(const std::string& filename, bool visible) = 0;
     virtual void setVisualizationObjectOpacity(const std::string& filename, double opacity) = 0;

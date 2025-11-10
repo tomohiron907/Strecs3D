@@ -23,6 +23,7 @@ public:
     // ファイル操作
     bool openVtkFile(const std::string& vtkFile, IUserInterface* ui);
     bool openStlFile(const std::string& stlFile, IUserInterface* ui);
+    bool openStepFile(const std::string& stepFile, IUserInterface* ui);
     
     // メイン処理
     bool processFiles(IUserInterface* ui);
@@ -36,6 +37,7 @@ public:
     void setMeshOpacity(const std::string& fileName, double opacity, IUserInterface* ui);
 
     // 状態管理
+    // TODO: これらの状態管理のメソッドが使われていない可能性高．削除できないか検討
     void setVtkFile(const std::string& vtkFile) { this->vtkFile = vtkFile; }
     void setStlFile(const std::string& stlFile) { this->stlFile = stlFile; }
     std::string getVtkFile() const { return vtkFile; }
@@ -44,6 +46,7 @@ public:
     void setCurrentStlFilename(const QString& filename) { currentStlFilename = filename; }
     
     // ファイル読み込み状態確認
+    // TODO: 状態管理をapplicationControllerで見るのではなく，UIStateを参照する
     bool isStlFileLoaded() const { return !stlFile.empty(); }
     bool isVtkFileLoaded() const { return !vtkFile.empty(); }
     bool areBothFilesLoaded() const { return isStlFileLoaded() && isVtkFileLoaded(); }

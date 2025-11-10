@@ -2,6 +2,7 @@
 #include "SceneDataController.h"
 #include "SceneRenderer.h"
 #include "../../core/processing/VtkProcessor.h"
+#include "../../core/processing/StepReader.h"
 #include "../mainwindowui.h"
 
 VisualizationManager::VisualizationManager(MainWindowUI* ui) : QObject() {
@@ -52,6 +53,34 @@ void VisualizationManager::displayStlFile(const std::string& stlFile, VtkProcess
         dataController_->registerObject(objInfo);
         renderer_->renderObjects(dataController_->getObjectList());
     }
+}
+
+void VisualizationManager::displayStepFile(const std::string& stepFile) {
+    StepReader stepReader;
+
+    if (!stepReader.readStepFile(stepFile)) {
+        std::cerr << "Failed to load STEP file: " << stepFile << std::endl;
+        return;
+    }
+
+    // 面アクターを取得して表示
+    auto facesActor = stepReader.getFacesActor();
+    if (facesActor) {
+        renderer_->addActorToRenderer(facesActor);
+        ObjectInfo objInfo{facesActor, stepFile + "_faces", true, 1.0};
+        dataController_->registerObject(objInfo);
+    }
+
+    // エッジアクターを取得して表示
+    auto edgesActor = stepReader.getEdgesActor();
+    if (edgesActor) {
+        renderer_->addActorToRenderer(edgesActor);
+        ObjectInfo objInfo{edgesActor, stepFile + "_edges", true, 1.0};
+        dataController_->registerObject(objInfo);
+    }
+
+    renderer_->renderObjects(dataController_->getObjectList());
+    renderer_->resetCamera();
 }
 
 void VisualizationManager::showTempDividedStl(VtkProcessor* vtkProcessor, QWidget* parent, UIState* uiState) {

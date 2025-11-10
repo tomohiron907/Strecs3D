@@ -72,6 +72,21 @@ bool ApplicationController::openStlFile(const std::string& stlFile, IUserInterfa
     }
 }
 
+bool ApplicationController::openStepFile(const std::string& stepFile, IUserInterface* ui)
+{
+    if (!ui) return false;
+
+    try {
+        ui->displayStepFile(stepFile);
+        std::cout << "Successfully loaded STEP file: " << stepFile << std::endl;
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error opening STEP file: " << e.what() << std::endl;
+        return false;
+    }
+}
+
 bool ApplicationController::processFiles(IUserInterface* ui)
 {
     try {

@@ -194,6 +194,13 @@ void MainWindowUIAdapter::displayStlFile(const std::string& stlFile, VtkProcesso
     }
 }
 
+void MainWindowUIAdapter::displayStepFile(const std::string& stepFile)
+{
+    if (visualizationManager) {
+        visualizationManager->displayStepFile(stepFile);
+    }
+}
+
 void MainWindowUIAdapter::showTempDividedStl(VtkProcessor* vtkProcessor)
 {
     if (visualizationManager) {

@@ -21,6 +21,7 @@ public:
     // ファイル表示
     void displayVtkFile(const std::string& vtkFile, VtkProcessor* vtkProcessor);
     void displayStlFile(const std::string& stlFile, VtkProcessor* vtkProcessor);
+    void displayStepFile(const std::string& stepFile);
     void showTempDividedStl(VtkProcessor* vtkProcessor, QWidget* parent = nullptr, UIState* uiState = nullptr);
 
     // オブジェクト制御
