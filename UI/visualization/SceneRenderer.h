@@ -31,6 +31,9 @@ public:
     void resetCamera();
     void enableTurntableMode(bool enable = true);
     void setTurntableRotationSpeed(double speed);
+
+    // STEP面ピッカー設定
+    void setupStepFacePicker(const std::vector<vtkSmartPointer<vtkActor>>& faceActors);
     
     // グリッド操作
     void showGrid(bool show = true);
@@ -66,7 +69,8 @@ private:
     vtkSmartPointer<vtkActor> zAxisActor_;
     vtkSmartPointer<vtkActor> originActor_;
     vtkSmartPointer<class TurntableInteractorStyle> turntableStyle_;
-    
+    vtkSmartPointer<class StepFacePickerStyle> stepFacePickerStyle_;
+
     void connectWidgetSignals(ObjectDisplayOptionsWidget* widget, const std::string& filePath);
     void createGrid();
     void createAxes();

@@ -1,6 +1,7 @@
 #include "VisualizationManager.h"
 #include "SceneDataController.h"
 #include "SceneRenderer.h"
+#include "StepFacePickerStyle.h"
 #include "../../core/processing/VtkProcessor.h"
 #include "../../core/processing/StepReader.h"
 #include "../mainwindowui.h"
@@ -63,11 +64,11 @@ void VisualizationManager::displayStepFile(const std::string& stepFile) {
         return;
     }
 
-    // 面アクターを取得して表示
-    auto facesActor = stepReader.getFacesActor();
-    if (facesActor) {
-        renderer_->addActorToRenderer(facesActor);
-        ObjectInfo objInfo{facesActor, stepFile + "_faces", true, 1.0};
+    // 個別の面アクターを取得して表示
+    auto faceActors = stepReader.getFaceActors();
+    for (size_t i = 0; i < faceActors.size(); ++i) {
+        renderer_->addActorToRenderer(faceActors[i]);
+        ObjectInfo objInfo{faceActors[i], stepFile + "_face_" + std::to_string(i), true, 1.0};
         dataController_->registerObject(objInfo);
     }
 
@@ -78,6 +79,9 @@ void VisualizationManager::displayStepFile(const std::string& stepFile) {
         ObjectInfo objInfo{edgesActor, stepFile + "_edges", true, 1.0};
         dataController_->registerObject(objInfo);
     }
+
+    // カスタムインタラクタースタイルを設定（面のホバー検出用）
+    renderer_->setupStepFacePicker(faceActors);
 
     renderer_->renderObjects(dataController_->getObjectList());
     renderer_->resetCamera();

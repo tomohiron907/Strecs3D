@@ -32,6 +32,7 @@
 StepReader::StepReader()
     : shape_(nullptr)
     , isValid_(false)
+    , faceCount_(0)
 {
 }
 
@@ -75,7 +76,13 @@ bool StepReader::readStepFile(const std::string& filename)
         shape_ = new TopoDS_Shape(shape);
         isValid_ = true;
 
-        std::cout << "Successfully loaded STEP file: " << filename << std::endl;
+        // 面の数をカウント
+        faceCount_ = 0;
+        for (TopExp_Explorer faceExp(*shape_, TopAbs_FACE); faceExp.More(); faceExp.Next()) {
+            faceCount_++;
+        }
+
+        std::cout << "Successfully loaded STEP file: " << filename << " (Faces: " << faceCount_ << ")" << std::endl;
         return true;
 
     } catch (const std::exception& e) {
@@ -252,4 +259,93 @@ vtkSmartPointer<vtkActor> StepReader::getEdgesActor() const
     mapper->SetResolveCoincidentTopologyLineOffsetParameters(-0.5, -0.5);
 
     return actor;
+}
+
+std::vector<vtkSmartPointer<vtkActor>> StepReader::getFaceActors() const
+{
+    std::vector<vtkSmartPointer<vtkActor>> faceActors;
+
+    if (!isValid()) {
+        return faceActors;
+    }
+
+    int faceIndex = 0;
+
+    // 各面を個別のアクターとして作成
+    for (TopExp_Explorer faceExp(*shape_, TopAbs_FACE); faceExp.More(); faceExp.Next()) {
+        TopoDS_Face face = TopoDS::Face(faceExp.Current());
+        TopLoc_Location location;
+        Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(face, location);
+
+        if (triangulation.IsNull()) {
+            faceIndex++;
+            continue;
+        }
+
+        vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+        vtkSmartPointer<vtkCellArray> triangles = vtkSmartPointer<vtkCellArray>::New();
+
+        // 三角形分割から点を追加
+        for (Standard_Integer i = 1; i <= triangulation->NbNodes(); i++) {
+            gp_Pnt p = triangulation->Node(i).Transformed(location.Transformation());
+            points->InsertNextPoint(p.X(), p.Y(), p.Z());
+        }
+
+        // 三角形を追加
+        for (Standard_Integer i = 1; i <= triangulation->NbTriangles(); i++) {
+            const Poly_Triangle& tri = triangulation->Triangle(i);
+            Standard_Integer n1, n2, n3;
+            tri.Get(n1, n2, n3);
+
+            vtkSmartPointer<vtkTriangle> triangle = vtkSmartPointer<vtkTriangle>::New();
+
+            // 面の向きに応じて頂点順序を調整
+            if (face.Orientation() == TopAbs_REVERSED) {
+                triangle->GetPointIds()->SetId(0, n1 - 1);
+                triangle->GetPointIds()->SetId(1, n3 - 1);
+                triangle->GetPointIds()->SetId(2, n2 - 1);
+            } else {
+                triangle->GetPointIds()->SetId(0, n1 - 1);
+                triangle->GetPointIds()->SetId(1, n2 - 1);
+                triangle->GetPointIds()->SetId(2, n3 - 1);
+            }
+
+            triangles->InsertNextCell(triangle);
+        }
+
+        vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
+        polyData->SetPoints(points);
+        polyData->SetPolys(triangles);
+
+        // 法線ベクトルを計算
+        vtkSmartPointer<vtkPolyDataNormals> normals = vtkSmartPointer<vtkPolyDataNormals>::New();
+        normals->SetInputData(polyData);
+        normals->ComputePointNormalsOn();
+        normals->ComputeCellNormalsOff();
+        normals->SplittingOff();
+        normals->Update();
+
+        vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        mapper->SetInputConnection(normals->GetOutputPort());
+
+        vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+        actor->SetMapper(mapper);
+
+        // 面の色と外観を設定
+        actor->GetProperty()->SetColor(0.8, 0.8, 0.8);
+        actor->GetProperty()->SetOpacity(1.0);
+        actor->GetProperty()->SetInterpolationToPhong();
+
+        // Polygon Offsetを設定
+        mapper->SetResolveCoincidentTopologyToPolygonOffset();
+        mapper->SetRelativeCoincidentTopologyPolygonOffsetParameters(1.0, 1.0);
+
+        // 面の色と外観を設定
+        actor->GetProperty()->SetRepresentationToSurface();
+
+        faceActors.push_back(actor);
+        faceIndex++;
+    }
+
+    return faceActors;
 }

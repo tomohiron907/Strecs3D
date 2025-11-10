@@ -1,5 +1,6 @@
 #include "SceneRenderer.h"
 #include "TurntableInteractorStyle.h"
+#include "StepFacePickerStyle.h"
 #include "SceneDataController.h"
 #include "../../core/processing/VtkProcessor.h"
 #include "../mainwindowui.h"
@@ -104,16 +105,26 @@ void SceneRenderer::clearRenderer() {
         }
         
         // 2Dアクター（スカラーバーなど）も削除
+        // ただし、StepFacePickerStyleのラベルは保護する
         vtkActor2DCollection* actors2D = renderer->GetActors2D();
         if (actors2D) {
+            // StepFacePickerStyleのラベルを取得（存在する場合）
+            vtkTextActor* labelToPreserve = nullptr;
+            if (stepFacePickerStyle_) {
+                labelToPreserve = stepFacePickerStyle_->GetLabel();
+            }
+
             actors2D->InitTraversal();
             vtkActor2D* actor2D;
             std::vector<vtkActor2D*> actors2DToRemove;
-            
+
             while ((actor2D = actors2D->GetNextActor2D()) != nullptr) {
-                actors2DToRemove.push_back(actor2D);
+                // StepFacePickerStyleのラベルは削除しない
+                if (actor2D != labelToPreserve) {
+                    actors2DToRemove.push_back(actor2D);
+                }
             }
-            
+
             for (auto* actor2DToRemove : actors2DToRemove) {
                 renderer->RemoveActor2D(actor2DToRemove);
             }
@@ -466,4 +477,34 @@ void SceneRenderer::handleStlFileLoadError(const std::exception& e, QWidget* par
     if (parent) {
         QMessageBox::critical(parent, "Error", QString("Failed to load STL files: ") + e.what());
     }
+}
+
+void SceneRenderer::setupStepFacePicker(const std::vector<vtkSmartPointer<vtkActor>>& faceActors) {
+    if (!ui_ || !ui_->getVtkWidget()) return;
+
+    auto interactor = ui_->getVtkWidget()->interactor();
+    if (!interactor) return;
+
+    auto renderer = ui_->getRenderer();
+    auto renderWindow = ui_->getVtkWidget()->renderWindow();
+    if (!renderer || !renderWindow) return;
+
+    // レンダーウィンドウのレイヤー設定
+    renderWindow->SetNumberOfLayers(2);
+    renderer->SetLayer(0);
+
+    // カスタム面ピッカースタイルを作成
+    stepFacePickerStyle_ = vtkSmartPointer<StepFacePickerStyle>::New();
+
+    // インタラクタースタイルを先に設定（Interactorが利用可能になる）
+    interactor->SetInteractorStyle(stepFacePickerStyle_);
+
+    // その後、面アクターとレンダラーを設定
+    stepFacePickerStyle_->SetFaceActors(faceActors);
+    stepFacePickerStyle_->SetRenderer(renderer);
+
+    // ターンテーブルスタイルを無効化
+    turntableStyle_ = nullptr;
+
+    std::cout << "Step face picker enabled for " << faceActors.size() << " faces" << std::endl;
 }
