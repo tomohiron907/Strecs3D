@@ -7,11 +7,13 @@
       "name": "vtk",
       "features": [ "qt" ]
     },
+    {
+      "name": "gmsh",
+      "features": [ "occ" ]
+    },
     "libzip",
     "lib3mf",
     "pugixml",
-    "libb2",
-    "gmsh",
-    "opencascade"
+    "libb2"
   ]
 }
