@@ -66,6 +66,25 @@ void UIState::setStressDensityMappings(const std::vector<StressDensityMapping>& 
     qDebug() << "UIState: Stress density mappings updated, count:" << mappings.size();
 }
 
+void UIState::addConstrainCondition(const ConstrainCondition& constrain)
+{
+    m_boundaryCondition.constrains.push_back(constrain);
+    emit boundaryConditionChanged(m_boundaryCondition);
+    qDebug() << "UIState: Constrain condition added - Surface ID:" << constrain.surface_id
+             << "Name:" << QString::fromStdString(constrain.name)
+             << "Total constrains:" << m_boundaryCondition.constrains.size();
+}
+
+void UIState::addLoadCondition(const LoadCondition& load)
+{
+    m_boundaryCondition.loads.push_back(load);
+    emit boundaryConditionChanged(m_boundaryCondition);
+    qDebug() << "UIState: Load condition added - Surface ID:" << load.surface_id
+             << "Name:" << QString::fromStdString(load.name)
+             << "Magnitude:" << load.magnitude
+             << "Total loads:" << m_boundaryCondition.loads.size();
+}
+
 void UIState::setDensitySliderColors(const std::vector<QColor>& colors)
 {
     m_densitySliderColors = colors;
@@ -175,7 +194,21 @@ void UIState::printDebugInfo() const
         const auto& color = m_densitySliderColors[i];
         qDebug() << "  [" << i << "] Color:" << color.name();
     }
-    
+
+    qDebug() << "Boundary Conditions:";
+    qDebug() << "  Constrains (" << m_boundaryCondition.constrains.size() << "entries):";
+    for (size_t i = 0; i < m_boundaryCondition.constrains.size(); ++i) {
+        const auto& constrain = m_boundaryCondition.constrains[i];
+        qDebug() << "    [" << i << "] Surface ID:" << constrain.surface_id << "Name:" << QString::fromStdString(constrain.name);
+    }
+    qDebug() << "  Loads (" << m_boundaryCondition.loads.size() << "entries):";
+    for (size_t i = 0; i < m_boundaryCondition.loads.size(); ++i) {
+        const auto& load = m_boundaryCondition.loads[i];
+        qDebug() << "    [" << i << "] Surface ID:" << load.surface_id << "Name:" << QString::fromStdString(load.name)
+                 << "Magnitude:" << load.magnitude
+                 << "Direction:(" << load.direction.x << "," << load.direction.y << "," << load.direction.z << ")";
+    }
+
     qDebug() << "Display Settings:";
     qDebug() << "  Mesh: Visible=" << m_meshDisplaySettings.isVisible << "Opacity=" << m_meshDisplaySettings.opacity;
     qDebug() << "  VTU: Visible=" << m_vtuDisplaySettings.isVisible << "Opacity=" << m_vtuDisplaySettings.opacity;
@@ -215,7 +248,22 @@ QString UIState::getDebugString() const
         const auto& color = m_densitySliderColors[i];
         debug += QString("  [%1] Color: %2\n").arg(i).arg(color.name());
     }
-    
+
+    debug += "Boundary Conditions:\n";
+    debug += QString("  Constrains (%1 entries):\n").arg(m_boundaryCondition.constrains.size());
+    for (size_t i = 0; i < m_boundaryCondition.constrains.size(); ++i) {
+        const auto& constrain = m_boundaryCondition.constrains[i];
+        debug += QString("    [%1] Surface ID: %2, Name: %3\n")
+                    .arg(i).arg(constrain.surface_id).arg(QString::fromStdString(constrain.name));
+    }
+    debug += QString("  Loads (%1 entries):\n").arg(m_boundaryCondition.loads.size());
+    for (size_t i = 0; i < m_boundaryCondition.loads.size(); ++i) {
+        const auto& load = m_boundaryCondition.loads[i];
+        debug += QString("    [%1] Surface ID: %2, Name: %3, Magnitude: %4, Direction: (%5, %6, %7)\n")
+                    .arg(i).arg(load.surface_id).arg(QString::fromStdString(load.name))
+                    .arg(load.magnitude).arg(load.direction.x).arg(load.direction.y).arg(load.direction.z);
+    }
+
     debug += "Display Settings:\n";
     debug += QString("  Mesh: Visible=%1, Opacity=%2\n").arg(m_meshDisplaySettings.isVisible).arg(m_meshDisplaySettings.opacity);
     debug += QString("  VTU: Visible=%1, Opacity=%2\n").arg(m_vtuDisplaySettings.isVisible).arg(m_vtuDisplaySettings.opacity);

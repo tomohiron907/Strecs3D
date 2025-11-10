@@ -5,6 +5,7 @@
 #include <QColor>
 #include <vector>
 #include "../types/StressDensityMapping.h"
+#include "../types/BoundaryCondition.h"
 
 enum class ProcessingMode {
     BAMBU,
@@ -43,6 +44,11 @@ public:
     void setStressDensityMappings(const std::vector<StressDensityMapping>& mappings);
     std::vector<StressDensityMapping> getStressDensityMappings() const { return m_stressDensityMappings; }
 
+    // Boundary Condition
+    BoundaryCondition getBoundaryCondition() const { return m_boundaryCondition; }
+    void addConstrainCondition(const ConstrainCondition& constrain);
+    void addLoadCondition(const LoadCondition& load);
+
     // Density Slider colors
     void setDensitySliderColors(const std::vector<QColor>& colors);
     std::vector<QColor> getDensitySliderColors() const { return m_densitySliderColors; }
@@ -80,6 +86,7 @@ signals:
     void stepFilePathChanged(const QString& path);
     void stressRangeChanged(double minStress, double maxStress);
     void stressDensityMappingsChanged(const std::vector<StressDensityMapping>& mappings);
+    void boundaryConditionChanged(const BoundaryCondition& condition);
     void densitySliderColorsChanged(const std::vector<QColor>& colors);
     void processingModeChanged(ProcessingMode mode);
     void meshDisplaySettingsChanged(const DisplaySettings& settings);
@@ -101,6 +108,9 @@ private:
 
     // Stress density mappings
     std::vector<StressDensityMapping> m_stressDensityMappings;
+
+    // Boundary condition
+    BoundaryCondition m_boundaryCondition;
 
     // Density slider colors
     std::vector<QColor> m_densitySliderColors;
