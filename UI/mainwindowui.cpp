@@ -126,6 +126,9 @@ void MainWindowUI::createButtons()
     openStepButton = new Button("Open STEP File", centralWidget);
     openStepButton->setIcon(":/resources/icons/step.png");
 
+    constrainButton = new Button("Constrain", centralWidget);
+    loadButton = new Button("Load", centralWidget);
+
     processButton = new Button("Process", centralWidget);
     processButton->setIcon(":/resources/icons/process.png");
     processButton->setIconDark(":/resources/icons/process_dark.png");
@@ -149,6 +152,14 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
     messageConsole->setMinimumHeight(CONSOLE_MIN_HEIGHT);
 
     leftPaneLayout->addWidget(openStepButton);
+
+    // Constrain と Load ボタンを横並びに配置
+    QHBoxLayout* buttonRowLayout = new QHBoxLayout();
+    buttonRowLayout->addWidget(constrainButton);
+    buttonRowLayout->addWidget(loadButton);
+    buttonRowLayout->setSpacing(LAYOUT_SPACING);
+    leftPaneLayout->addLayout(buttonRowLayout);
+
     leftPaneLayout->addWidget(rangeSlider);
     leftPaneLayout->addWidget(stressRangeWidget);
     leftPaneLayout->addWidget(modeComboBox);
@@ -254,6 +265,12 @@ void MainWindowUI::setButtonIconSize(const QSize& size)
     }
     if (openStepButton) {
         openStepButton->setIconSize(size);
+    }
+    if (constrainButton) {
+        constrainButton->setIconSize(size);
+    }
+    if (loadButton) {
+        loadButton->setIconSize(size);
     }
     if (processButton) {
         processButton->setIconSize(size);
