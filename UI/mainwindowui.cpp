@@ -114,19 +114,24 @@ void MainWindowUI::createHeaderWidget(QVBoxLayout* outerLayout)
 void MainWindowUI::createButtons()
 {
     Button::setGlobalIconSize(QSize(ICON_SIZE, ICON_SIZE));
-    
+
     openStlButton = new Button("Open STL File", centralWidget);
     openStlButton->setIcon(":/resources/icons/stl.png");
-    
+    openStlButton->setVisible(false);
+
     openVtkButton = new Button("Open VTK File", centralWidget);
     openVtkButton->setIcon(":/resources/icons/vtk.png");
-    
+    openVtkButton->setVisible(false);
+
+    openStepButton = new Button("Open STEP File", centralWidget);
+    openStepButton->setIcon(":/resources/icons/step.png");
+
     processButton = new Button("Process", centralWidget);
     processButton->setIcon(":/resources/icons/process.png");
     processButton->setIconDark(":/resources/icons/process_dark.png");
     processButton->setEnabled(false);
     processButton->setEmphasized(false);
-    
+
     export3mfButton = new Button("Export 3MF", centralWidget);
     export3mfButton->setIcon(":/resources/icons/export.png");
     export3mfButton->setIconDark(":/resources/icons/export_dark.png");
@@ -143,8 +148,7 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
     messageConsole = new MessageConsole(centralWidget);
     messageConsole->setMinimumHeight(CONSOLE_MIN_HEIGHT);
 
-    leftPaneLayout->addWidget(openStlButton);
-    leftPaneLayout->addWidget(openVtkButton);
+    leftPaneLayout->addWidget(openStepButton);
     leftPaneLayout->addWidget(rangeSlider);
     leftPaneLayout->addWidget(stressRangeWidget);
     leftPaneLayout->addWidget(modeComboBox);
@@ -240,13 +244,16 @@ void MainWindowUI::setButtonIconSize(const QSize& size)
 {
     // グローバルアイコンサイズを設定
     Button::setGlobalIconSize(size);
-    
+
     // 既存のボタンのアイコンサイズを更新
     if (openStlButton) {
         openStlButton->setIconSize(size);
     }
     if (openVtkButton) {
         openVtkButton->setIconSize(size);
+    }
+    if (openStepButton) {
+        openStepButton->setIconSize(size);
     }
     if (processButton) {
         processButton->setIconSize(size);

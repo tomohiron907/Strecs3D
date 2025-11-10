@@ -34,6 +34,7 @@ public:
     vtkSmartPointer<vtkRenderer> getRenderer() const { return renderer; }
     Button* getOpenStlButton() const { return openStlButton; }
     Button* getOpenVtkButton() const { return openVtkButton; }
+    Button* getOpenStepButton() const { return openStepButton; }
     Button* getProcessButton() const { return processButton; }
     Button* getExport3mfButton() const { return export3mfButton; }
     ModeComboBox* getModeComboBox() const { return modeComboBox; }
@@ -98,6 +99,7 @@ private:
     vtkSmartPointer<vtkRenderer> renderer;
     Button* openStlButton;
     Button* openVtkButton;
+    Button* openStepButton;
     Button* processButton;
     Button* export3mfButton;
     ModeComboBox* modeComboBox;
