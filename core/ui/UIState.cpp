@@ -85,6 +85,20 @@ void UIState::addLoadCondition(const LoadCondition& load)
              << "Total loads:" << m_boundaryCondition.loads.size();
 }
 
+void UIState::clearConstrainConditions()
+{
+    m_boundaryCondition.constrains.clear();
+    emit boundaryConditionChanged(m_boundaryCondition);
+    qDebug() << "UIState: All constrain conditions cleared";
+}
+
+void UIState::clearLoadConditions()
+{
+    m_boundaryCondition.loads.clear();
+    emit boundaryConditionChanged(m_boundaryCondition);
+    qDebug() << "UIState: All load conditions cleared";
+}
+
 void UIState::setDensitySliderColors(const std::vector<QColor>& colors)
 {
     m_densitySliderColors = colors;

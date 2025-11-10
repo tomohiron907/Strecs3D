@@ -8,8 +8,10 @@
 #include "core/commands/state/SetStressRangeCommand.h"
 #include "core/commands/state/SetProcessingModeCommand.h"
 #include "core/commands/state/SetStressDensityMappingCommand.h"
+#include "core/commands/state/SetConstrainConditionCommand.h"
 #include "core/commands/visualization/SetMeshVisibilityCommand.h"
 #include "core/commands/visualization/SetMeshOpacityCommand.h"
+#include "UI/dialogs/ConstrainDialog.h"
 #include <QPushButton>
 #include <QFileDialog>
 #include <QVBoxLayout>
@@ -57,6 +59,7 @@ void MainWindow::connectSignals()
     connect(ui->getOpenStlButton(), &QPushButton::clicked, this, &MainWindow::openSTLFile);
     connect(ui->getOpenVtkButton(), &QPushButton::clicked, this, &MainWindow::openVTKFile);
     connect(ui->getOpenStepButton(), &QPushButton::clicked, this, &MainWindow::openSTEPFile);
+    connect(ui->getConstrainButton(), &QPushButton::clicked, this, &MainWindow::onConstrainButtonClicked);
     connect(ui->getProcessButton(), &QPushButton::clicked, this, &MainWindow::processFiles);
     connect(ui->getExport3mfButton(), &QPushButton::clicked, this, &MainWindow::export3mfFile);
 
@@ -426,7 +429,7 @@ void MainWindow::showUIStateDebugInfo()
     if (UIState* state = getUIState()) {
         QString debugInfo = state->getDebugString();
         logMessage("=== UIState Debug Info ===");
-        
+
         // Split the debug string into lines and log each one
         QStringList lines = debugInfo.split('\n');
         for (const QString& line : lines) {
@@ -437,4 +440,71 @@ void MainWindow::showUIStateDebugInfo()
     } else {
         logMessage("UIState is not available for debugging");
     }
+}
+
+void MainWindow::onConstrainButtonClicked()
+{
+    // ConstrainDialogを開く（モーダルレス）
+    ConstrainDialog* dialog = new ConstrainDialog(this);
+
+    // UIStateから既存の拘束条件を取得してダイアログにロード
+    UIState* state = getUIState();
+    if (state) {
+        BoundaryCondition boundaryCondition = state->getBoundaryCondition();
+        std::vector<int> existingSurfaceIds;
+
+        for (const auto& constrain : boundaryCondition.constrains) {
+            existingSurfaceIds.push_back(constrain.surface_id);
+        }
+
+        dialog->loadSurfaceIds(existingSurfaceIds);
+    }
+
+    // ダイアログが閉じられたときの処理
+    connect(dialog, &QDialog::accepted, this, [this, dialog]() {
+        // OKが押された場合、選択されたsurface_idを取得
+        std::vector<int> surfaceIds = dialog->getSelectedSurfaceIds();
+
+        // 各surface_idに対してSetConstrainConditionCommandを実行
+        UIState* state = getUIState();
+        if (!state) {
+            dialog->deleteLater();
+            return;
+        }
+
+        // 既存の拘束条件をクリア（新しいデータで上書き）
+        state->clearConstrainConditions();
+
+        // テーブルIDは1から始まる
+        int tableId = 1;
+        for (int surfaceId : surfaceIds) {
+            ConstrainCondition constrain;
+            constrain.surface_id = surfaceId;
+            constrain.name = "Constrain_" + std::to_string(tableId);
+
+            auto command = std::make_unique<SetConstrainConditionCommand>(
+                state,
+                constrain
+            );
+            command->execute();
+
+            tableId++;
+        }
+
+        if (!surfaceIds.empty()) {
+            logMessage(QString("Total %1 constrain condition(s) set.").arg(surfaceIds.size()));
+        } else {
+            logMessage("All constrain conditions cleared.");
+        }
+
+        dialog->deleteLater();
+    });
+
+    // ダイアログがキャンセルされたときの処理
+    connect(dialog, &QDialog::rejected, this, [dialog]() {
+        dialog->deleteLater();
+    });
+
+    // モーダルレスで表示
+    dialog->show();
 }

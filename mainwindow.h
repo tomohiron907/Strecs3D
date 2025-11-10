@@ -44,6 +44,7 @@ public slots:
     void onStressRangeChanged(double minStress, double maxStress); // StressRangeWidgetが変更された時の処理
     void updateProcessButtonState(); // Processボタンの有効/無効状態を更新
     void showUIStateDebugInfo(); // UIStateのデバッグ情報をコンソールに表示
+    void onConstrainButtonClicked(); // Constrainボタンが押された時の処理
 
 private:
     // Initialization methods

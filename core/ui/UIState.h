@@ -48,6 +48,8 @@ public:
     BoundaryCondition getBoundaryCondition() const { return m_boundaryCondition; }
     void addConstrainCondition(const ConstrainCondition& constrain);
     void addLoadCondition(const LoadCondition& load);
+    void clearConstrainConditions();
+    void clearLoadConditions();
 
     // Density Slider colors
     void setDensitySliderColors(const std::vector<QColor>& colors);
