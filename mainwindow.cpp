@@ -9,11 +9,11 @@
 #include "core/commands/state/SetStressRangeCommand.h"
 #include "core/commands/state/SetProcessingModeCommand.h"
 #include "core/commands/state/SetStressDensityMappingCommand.h"
-#include "core/commands/state/SetConstrainConditionCommand.h"
+#include "core/commands/state/SetConstraintConditionCommand.h"
 #include "core/commands/state/SetLoadConditionCommand.h"
 #include "core/commands/visualization/SetMeshVisibilityCommand.h"
 #include "core/commands/visualization/SetMeshOpacityCommand.h"
-#include "UI/dialogs/ConstrainDialog.h"
+#include "UI/dialogs/ConstraintDialog.h"
 #include "UI/dialogs/LoadDialog.h"
 #include "utils/tempPathUtility.h"
 #include <QPushButton>
@@ -450,8 +450,8 @@ void MainWindow::showUIStateDebugInfo()
 
 void MainWindow::onConstrainButtonClicked()
 {
-    // ConstrainDialogを開く（モーダルレス）
-    ConstrainDialog* dialog = new ConstrainDialog(this);
+    // ConstraintDialogを開く（モーダルレス）
+    ConstraintDialog* dialog = new ConstraintDialog(this);
 
     // UIStateから既存の拘束条件を取得してダイアログにロード
     UIState* state = getUIState();
@@ -459,8 +459,8 @@ void MainWindow::onConstrainButtonClicked()
         BoundaryCondition boundaryCondition = state->getBoundaryCondition();
         std::vector<int> existingSurfaceIds;
 
-        for (const auto& constrain : boundaryCondition.constrains) {
-            existingSurfaceIds.push_back(constrain.surface_id);
+        for (const auto& constraint : boundaryCondition.constraints) {
+            existingSurfaceIds.push_back(constraint.surface_id);
         }
 
         dialog->loadSurfaceIds(existingSurfaceIds);
@@ -471,7 +471,7 @@ void MainWindow::onConstrainButtonClicked()
         // OKが押された場合、選択されたsurface_idを取得
         std::vector<int> surfaceIds = dialog->getSelectedSurfaceIds();
 
-        // 各surface_idに対してSetConstrainConditionCommandを実行
+        // 各surface_idに対してSetConstraintConditionCommandを実行
         UIState* state = getUIState();
         if (!state) {
             dialog->deleteLater();
@@ -479,18 +479,18 @@ void MainWindow::onConstrainButtonClicked()
         }
 
         // 既存の拘束条件をクリア（新しいデータで上書き）
-        state->clearConstrainConditions();
+        state->clearConstraintConditions();
 
         // テーブルIDは1から始まる
         int tableId = 1;
         for (int surfaceId : surfaceIds) {
-            ConstrainCondition constrain;
-            constrain.surface_id = surfaceId;
-            constrain.name = "Constrain_" + std::to_string(tableId);
+            ConstraintCondition constraint;
+            constraint.surface_id = surfaceId;
+            constraint.name = "Constraint_" + std::to_string(tableId);
 
-            auto command = std::make_unique<SetConstrainConditionCommand>(
+            auto command = std::make_unique<SetConstraintConditionCommand>(
                 state,
-                constrain
+                constraint
             );
             command->execute();
 
@@ -498,9 +498,9 @@ void MainWindow::onConstrainButtonClicked()
         }
 
         if (!surfaceIds.empty()) {
-            logMessage(QString("Total %1 constrain condition(s) set.").arg(surfaceIds.size()));
+            logMessage(QString("Total %1 constraint condition(s) set.").arg(surfaceIds.size()));
         } else {
-            logMessage("All constrain conditions cleared.");
+            logMessage("All constraint conditions cleared.");
         }
 
         dialog->deleteLater();

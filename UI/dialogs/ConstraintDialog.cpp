@@ -1,17 +1,17 @@
-#include "ConstrainDialog.h"
+#include "ConstraintDialog.h"
 #include <QMessageBox>
 #include <QHeaderView>
 #include <QTableWidgetItem>
 
-ConstrainDialog::ConstrainDialog(QWidget* parent)
+ConstraintDialog::ConstraintDialog(QWidget* parent)
     : QDialog(parent), m_isLoading(false)
 {
     setupUI();
 }
 
-void ConstrainDialog::setupUI()
+void ConstraintDialog::setupUI()
 {
-    setWindowTitle("Set Constrain Conditions");
+    setWindowTitle("Set Constraint Conditions");
     setModal(false); // モーダルレスに変更
     setMinimumWidth(500);
     setMinimumHeight(400);
@@ -22,7 +22,7 @@ void ConstrainDialog::setupUI()
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
 
     // 説明ラベル
-    QLabel* descriptionLabel = new QLabel("Add surface IDs to constrain (edit table directly):", this);
+    QLabel* descriptionLabel = new QLabel("Add surface IDs to constraint (edit table directly):", this);
     mainLayout->addWidget(descriptionLabel);
 
     // テーブルウィジェット
@@ -61,9 +61,9 @@ void ConstrainDialog::setupUI()
     mainLayout->addLayout(buttonLayout);
 
     // シグナル接続
-    connect(addButton, &QPushButton::clicked, this, &ConstrainDialog::onAddButtonClicked);
-    connect(removeButton, &QPushButton::clicked, this, &ConstrainDialog::onRemoveButtonClicked);
-    connect(surfaceTableWidget, &QTableWidget::cellChanged, this, &ConstrainDialog::onCellChanged);
+    connect(addButton, &QPushButton::clicked, this, &ConstraintDialog::onAddButtonClicked);
+    connect(removeButton, &QPushButton::clicked, this, &ConstraintDialog::onRemoveButtonClicked);
+    connect(surfaceTableWidget, &QTableWidget::cellChanged, this, &ConstraintDialog::onCellChanged);
     connect(okButton, &QPushButton::clicked, this, &QDialog::accept);
     connect(cancelButton, &QPushButton::clicked, this, &QDialog::reject);
 
@@ -114,7 +114,7 @@ void ConstrainDialog::setupUI()
     )");
 }
 
-void ConstrainDialog::addNewRow()
+void ConstraintDialog::addNewRow()
 {
     int rowCount = surfaceTableWidget->rowCount();
     surfaceTableWidget->insertRow(rowCount);
@@ -131,7 +131,7 @@ void ConstrainDialog::addNewRow()
     surfaceTableWidget->setItem(rowCount, 1, idItem);
 }
 
-void ConstrainDialog::updateRowNumbers()
+void ConstraintDialog::updateRowNumbers()
 {
     for (int i = 0; i < surfaceTableWidget->rowCount(); ++i) {
         QTableWidgetItem* noItem = surfaceTableWidget->item(i, 0);
@@ -141,12 +141,12 @@ void ConstrainDialog::updateRowNumbers()
     }
 }
 
-void ConstrainDialog::onAddButtonClicked()
+void ConstraintDialog::onAddButtonClicked()
 {
     addNewRow();
 }
 
-void ConstrainDialog::onRemoveButtonClicked()
+void ConstraintDialog::onRemoveButtonClicked()
 {
     int currentRow = surfaceTableWidget->currentRow();
     if (currentRow >= 0) {
@@ -155,7 +155,7 @@ void ConstrainDialog::onRemoveButtonClicked()
     }
 }
 
-void ConstrainDialog::addRowWithValue(int surfaceId)
+void ConstraintDialog::addRowWithValue(int surfaceId)
 {
     int rowCount = surfaceTableWidget->rowCount();
     surfaceTableWidget->insertRow(rowCount);
@@ -172,7 +172,7 @@ void ConstrainDialog::addRowWithValue(int surfaceId)
     surfaceTableWidget->setItem(rowCount, 1, idItem);
 }
 
-void ConstrainDialog::loadSurfaceIds(const std::vector<int>& surfaceIds)
+void ConstraintDialog::loadSurfaceIds(const std::vector<int>& surfaceIds)
 {
     // ロード中フラグを立てる
     m_isLoading = true;
@@ -194,7 +194,7 @@ void ConstrainDialog::loadSurfaceIds(const std::vector<int>& surfaceIds)
     m_isLoading = false;
 }
 
-void ConstrainDialog::onCellChanged(int row, int column)
+void ConstraintDialog::onCellChanged(int row, int column)
 {
     // データロード中は何もしない
     if (m_isLoading) return;
@@ -238,7 +238,7 @@ void ConstrainDialog::onCellChanged(int row, int column)
     }
 }
 
-std::vector<int> ConstrainDialog::getSelectedSurfaceIds() const
+std::vector<int> ConstraintDialog::getSelectedSurfaceIds() const
 {
     std::vector<int> surfaceIds;
 

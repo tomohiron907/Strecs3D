@@ -10,22 +10,22 @@
  *
  * このコマンドはUIStateの更新のみを行う（描画は不要）
  */
-class SetConstrainConditionCommand : public Command {
+class SetConstraintConditionCommand : public Command {
 public:
-    SetConstrainConditionCommand(
+    SetConstraintConditionCommand(
         UIState* uiState,
-        const ConstrainCondition& constrain
+        const ConstraintCondition& constraint
     ) : uiState_(uiState),
-        constrain_(constrain) {}
+        constraint_(constraint) {}
 
     void execute() override {
         if (!uiState_) return;
 
         // UIStateに拘束条件を追加
-        uiState_->addConstrainCondition(constrain_);
+        uiState_->addConstraintCondition(constraint_);
     }
 
 private:
     UIState* uiState_;
-    ConstrainCondition constrain_;
+    ConstraintCondition constraint_;
 };

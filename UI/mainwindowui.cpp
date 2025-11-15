@@ -126,7 +126,7 @@ void MainWindowUI::createButtons()
     openStepButton = new Button("Open STEP File", centralWidget);
     openStepButton->setIcon(":/resources/icons/step.png");
 
-    constrainButton = new Button("Constrain", centralWidget);
+    constrainButton = new Button("Constraint", centralWidget);
     loadButton = new Button("Load", centralWidget);
 
     simulateButton = new Button("Simulate", centralWidget);
@@ -155,7 +155,7 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
 
     leftPaneLayout->addWidget(openStepButton);
 
-    // Constrain と Load ボタンを横並びに配置
+    // Constraint と Load ボタンを横並びに配置
     QHBoxLayout* buttonRowLayout = new QHBoxLayout();
     buttonRowLayout->addWidget(constrainButton);
     buttonRowLayout->addWidget(loadButton);

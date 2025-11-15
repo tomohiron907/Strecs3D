@@ -66,13 +66,13 @@ void UIState::setStressDensityMappings(const std::vector<StressDensityMapping>& 
     qDebug() << "UIState: Stress density mappings updated, count:" << mappings.size();
 }
 
-void UIState::addConstrainCondition(const ConstrainCondition& constrain)
+void UIState::addConstraintCondition(const ConstraintCondition& constraint)
 {
-    m_boundaryCondition.constrains.push_back(constrain);
+    m_boundaryCondition.constraints.push_back(constraint);
     emit boundaryConditionChanged(m_boundaryCondition);
-    qDebug() << "UIState: Constrain condition added - Surface ID:" << constrain.surface_id
-             << "Name:" << QString::fromStdString(constrain.name)
-             << "Total constrains:" << m_boundaryCondition.constrains.size();
+    qDebug() << "UIState: Constraint condition added - Surface ID:" << constraint.surface_id
+             << "Name:" << QString::fromStdString(constraint.name)
+             << "Total constraints:" << m_boundaryCondition.constraints.size();
 }
 
 void UIState::addLoadCondition(const LoadCondition& load)
@@ -85,11 +85,11 @@ void UIState::addLoadCondition(const LoadCondition& load)
              << "Total loads:" << m_boundaryCondition.loads.size();
 }
 
-void UIState::clearConstrainConditions()
+void UIState::clearConstraintConditions()
 {
-    m_boundaryCondition.constrains.clear();
+    m_boundaryCondition.constraints.clear();
     emit boundaryConditionChanged(m_boundaryCondition);
-    qDebug() << "UIState: All constrain conditions cleared";
+    qDebug() << "UIState: All constraint conditions cleared";
 }
 
 void UIState::clearLoadConditions()
@@ -210,10 +210,10 @@ void UIState::printDebugInfo() const
     }
 
     qDebug() << "Boundary Conditions:";
-    qDebug() << "  Constrains (" << m_boundaryCondition.constrains.size() << "entries):";
-    for (size_t i = 0; i < m_boundaryCondition.constrains.size(); ++i) {
-        const auto& constrain = m_boundaryCondition.constrains[i];
-        qDebug() << "    [" << i << "] Surface ID:" << constrain.surface_id << "Name:" << QString::fromStdString(constrain.name);
+    qDebug() << "  Constraints (" << m_boundaryCondition.constraints.size() << "entries):";
+    for (size_t i = 0; i < m_boundaryCondition.constraints.size(); ++i) {
+        const auto& constraint = m_boundaryCondition.constraints[i];
+        qDebug() << "    [" << i << "] Surface ID:" << constraint.surface_id << "Name:" << QString::fromStdString(constraint.name);
     }
     qDebug() << "  Loads (" << m_boundaryCondition.loads.size() << "entries):";
     for (size_t i = 0; i < m_boundaryCondition.loads.size(); ++i) {
@@ -264,11 +264,11 @@ QString UIState::getDebugString() const
     }
 
     debug += "Boundary Conditions:\n";
-    debug += QString("  Constrains (%1 entries):\n").arg(m_boundaryCondition.constrains.size());
-    for (size_t i = 0; i < m_boundaryCondition.constrains.size(); ++i) {
-        const auto& constrain = m_boundaryCondition.constrains[i];
+    debug += QString("  Constraints (%1 entries):\n").arg(m_boundaryCondition.constraints.size());
+    for (size_t i = 0; i < m_boundaryCondition.constraints.size(); ++i) {
+        const auto& constraint = m_boundaryCondition.constraints[i];
         debug += QString("    [%1] Surface ID: %2, Name: %3\n")
-                    .arg(i).arg(constrain.surface_id).arg(QString::fromStdString(constrain.name));
+                    .arg(i).arg(constraint.surface_id).arg(QString::fromStdString(constraint.name));
     }
     debug += QString("  Loads (%1 entries):\n").arg(m_boundaryCondition.loads.size());
     for (size_t i = 0; i < m_boundaryCondition.loads.size(); ++i) {

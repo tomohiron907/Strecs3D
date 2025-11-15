@@ -46,9 +46,9 @@ public:
 
     // Boundary Condition
     BoundaryCondition getBoundaryCondition() const { return m_boundaryCondition; }
-    void addConstrainCondition(const ConstrainCondition& constrain);
+    void addConstraintCondition(const ConstraintCondition& constraint);
     void addLoadCondition(const LoadCondition& load);
-    void clearConstrainConditions();
+    void clearConstraintConditions();
     void clearLoadConditions();
 
     // Density Slider colors

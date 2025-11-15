@@ -34,12 +34,12 @@ bool SimulationConditionExporter::exportToJson(
 
     // constraints - fixed_faces
     json fixedFacesArray = json::array();
-    for (const auto& constrain : boundaryCondition.constrains) {
-        json constrainObj = {
-            {"surface_id", constrain.surface_id},
-            {"name", constrain.name}
+    for (const auto& constraint : boundaryCondition.constraints) {
+        json constraintObj = {
+            {"surface_id", constraint.surface_id},
+            {"name", constraint.name}
         };
-        fixedFacesArray.push_back(constrainObj);
+        fixedFacesArray.push_back(constraintObj);
     }
     j["constraints"]["fixed_faces"] = fixedFacesArray;
 

@@ -1,5 +1,5 @@
-#ifndef CONSTRAINDIALOG_H
-#define CONSTRAINDIALOG_H
+#ifndef CONSTRAINTDIALOG_H
+#define CONSTRAINTDIALOG_H
 
 #include <QDialog>
 #include <QTableWidget>
@@ -13,12 +13,12 @@
  * 拘束条件を設定するためのダイアログ
  * surface_idをテーブルビューで直接編集し、OKボタンで確定する
  */
-class ConstrainDialog : public QDialog {
+class ConstraintDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ConstrainDialog(QWidget* parent = nullptr);
-    ~ConstrainDialog() = default;
+    explicit ConstraintDialog(QWidget* parent = nullptr);
+    ~ConstraintDialog() = default;
 
     // 選択されたsurface_idのリストを取得
     std::vector<int> getSelectedSurfaceIds() const;
@@ -46,4 +46,4 @@ private:
     bool m_isLoading; // データロード中フラグ（cellChangedシグナルを一時的に無視するため）
 };
 
-#endif // CONSTRAINDIALOG_H
+#endif // CONSTRAINTDIALOG_H

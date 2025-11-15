@@ -11,7 +11,7 @@ struct Vector3D {
 };
 
 // 拘束条件構造体
-struct ConstrainCondition {
+struct ConstraintCondition {
     int surface_id;
     std::string name;
 };
@@ -26,6 +26,6 @@ struct LoadCondition {
 
 // 境界条件構造体
 struct BoundaryCondition {
-    std::vector<ConstrainCondition> constrains;
+    std::vector<ConstraintCondition> constraints;
     std::vector<LoadCondition> loads;
 };
