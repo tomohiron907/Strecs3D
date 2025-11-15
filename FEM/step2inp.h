@@ -18,7 +18,8 @@ public:
     // Main conversion method
     int convert(const std::string& step_file,
                 const std::vector<ConstraintProperties>& constraints,
-                const std::vector<LoadProperties>& loads);
+                const std::vector<LoadProperties>& loads,
+                const std::string& output_file = "");
 
     // Access to components for advanced usage
     MeshGenerator& getMeshGenerator() { return mesh_generator_; }
@@ -39,6 +40,7 @@ private:
 // Utility function
 int convertStepToInp(const std::string& step_file,
                      const std::vector<ConstraintProperties>& constraints,
-                     const std::vector<LoadProperties>& loads);
+                     const std::vector<LoadProperties>& loads,
+                     const std::string& output_file = "");
 
 #endif // STEP2INP_H

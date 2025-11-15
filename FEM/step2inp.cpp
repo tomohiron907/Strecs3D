@@ -8,7 +8,8 @@ Step2Inp::~Step2Inp() {}
 
 int Step2Inp::convert(const std::string& step_file,
                       const std::vector<ConstraintProperties>& constraints,
-                      const std::vector<LoadProperties>& loads) {
+                      const std::vector<LoadProperties>& loads,
+                      const std::string& output_file) {
     gmsh::initialize();
 
     try {
@@ -36,8 +37,13 @@ int Step2Inp::convert(const std::string& step_file,
         }
 
         // Write initial INP file
-        std::string base_name = InpWriter::getBaseFilename(step_file);
-        std::string inp_file = base_name + ".inp";
+        std::string inp_file;
+        if (output_file.empty()) {
+            std::string base_name = InpWriter::getBaseFilename(step_file);
+            inp_file = base_name + ".inp";
+        } else {
+            inp_file = output_file;
+        }
 
         if (inp_writer_.initializeInpFile(step_file, inp_file) != 0) {
             gmsh::finalize();
@@ -110,7 +116,8 @@ int Step2Inp::convert(const std::string& step_file,
 
 int convertStepToInp(const std::string& step_file,
                      const std::vector<ConstraintProperties>& constraints,
-                     const std::vector<LoadProperties>& loads) {
+                     const std::vector<LoadProperties>& loads,
+                     const std::string& output_file) {
     Step2Inp converter;
-    return converter.convert(step_file, constraints, loads);
+    return converter.convert(step_file, constraints, loads, output_file);
 }

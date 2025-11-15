@@ -2,6 +2,7 @@
 #include "frd2vtu.h"
 #include "step2inp.h"
 #include "simulation_config.h"
+#include "../utils/tempPathUtility.h"
 #include <iostream>
 #include <cstdlib>
 #include <filesystem>
@@ -37,25 +38,47 @@ int runFEMAnalysis(const std::string& config_file) {
         return EXIT_FAILURE;
     }
 
-    // Step 1: Convert STEP to INP
-    std::cout << "Step 1: Converting STEP to INP..." << std::endl;
-    int result = convertStepToInp(step_file, constraints, loads);
-    if (result != 0) {
-        std::cerr << "エラー: STEP to INP conversion failed" << std::endl;
-        return result;
+    // Get temp/FEM directory for intermediate files
+    std::filesystem::path fem_temp_dir = TempPathUtility::getTempSubDirPath("FEM");
+
+    // Create directory if it doesn't exist
+    if (!std::filesystem::exists(fem_temp_dir)) {
+        std::filesystem::create_directories(fem_temp_dir);
     }
 
     // Get base filename for subsequent operations
     std::filesystem::path path(step_file);
     std::string base_name = path.stem().string();
-    std::string inp_file = base_name + ".inp";
-    std::string frd_file = base_name + ".frd";
-    std::string vtu_file = base_name + ".vtu";
+
+    // All intermediate files will be created in temp/FEM directory
+    std::filesystem::path inp_file_path = fem_temp_dir / (base_name + ".inp");
+    std::filesystem::path frd_file_path = fem_temp_dir / (base_name + ".frd");
+    std::filesystem::path vtu_file_path = fem_temp_dir / (base_name + ".vtu");
+
+    std::string inp_file = inp_file_path.string();
+    std::string frd_file = frd_file_path.string();
+    std::string vtu_file = vtu_file_path.string();
+
+    // Step 1: Convert STEP to INP
+    std::cout << "Step 1: Converting STEP to INP..." << std::endl;
+    int result = convertStepToInp(step_file, constraints, loads, inp_file);
+    if (result != 0) {
+        std::cerr << "エラー: STEP to INP conversion failed" << std::endl;
+        return result;
+    }
 
     // Step 2: Run CalculiX analysis
+    // CalculiX needs to run in the temp/FEM directory to output files there
     std::cout << "Step 2: Running CalculiX analysis..." << std::endl;
+    std::string original_dir = std::filesystem::current_path().string();
+    std::filesystem::current_path(fem_temp_dir);
+
     std::string ccx_command = "ccx_2.22 " + base_name;
     result = std::system(ccx_command.c_str());
+
+    // Return to original directory
+    std::filesystem::current_path(original_dir);
+
     if (result != 0) {
         std::cerr << "エラー: CalculiX analysis failed" << std::endl;
         return result;
