@@ -4,6 +4,7 @@
 #include "../../utils/fileUtility.h"
 #include "../../utils/tempPathUtility.h"
 #include "../processing/VtkProcessor.h"
+#include "../processing/StepToStlConverter.h"
 #include "../ui/UIState.h"
 #include "../../FEM/SimulationConditionExporter.h"
 #include "../../FEM/fem_pipeline.h"
@@ -79,8 +80,21 @@ bool ApplicationController::openStepFile(const std::string& stepFile, IUserInter
     if (!ui) return false;
 
     try {
+        // STEPファイルを表示
         ui->displayStepFile(stepFile);
         std::cout << "Successfully loaded STEP file: " << stepFile << std::endl;
+
+        // STEPファイルをSTLに変換して保存
+        StepToStlConverter converter;
+        QString stlPath = converter.convertAndSave(QString::fromStdString(stepFile));
+
+        if (stlPath.isEmpty()) {
+            std::cerr << "Warning: Failed to convert STEP to STL" << std::endl;
+            // STEPファイルの表示は成功しているので、変換失敗でもtrueを返す
+        } else {
+            std::cout << "STEP file converted to STL: " << stlPath.toStdString() << std::endl;
+        }
+
         return true;
     }
     catch (const std::exception& e) {
