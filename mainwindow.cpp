@@ -610,4 +610,6 @@ void MainWindow::onSimulateButtonClicked()
     command->execute();
 
     logMessage("FEM analysis pipeline completed.");
+
+    updateProcessButtonState();
 }
