@@ -346,9 +346,7 @@ bool ApplicationController::exportSimulationCondition(IUserInterface* ui, UIStat
     SimulationConditionExporter exporter;
     bool success = exporter.exportToJson(uiState, outputPath);
 
-    if (success) {
-        ui->showInfoMessage("成功", "シミュレーション条件を出力しました: " + outputPath);
-    } else {
+    if (!success) {
         std::cerr << "Error: Failed to export simulation condition" << std::endl;
         ui->showCriticalMessage("エラー", "シミュレーション条件の出力に失敗しました");
     }
