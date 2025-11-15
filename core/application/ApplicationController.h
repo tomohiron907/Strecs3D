@@ -33,7 +33,7 @@ public:
     bool exportSimulationCondition(IUserInterface* ui, UIState* uiState, const QString& outputPath);
 
     // シミュレーション実行
-    bool runSimulation(IUserInterface* ui, const QString& configFilePath);
+    QString runSimulation(IUserInterface* ui, const QString& configFilePath);
 
     // 可視化
     void loadAndDisplayTempStlFiles(IUserInterface* ui);

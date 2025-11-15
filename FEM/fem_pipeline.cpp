@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <filesystem>
 
-int runFEMAnalysis(const std::string& config_file) {
+std::string runFEMAnalysis(const std::string& config_file) {
     // Load simulation configuration from JSON
     SimulationConfig config;
     try {
@@ -15,7 +15,7 @@ int runFEMAnalysis(const std::string& config_file) {
         std::cout << "Loaded configuration from: " << config_file << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "エラー: 設定ファイルの読み込みに失敗しました: " << e.what() << std::endl;
-        return EXIT_FAILURE;
+        return "";
     }
 
     std::string step_file = config.step_file;
@@ -35,7 +35,7 @@ int runFEMAnalysis(const std::string& config_file) {
 
     if (constraints.empty() && loads.empty()) {
         std::cerr << "エラー: 設定ファイルに境界条件が指定されていません。" << std::endl;
-        return EXIT_FAILURE;
+        return "";
     }
 
     // Get temp/FEM directory for intermediate files
@@ -64,7 +64,7 @@ int runFEMAnalysis(const std::string& config_file) {
     int result = convertStepToInp(step_file, constraints, loads, inp_file);
     if (result != 0) {
         std::cerr << "エラー: STEP to INP conversion failed" << std::endl;
-        return result;
+        return "";
     }
 
     // Step 2: Run CalculiX analysis
@@ -81,13 +81,13 @@ int runFEMAnalysis(const std::string& config_file) {
 
     if (result != 0) {
         std::cerr << "エラー: CalculiX analysis failed" << std::endl;
-        return result;
+        return "";
     }
 
     // Check if FRD file was generated
     if (!std::filesystem::exists(frd_file)) {
         std::cerr << "エラー: FRD file was not generated: " << frd_file << std::endl;
-        return EXIT_FAILURE;
+        return "";
     }
 
     // Step 3: Convert FRD to VTU
@@ -99,9 +99,16 @@ int runFEMAnalysis(const std::string& config_file) {
         std::cout << "  - INP file: " << inp_file << std::endl;
         std::cout << "  - FRD file: " << frd_file << std::endl;
         std::cout << "  - VTU file: " << vtu_file << std::endl;
+
+        // Verify VTU file exists and return its path
+        if (std::filesystem::exists(vtu_file)) {
+            return vtu_file;
+        } else {
+            std::cerr << "エラー: VTU file was not generated: " << vtu_file << std::endl;
+            return "";
+        }
     } else {
         std::cerr << "エラー: FRD to VTU conversion failed" << std::endl;
+        return "";
     }
-
-    return result;
 }

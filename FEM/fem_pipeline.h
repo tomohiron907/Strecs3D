@@ -13,8 +13,8 @@
  * 4. Convert results from FRD to VTU format
  *
  * @param config_file Path to the simulation configuration JSON file
- * @return 0 on success, non-zero error code on failure
+ * @return Path to the generated VTU file on success, empty string on failure
  */
-int runFEMAnalysis(const std::string& config_file);
+std::string runFEMAnalysis(const std::string& config_file);
 
 #endif // FEM_PIPELINE_H

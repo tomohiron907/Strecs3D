@@ -354,35 +354,35 @@ bool ApplicationController::exportSimulationCondition(IUserInterface* ui, UIStat
     return success;
 }
 
-bool ApplicationController::runSimulation(IUserInterface* ui, const QString& configFilePath)
+QString ApplicationController::runSimulation(IUserInterface* ui, const QString& configFilePath)
 {
     if (!ui) {
-        return false;
+        return QString();
     }
 
     // 設定ファイルのパスを確認
     if (configFilePath.isEmpty()) {
         std::cerr << "Error: Configuration file path is empty" << std::endl;
         ui->showWarningMessage("警告", "設定ファイルのパスが指定されていません");
-        return false;
+        return QString();
     }
 
     try {
         // FEM解析パイプラインを実行
         std::string configFilePathStd = configFilePath.toStdString();
-        int result = runFEMAnalysis(configFilePathStd);
+        std::string vtuFilePath = runFEMAnalysis(configFilePathStd);
 
-        if (result == 0) {
+        if (!vtuFilePath.empty()) {
             ui->showInfoMessage("成功", "FEMシミュレーションが正常に完了しました");
-            return true;
+            return QString::fromStdString(vtuFilePath);
         } else {
-            std::cerr << "Error: FEM simulation failed with code: " << result << std::endl;
-            ui->showCriticalMessage("エラー", QString("FEMシミュレーションが失敗しました (エラーコード: %1)").arg(result));
-            return false;
+            std::cerr << "Error: FEM simulation failed - VTU file not generated" << std::endl;
+            ui->showCriticalMessage("エラー", "FEMシミュレーションが失敗しました");
+            return QString();
         }
     } catch (const std::exception& e) {
         std::cerr << "Error running FEM simulation: " << e.what() << std::endl;
         ui->showCriticalMessage("エラー", QString("FEMシミュレーションの実行中にエラーが発生しました: ") + e.what());
-        return false;
+        return QString();
     }
 } 

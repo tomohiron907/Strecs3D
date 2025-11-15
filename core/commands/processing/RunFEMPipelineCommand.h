@@ -41,7 +41,17 @@ public:
         }
 
         // Step 2: エクスポートした設定ファイルを使用してFEM解析を実行
-        controller_->runSimulation(ui_, outputPath_);
+        QString vtuFilePath = controller_->runSimulation(ui_, outputPath_);
+
+        // Step 3: VTUファイルが正常に生成された場合、自動的に開く
+        if (!vtuFilePath.isEmpty()) {
+            controller_->openVtkFile(vtuFilePath.toStdString(), ui_);
+
+            // UIStateにもVTUファイルパスを保存
+            if (uiState_) {
+                uiState_->setVtkFilePath(vtuFilePath);
+            }
+        }
     }
 
 private:
