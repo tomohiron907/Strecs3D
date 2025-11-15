@@ -90,9 +90,12 @@ bool ApplicationController::openStepFile(const std::string& stepFile, IUserInter
 
         if (stlPath.isEmpty()) {
             std::cerr << "Warning: Failed to convert STEP to STL" << std::endl;
+            convertedStlPath_.clear();
             // STEPファイルの表示は成功しているので、変換失敗でもtrueを返す
         } else {
             std::cout << "STEP file converted to STL: " << stlPath.toStdString() << std::endl;
+            // 変換されたSTLファイルパスを保存
+            convertedStlPath_ = stlPath;
         }
 
         return true;

@@ -176,6 +176,13 @@ void MainWindow::openSTEPFile()
     // UIStateにファイルパスを設定
     if (UIState* state = getUIState()) {
         state->setStepFilePath(fileName);
+
+        // 変換されたSTLファイルパスもUIStateに登録
+        QString convertedStlPath = appController->getConvertedStlPath();
+        if (!convertedStlPath.isEmpty()) {
+            state->setStlFilePath(convertedStlPath);
+            logMessage(QString("Converted STL file registered: %1").arg(convertedStlPath));
+        }
     }
 
     updateProcessButtonState();

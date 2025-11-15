@@ -24,6 +24,9 @@ public:
     bool openVtkFile(const std::string& vtkFile, IUserInterface* ui);
     bool openStlFile(const std::string& stlFile, IUserInterface* ui);
     bool openStepFile(const std::string& stepFile, IUserInterface* ui);
+
+    // STEPファイルから変換されたSTLファイルパスを取得
+    QString getConvertedStlPath() const { return convertedStlPath_; }
     
     // メイン処理
     bool processFiles(IUserInterface* ui);
@@ -64,7 +67,8 @@ private:
     std::string vtkFile;
     std::string stlFile;
     QString currentStlFilename;
-    
+    QString convertedStlPath_;  // STEPから変換されたSTLファイルパス
+
     std::unique_ptr<ProcessPipeline> fileProcessor;
     std::unique_ptr<ExportManager> exportManager;
     
