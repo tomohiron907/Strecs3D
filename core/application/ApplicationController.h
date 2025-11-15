@@ -45,11 +45,6 @@ public:
     void setMeshOpacity(const std::string& fileName, double opacity, IUserInterface* ui);
 
     // 状態管理
-    // TODO: これらの状態管理のメソッドが使われていない可能性高．削除できないか検討
-    void setVtkFile(const std::string& vtkFile) { this->vtkFile = vtkFile; }
-    void setStlFile(const std::string& stlFile) { this->stlFile = stlFile; }
-    std::string getVtkFile() const { return vtkFile; }
-    std::string getStlFile() const { return stlFile; }
     QString getCurrentStlFilename() const { return currentStlFilename; }
     void setCurrentStlFilename(const QString& filename) { currentStlFilename = filename; }
     
@@ -63,8 +58,6 @@ public:
     ExportManager* getExportManager() { return exportManager.get(); }
 
 private:
-    std::string vtkFile;
-    std::string stlFile;
     QString currentStlFilename;
     QString convertedStlPath_;  // STEPから変換されたSTLファイルパス
 
@@ -72,6 +65,7 @@ private:
     std::unique_ptr<ExportManager> exportManager;
     
     // ヘルパーメソッド
+    UIState* getUIState(IUserInterface* ui);
     bool validateFiles(IUserInterface* ui);
     std::vector<int> getStressThresholds(UIState* uiState);
     std::vector<StressDensityMapping> getStressDensityMappings(UIState* uiState);

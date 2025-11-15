@@ -20,12 +20,23 @@ ApplicationController::ApplicationController(QObject* parent)
 {
 }
 
+UIState* ApplicationController::getUIState(IUserInterface* ui)
+{
+    if (!ui) return nullptr;
+
+    auto* adapter = dynamic_cast<MainWindowUIAdapter*>(ui);
+    if (!adapter) return nullptr;
+
+    auto* mainWindowUI = adapter->getMainWindowUI();
+    if (!mainWindowUI) return nullptr;
+
+    return mainWindowUI->getUIState();
+}
+
 
 bool ApplicationController::openVtkFile(const std::string& vtkFile, IUserInterface* ui)
 {
     if (!ui) return false;
-
-    setVtkFile(vtkFile);
 
     // VTK用ObjectDisplayOptionsWidgetのファイル名と状態を更新
     ui->setVtkFileName(QString::fromStdString(vtkFile));
@@ -59,7 +70,6 @@ bool ApplicationController::openStlFile(const std::string& stlFile, IUserInterfa
 {
     if (!ui) return false;
 
-    setStlFile(stlFile);
     setCurrentStlFilename(QString::fromStdString(stlFile));
 
     // ObjectDisplayOptionsWidgetのファイル名を更新
@@ -150,11 +160,14 @@ bool ApplicationController::validateFiles(IUserInterface* ui)
 {
     if (!ui) return false;
 
-    if (vtkFile.empty()) {
+    auto* uiState = getUIState(ui);
+    if (!uiState) return false;
+
+    if (uiState->getVtkFilePath().isEmpty()) {
         ui->showWarningMessage("Warning", "No VTK file selected");
         return false;
     }
-    if (stlFile.empty()) {
+    if (uiState->getStlFilePath().isEmpty()) {
         ui->showWarningMessage("Warning", "No STL file selected");
         return false;
     }
@@ -165,16 +178,13 @@ bool ApplicationController::initializeVtkProcessor(IUserInterface* ui)
 {
     if (!ui) return false;
 
-    auto* adapter = dynamic_cast<MainWindowUIAdapter*>(ui);
-    if (!adapter) return false;
-
-    auto* mainWindowUI = adapter->getMainWindowUI();
-    if (!mainWindowUI) return false;
-
-    auto* uiState = mainWindowUI->getUIState();
+    auto* uiState = getUIState(ui);
     if (!uiState) return false;
 
     auto thresholds = getStressThresholds(uiState);
+    std::string vtkFile = uiState->getVtkFilePath().toStdString();
+    std::string stlFile = uiState->getStlFilePath().toStdString();
+
     if (!fileProcessor->initializeVtkProcessor(vtkFile, stlFile, thresholds, nullptr)) {
         ui->showCriticalMessage("Error", "Failed to initialize VTK processor");
         return false;
@@ -266,6 +276,11 @@ void ApplicationController::handleProcessingError(const std::exception& e, IUser
 bool ApplicationController::export3mfFile(IUserInterface* ui)
 {
     if (!ui) return false;
+
+    auto* uiState = getUIState(ui);
+    if (!uiState) return false;
+
+    std::string stlFile = uiState->getStlFilePath().toStdString();
     return exportManager->export3mfFile(stlFile, nullptr);
 }
 
