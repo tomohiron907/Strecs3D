@@ -8,7 +8,7 @@ ConstraintSetter::ConstraintSetter() {
 ConstraintSetter::~ConstraintSetter() {
 }
 
-void ConstraintSetter::addConstraint(const ConstraintCondition& constraint) {
+void ConstraintSetter::addConstraint(const ConstraintProperties& constraint) {
     constraints_.push_back(constraint);
 }
 
@@ -49,10 +49,10 @@ void ConstraintSetter::writeFixedConstraints(std::ofstream& f) const {
     f << "ConstraintFixed,3\n";
 }
 
-const std::vector<ConstraintCondition>& ConstraintSetter::getConstraints() const {
+const std::vector<ConstraintProperties>& ConstraintSetter::getConstraints() const {
     return constraints_;
 }
 
-ConstraintCondition createConstraintCondition(int surface_number) {
+ConstraintProperties createConstraintCondition(int surface_number) {
     return {surface_number};
 }

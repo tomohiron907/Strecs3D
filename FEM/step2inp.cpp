@@ -7,8 +7,8 @@ Step2Inp::Step2Inp() {}
 Step2Inp::~Step2Inp() {}
 
 int Step2Inp::convert(const std::string& step_file,
-                      const std::vector<ConstraintCondition>& constraints,
-                      const std::vector<LoadCondition>& loads) {
+                      const std::vector<ConstraintProperties>& constraints,
+                      const std::vector<LoadProperties>& loads) {
     gmsh::initialize();
 
     try {
@@ -109,8 +109,8 @@ int Step2Inp::convert(const std::string& step_file,
 }
 
 int convertStepToInp(const std::string& step_file,
-                     const std::vector<ConstraintCondition>& constraints,
-                     const std::vector<LoadCondition>& loads) {
+                     const std::vector<ConstraintProperties>& constraints,
+                     const std::vector<LoadProperties>& loads) {
     Step2Inp converter;
     return converter.convert(step_file, constraints, loads);
 }

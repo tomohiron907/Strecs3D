@@ -4,7 +4,7 @@
 #include <vector>
 #include <fstream>
 
-struct ConstraintCondition {
+struct ConstraintProperties {
     int surface_number;
 };
 
@@ -14,7 +14,7 @@ public:
     ~ConstraintSetter();
 
     // Add constraint condition
-    void addConstraint(const ConstraintCondition& constraint);
+    void addConstraint(const ConstraintProperties& constraint);
     void addConstraint(int surface_number);
 
     // Get node tags for a surface
@@ -25,13 +25,13 @@ public:
     void writeFixedConstraints(std::ofstream& f) const;
 
     // Get all constraints
-    const std::vector<ConstraintCondition>& getConstraints() const;
+    const std::vector<ConstraintProperties>& getConstraints() const;
 
 private:
-    std::vector<ConstraintCondition> constraints_;
+    std::vector<ConstraintProperties> constraints_;
 };
 
 // Utility function
-ConstraintCondition createConstraintCondition(int surface_number);
+ConstraintProperties createConstraintCondition(int surface_number);
 
 #endif // CONSTRAINT_SETTER_H

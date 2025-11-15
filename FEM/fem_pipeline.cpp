@@ -20,13 +20,13 @@ int runFEMAnalysis(const std::string& config_file) {
     std::string step_file = config.step_file;
 
     // Create constraint conditions from config
-    std::vector<ConstraintCondition> constraints;
+    std::vector<ConstraintProperties> constraints;
     for (const auto& fixed_face : config.constraints.fixed_faces) {
         constraints.push_back(createConstraintCondition(fixed_face.surface_id));
     }
 
     // Create load conditions from config
-    std::vector<LoadCondition> loads;
+    std::vector<LoadProperties> loads;
     for (const auto& load : config.loads.applied_loads) {
         std::vector<double> direction = {load.direction.x, load.direction.y, load.direction.z};
         loads.push_back(createLoadCondition(load.surface_id, load.magnitude, direction));

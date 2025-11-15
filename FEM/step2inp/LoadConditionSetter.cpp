@@ -11,7 +11,7 @@ LoadConditionSetter::LoadConditionSetter() {
 LoadConditionSetter::~LoadConditionSetter() {
 }
 
-void LoadConditionSetter::addLoad(const LoadCondition& load) {
+void LoadConditionSetter::addLoad(const LoadProperties& load) {
     loads_.push_back(load);
 }
 
@@ -197,11 +197,11 @@ void LoadConditionSetter::writeForceBoundaryCondition(std::ofstream& f, int surf
     }
 }
 
-const std::vector<LoadCondition>& LoadConditionSetter::getLoads() const {
+const std::vector<LoadProperties>& LoadConditionSetter::getLoads() const {
     return loads_;
 }
 
-LoadCondition createLoadCondition(int surface_number, double magnitude,
-                                  const std::vector<double>& direction) {
+LoadProperties createLoadCondition(int surface_number, double magnitude,
+                                   const std::vector<double>& direction) {
     return {surface_number, magnitude, direction};
 }

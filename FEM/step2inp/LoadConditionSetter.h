@@ -4,7 +4,7 @@
 #include <vector>
 #include <fstream>
 
-struct LoadCondition {
+struct LoadProperties {
     int surface_number;
     double magnitude;
     std::vector<double> direction;
@@ -16,7 +16,7 @@ public:
     ~LoadConditionSetter();
 
     // Add load condition
-    void addLoad(const LoadCondition& load);
+    void addLoad(const LoadProperties& load);
     void addLoad(int surface_number, double magnitude, const std::vector<double>& direction);
 
     // Calculate element area (geometry utility)
@@ -28,14 +28,14 @@ public:
                                      const std::vector<double>& force_direction) const;
 
     // Get all load conditions
-    const std::vector<LoadCondition>& getLoads() const;
+    const std::vector<LoadProperties>& getLoads() const;
 
 private:
-    std::vector<LoadCondition> loads_;
+    std::vector<LoadProperties> loads_;
 };
 
 // Utility function
-LoadCondition createLoadCondition(int surface_number, double magnitude,
-                                  const std::vector<double>& direction);
+LoadProperties createLoadCondition(int surface_number, double magnitude,
+                                   const std::vector<double>& direction);
 
 #endif // LOAD_CONDITION_SETTER_H
