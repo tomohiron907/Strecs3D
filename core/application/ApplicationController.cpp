@@ -70,8 +70,6 @@ bool ApplicationController::openStlFile(const std::string& stlFile, IUserInterfa
 {
     if (!ui) return false;
 
-    setCurrentStlFilename(QString::fromStdString(stlFile));
-
     // ObjectDisplayOptionsWidgetのファイル名を更新
     ui->setStlFileName(QString::fromStdString(stlFile));
 

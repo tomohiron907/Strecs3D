@@ -21,9 +21,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
-    
-    QString getCurrentMode() const;
-    QString getCurrentStlFilename() const;
+
     void logMessage(const QString& message);
     
     // UIState access

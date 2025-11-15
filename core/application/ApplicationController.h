@@ -44,10 +44,6 @@ public:
     void setMeshVisibility(const std::string& fileName, bool visible, IUserInterface* ui);
     void setMeshOpacity(const std::string& fileName, double opacity, IUserInterface* ui);
 
-    // 状態管理
-    QString getCurrentStlFilename() const { return currentStlFilename; }
-    void setCurrentStlFilename(const QString& filename) { currentStlFilename = filename; }
-    
     // ファイル読み込み状態確認
     bool isStlFileLoaded(UIState* uiState) const;
     bool isVtkFileLoaded(UIState* uiState) const;
@@ -58,7 +54,6 @@ public:
     ExportManager* getExportManager() { return exportManager.get(); }
 
 private:
-    QString currentStlFilename;
     QString convertedStlPath_;  // STEPから変換されたSTLファイルパス
 
     std::unique_ptr<ProcessPipeline> fileProcessor;

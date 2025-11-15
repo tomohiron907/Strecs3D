@@ -228,16 +228,6 @@ void MainWindow::export3mfFile()
     logMessage("3MF export completed successfully");
 }
 
-QString MainWindow::getCurrentMode() const
-{
-    return ui->getModeComboBox()->currentText();
-}
-
-QString MainWindow::getCurrentStlFilename() const
-{
-    return appController->getCurrentStlFilename();
-}
-
 void MainWindow::onObjectVisibilityChanged(bool visible)
 {
     auto objectDisplayWidget = ui->getObjectDisplayOptionsWidget();
