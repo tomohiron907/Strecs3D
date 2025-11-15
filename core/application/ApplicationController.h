@@ -54,10 +54,9 @@ public:
     void setCurrentStlFilename(const QString& filename) { currentStlFilename = filename; }
     
     // ファイル読み込み状態確認
-    // TODO: 状態管理をapplicationControllerで見るのではなく，UIStateを参照する
-    bool isStlFileLoaded() const { return !stlFile.empty(); }
-    bool isVtkFileLoaded() const { return !vtkFile.empty(); }
-    bool areBothFilesLoaded() const { return isStlFileLoaded() && isVtkFileLoaded(); }
+    bool isStlFileLoaded(UIState* uiState) const;
+    bool isVtkFileLoaded(UIState* uiState) const;
+    bool areBothFilesLoaded(UIState* uiState) const;
     
     // ゲッター
     ProcessPipeline* getFileProcessor() { return fileProcessor.get(); }

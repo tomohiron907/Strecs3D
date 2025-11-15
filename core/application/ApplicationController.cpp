@@ -433,4 +433,21 @@ bool ApplicationController::runFEMPipeline(IUserInterface* ui, UIState* uiState,
     }
 
     return false;
+}
+
+bool ApplicationController::isStlFileLoaded(UIState* uiState) const
+{
+    if (!uiState) return false;
+    return !uiState->getStlFilePath().isEmpty();
+}
+
+bool ApplicationController::isVtkFileLoaded(UIState* uiState) const
+{
+    if (!uiState) return false;
+    return !uiState->getVtkFilePath().isEmpty();
+}
+
+bool ApplicationController::areBothFilesLoaded(UIState* uiState) const
+{
+    return isStlFileLoaded(uiState) && isVtkFileLoaded(uiState);
 } 

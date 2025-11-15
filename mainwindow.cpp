@@ -385,10 +385,14 @@ void MainWindow::resetExportButton()
 
 void MainWindow::updateProcessButtonState()
 {
+    // UIStateを取得
+    UIState* state = getUIState();
+    if (!state) return;
+
     // 両ファイル（STLとVTK）が読み込まれている場合のみProcessボタンを有効化
-    bool bothFilesLoaded = appController->areBothFilesLoaded();
+    bool bothFilesLoaded = appController->areBothFilesLoaded(state);
     ui->getProcessButton()->setEnabled(bothFilesLoaded);
-    
+
     if (bothFilesLoaded) {
         ui->getProcessButton()->setEmphasized(true);
     } else {
