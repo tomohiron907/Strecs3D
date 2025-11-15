@@ -27,30 +27,8 @@ public:
         outputPath_(outputPath) {}
 
     void execute() override {
-        if (!controller_ || !ui_ || !uiState_) {
-            return;
-        }
-
-        // Step 1: FEM設定ファイルをJSONにエクスポート
-        bool exportSuccess = controller_->exportSimulationCondition(ui_, uiState_, outputPath_);
-
-        if (!exportSuccess) {
-            // エクスポートが失敗した場合、FEM解析は実行しない
-            ui_->showCriticalMessage("エラー", "FEM設定ファイルのエクスポートに失敗したため、解析を実行できません");
-            return;
-        }
-
-        // Step 2: エクスポートした設定ファイルを使用してFEM解析を実行
-        QString vtuFilePath = controller_->runSimulation(ui_, outputPath_);
-
-        // Step 3: VTUファイルが正常に生成された場合、自動的に開く
-        if (!vtuFilePath.isEmpty()) {
-            controller_->openVtkFile(vtuFilePath.toStdString(), ui_);
-
-            // UIStateにもVTUファイルパスを保存
-            if (uiState_) {
-                uiState_->setVtkFilePath(vtuFilePath);
-            }
+        if (controller_) {
+            controller_->runFEMPipeline(ui_, uiState_, outputPath_);
         }
     }
 

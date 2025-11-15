@@ -385,4 +385,35 @@ QString ApplicationController::runSimulation(IUserInterface* ui, const QString& 
         ui->showCriticalMessage("エラー", QString("FEMシミュレーションの実行中にエラーが発生しました: ") + e.what());
         return QString();
     }
+}
+
+bool ApplicationController::runFEMPipeline(IUserInterface* ui, UIState* uiState, const QString& outputPath)
+{
+    if (!ui || !uiState) {
+        return false;
+    }
+
+    // Step 1: FEM設定ファイルをJSONにエクスポート
+    bool exportSuccess = exportSimulationCondition(ui, uiState, outputPath);
+
+    if (!exportSuccess) {
+        // エクスポートが失敗した場合、FEM解析は実行しない
+        ui->showCriticalMessage("エラー", "FEM設定ファイルのエクスポートに失敗したため、解析を実行できません");
+        return false;
+    }
+
+    // Step 2: エクスポートした設定ファイルを使用してFEM解析を実行
+    QString vtuFilePath = runSimulation(ui, outputPath);
+
+    // Step 3: VTUファイルが正常に生成された場合、自動的に開く
+    if (!vtuFilePath.isEmpty()) {
+        openVtkFile(vtuFilePath.toStdString(), ui);
+
+        // UIStateにもVTUファイルパスを保存
+        uiState->setVtkFilePath(vtuFilePath);
+
+        return true;
+    }
+
+    return false;
 } 

@@ -34,6 +34,7 @@ public:
 
     // シミュレーション実行
     QString runSimulation(IUserInterface* ui, const QString& configFilePath);
+    bool runFEMPipeline(IUserInterface* ui, UIState* uiState, const QString& outputPath);
 
     // 可視化
     void loadAndDisplayTempStlFiles(IUserInterface* ui);
