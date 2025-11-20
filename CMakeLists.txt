@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# IMPORTANT: Set overlay ports BEFORE vcpkg toolchain is loaded
+# Use overlay ports for custom vcpkg packages (e.g., gmsh with OpenCASCADE)
+set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/ports" CACHE PATH "vcpkg overlay ports directory")
+
 # vcpkgのインストール先をプロジェクトルートに固定
 set(VCPKG_INSTALLED_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed" CACHE PATH "vcpkg install directory")
 
@@ -8,6 +12,10 @@ set(VCPKG_INSTALLED_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed" CACHE PATH "vcpkg 
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       CACHE STRING "")
+endif()
+
+if(EXISTS "${VCPKG_OVERLAY_PORTS}")
+    message(STATUS "Using vcpkg overlay ports: ${VCPKG_OVERLAY_PORTS}")
 endif()
 
 project(Strecs3D LANGUAGES CXX)

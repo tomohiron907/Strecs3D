@@ -53,7 +53,8 @@ else()
 endif()
 
 # vcpkgからgmshを検索
-find_package(gmsh REQUIRED)
+# Updated to use 'gmsh' package name (changed from unofficial-gmsh in newer vcpkg versions)
+find_package(gmsh CONFIG REQUIRED)
 if(gmsh_FOUND)
   message(STATUS "gmsh found: ${gmsh_VERSION}")
 else()

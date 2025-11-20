@@ -39,7 +39,7 @@ function(apply_macos_settings TARGET_NAME)
     ${VTK_LIBRARIES}
     lib3mf::lib3mf
     libzip::zip
-    gmsh::lib
+    $<IF:$<TARGET_EXISTS:gmsh::shared>,gmsh::shared,gmsh::lib>
     ${OpenCASCADE_LIBRARIES}
     nlohmann_json::nlohmann_json
   )
