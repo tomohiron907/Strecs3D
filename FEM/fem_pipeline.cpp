@@ -6,6 +6,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <filesystem>
+#include <mach-o/dyld.h>
+#include <limits.h>
 
 std::string runFEMAnalysis(const std::string& config_file) {
     // Load simulation configuration from JSON
@@ -73,7 +75,22 @@ std::string runFEMAnalysis(const std::string& config_file) {
     std::string original_dir = std::filesystem::current_path().string();
     std::filesystem::current_path(fem_temp_dir);
 
-    std::string ccx_command = "ccx_2.22 " + base_name;
+    // Get path to bundled ccx executable (bin/ccx in same directory as executable)
+    char exe_path[PATH_MAX];
+    uint32_t size = sizeof(exe_path);
+    std::filesystem::path ccx_path;
+
+    if (_NSGetExecutablePath(exe_path, &size) == 0) {
+        // Get the directory containing the executable
+        std::filesystem::path exe_dir = std::filesystem::path(exe_path).parent_path();
+        ccx_path = exe_dir / "bin" / "ccx";
+        std::cout << "Looking for CCX at: " << ccx_path << std::endl;
+    } else {
+        std::cerr << "警告: 実行ファイルのパスを取得できませんでした。デフォルトパスを使用します。" << std::endl;
+        ccx_path = "ccx";  // Fall back to searching in PATH
+    }
+
+    std::string ccx_command = ccx_path.string() + " " + base_name;
     result = std::system(ccx_command.c_str());
 
     // Return to original directory
