@@ -6,8 +6,19 @@
 #include <iostream>
 #include <cstdlib>
 #include <filesystem>
-#include <mach-o/dyld.h>
 #include <limits.h>
+
+// --- 【修正1】 プラットフォームごとのヘッダー切り替え ---
+#if defined(__APPLE__)
+    #include <mach-o/dyld.h>
+#elif defined(_WIN32)
+    #include <windows.h>
+    // WindowsでのPATH_MAX対応（定義されていない場合の予備）
+    #ifndef PATH_MAX
+    #define PATH_MAX MAX_PATH
+    #endif
+#endif
+// ----------------------------------------------------
 
 std::string runFEMAnalysis(const std::string& config_file) {
     // Load simulation configuration from JSON
@@ -76,21 +87,51 @@ std::string runFEMAnalysis(const std::string& config_file) {
     std::filesystem::current_path(fem_temp_dir);
 
     // Get path to bundled ccx executable (bin/ccx in same directory as executable)
+    std::filesystem::path ccx_path;
+    bool pathFound = false;
+
+    // --- 【修正2 & 3】 OSごとの実行パス取得処理 ---
+#if defined(__APPLE__)
+    // macOS Implementation
     char exe_path[PATH_MAX];
     uint32_t size = sizeof(exe_path);
-    std::filesystem::path ccx_path;
-
     if (_NSGetExecutablePath(exe_path, &size) == 0) {
-        // Get the directory containing the executable
         std::filesystem::path exe_dir = std::filesystem::path(exe_path).parent_path();
-        ccx_path = exe_dir / "bin" / "ccx";
+        ccx_path = exe_dir / "bin" / "ccx"; // Mac: 拡張子なし
+        pathFound = true;
+    }
+#elif defined(_WIN32)
+    // Windows Implementation
+    char exe_path[PATH_MAX];
+    // GetModuleFileNameAはANSI版のパスを取得します
+    if (GetModuleFileNameA(NULL, exe_path, PATH_MAX) != 0) {
+        std::filesystem::path exe_dir = std::filesystem::path(exe_path).parent_path();
+        ccx_path = exe_dir / "bin" / "ccx.exe"; // Windows: .exeをつける
+        pathFound = true;
+    }
+#else
+    // Linux / Other (Fallback)
+    // Linuxの場合は /proc/self/exe を読むのが一般的ですが、ここでは簡易的にデフォルトへ
+    pathFound = false;
+#endif
+
+    if (pathFound) {
         std::cout << "Looking for CCX at: " << ccx_path << std::endl;
     } else {
         std::cerr << "警告: 実行ファイルのパスを取得できませんでした。デフォルトパスを使用します。" << std::endl;
-        ccx_path = "ccx";  // Fall back to searching in PATH
+        #if defined(_WIN32)
+            ccx_path = "ccx.exe";
+        #else
+            ccx_path = "ccx";
+        #endif
     }
+    // ----------------------------------------------------
 
+    // パスにスペースが含まれる場合の対策として引用符で囲むことを推奨しますが、
+    // ここでは元の実装に合わせてそのまま結合します。
     std::string ccx_command = ccx_path.string() + " " + base_name;
+    
+    std::cout << "Executing command: " << ccx_command << std::endl; // デバッグ用に出力追加
     result = std::system(ccx_command.c_str());
 
     // Return to original directory

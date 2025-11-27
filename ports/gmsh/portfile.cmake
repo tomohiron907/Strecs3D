@@ -1,5 +1,9 @@
 string(REPLACE "." "_" UNDERSCORES_VERSION "${VERSION}")
 
+message(WARNING "========================================")
+message(WARNING "  【確認用】 私のカスタムGmshポートを使用中！  ")
+message(WARNING "========================================")
+
 vcpkg_from_gitlab(
     GITLAB_URL https://gitlab.onelab.info
     OUT_SOURCE_PATH SOURCE_PATH
@@ -32,10 +36,13 @@ vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     DISABLE_PARALLEL_CONFIGURE
     OPTIONS
+        "-DCMAKE_CXX_FLAGS=/bigobj /EHsc -DWIN32"
         # Force enable OCC when occ feature is specified
         -DENABLE_OCC=ON
         -DENABLE_OCC_CAF=ON
-        -DENABLE_OCC_TBB=ON
+        # Disable ENABLE_OCC_TBB: vcpkg's TBB uses tbb12.lib but gmsh looks for tbb.lib
+        # TBB is optional for OCC - it's only used for parallel processing optimization
+        -DENABLE_OCC_TBB=OFF
         # my-customize
         -DENABLE_MESH=ON
         -DENABLE_EIGEN=ON

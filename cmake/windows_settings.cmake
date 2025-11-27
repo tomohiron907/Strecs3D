@@ -65,7 +65,7 @@ function(apply_windows_settings TARGET_NAME)
     ${LIB3MF_LIB}
     ${LIBZIP_LIBRARIES}
     pugixml::pugixml
-    gmsh::lib
+    $<IF:$<TARGET_EXISTS:gmsh::shared>,gmsh::shared,gmsh::lib>
     ${OpenCASCADE_LIBRARIES}
     nlohmann_json::nlohmann_json
   )
@@ -85,10 +85,18 @@ function(apply_windows_settings TARGET_NAME)
   endif()
 
   # Windows環境での設定
-  set_target_properties(${TARGET_NAME} PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    VS_DEBUGGER_ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/$<CONFIG>;$ENV{PATH}"
-  )
+  # Debug時はコンソールを表示、Release時はGUIアプリとして実行
+  if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_target_properties(${TARGET_NAME} PROPERTIES
+      WIN32_EXECUTABLE TRUE
+      VS_DEBUGGER_ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/$<CONFIG>;$ENV{PATH}"
+    )
+  else()
+    set_target_properties(${TARGET_NAME} PROPERTIES
+      WIN32_EXECUTABLE FALSE
+      VS_DEBUGGER_ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/$<CONFIG>;$ENV{PATH}"
+    )
+  endif()
 endfunction()
 
 # Qtプラグインパスの設定
