@@ -127,9 +127,13 @@ std::string runFEMAnalysis(const std::string& config_file) {
     }
     // ----------------------------------------------------
 
-    // パスにスペースが含まれる場合の対策として引用符で囲むことを推奨しますが、
-    // ここでは元の実装に合わせてそのまま結合します。
-    std::string ccx_command = ccx_path.string() + " " + base_name;
+    // Windowsではパスに空白が含まれる可能性があるので引用符で囲む
+    std::string ccx_command;
+#if defined(_WIN32)
+    ccx_command = "\"" + ccx_path.string() + "\" " + base_name;
+#else
+    ccx_command = ccx_path.string() + " " + base_name;
+#endif
     
     std::cout << "Executing command: " << ccx_command << std::endl; // デバッグ用に出力追加
     result = std::system(ccx_command.c_str());
