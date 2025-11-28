@@ -60,6 +60,7 @@ int MeshGenerator::generateMesh(const std::string& step_file) {
         gmsh::option::setNumber("Mesh.Algorithm3D", mesh_algorithm_);
         gmsh::model::mesh::generate(3);
         gmsh::model::mesh::setOrder(mesh_order_);
+        gmsh::model::mesh::optimize("HighOrder");
 
         gmsh::option::setNumber("Mesh.SaveAll", 0);
 
