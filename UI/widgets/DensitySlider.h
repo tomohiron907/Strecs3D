@@ -31,6 +31,41 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
 
 private:
+    // Layout constants
+    static constexpr int SLIDER_WIDTH = 30;
+    static constexpr int GRADIENT_WIDTH = 30;
+    static constexpr int GRADIENT_GAP = 20;
+    static constexpr int LABEL_EXTRA_WIDTH = 28;
+    static constexpr int LABEL_GAP = 8;
+    static constexpr int TRIANGLE_SIZE = 13;
+    static constexpr int PERCENT_EDIT_GAP = 20;
+    static constexpr int VERTICAL_LABEL_DISTANCE = 60;
+    static constexpr int RIGHT_LABEL_DISTANCE = 70;
+    static constexpr int REGION_COUNT = 4;
+    static constexpr int HANDLE_COUNT = 3;
+
+    // Helper structure for slider bounds
+    struct SliderBounds {
+        int left;
+        int right;
+        int top;
+        int bottom;
+        int gradLeft;
+        int gradRight;
+    };
+
+    SliderBounds getSliderBounds() const;
+    std::vector<int> getRegionPositions() const;
+    double yToStress(int y) const;
+
+    // Drawing helper functions
+    void drawGradientBar(QPainter& painter, const SliderBounds& bounds);
+    void drawStressLabels(QPainter& painter, const SliderBounds& bounds);
+    void drawSliderBody(QPainter& painter, const SliderBounds& bounds);
+    void drawRegions(QPainter& painter, const SliderBounds& bounds);
+    void drawHandles(QPainter& painter, const SliderBounds& bounds);
+    void drawAxisLabels(QPainter& painter, const SliderBounds& bounds);
+
     std::vector<int> m_handles; // 3つのハンドル位置（Y座標）
     int m_draggedHandle = -1;
     int m_handleRadius = 8;

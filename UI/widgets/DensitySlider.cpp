@@ -40,12 +40,12 @@ DensitySlider::DensitySlider(QWidget* parent)
     : QWidget(parent)
 {
     // コンストラクタで固定値ではなく、後で計算する
-    m_handles = {0, 0, 0}; // 仮の値
+    m_handles.resize(HANDLE_COUNT, 0); // 仮の値
     setMinimumWidth(120);
     setMinimumHeight(220);
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
-    // パーセント入力欄を4つ作成
-    for (int i = 0; i < 4; ++i) {
+    // パーセント入力欄を作成
+    for (int i = 0; i < REGION_COUNT; ++i) {
         QLineEdit* edit = new QLineEdit(this);
         edit->setFixedWidth(40);
         edit->setAlignment(Qt::AlignCenter);
@@ -88,137 +88,23 @@ void DensitySlider::setOriginalStressRange(double minStress, double maxStress) {
 void DensitySlider::paintEvent(QPaintEvent*) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    int w = width();
-    int h = height();
-    int x = w / 2;
-    int sliderWidth = 30;
-    int left = x - sliderWidth / 2;
-    int right = x + sliderWidth / 2;
-    int top = m_margin;
-    int bottom = h - m_margin;
+    SliderBounds bounds = getSliderBounds();
 
-    // グラデーション長方形（スライダの左側に表示）
-    int gradWidth = 30;
-    int gradGap = 20; // スライダとグラデーションバーの間隔
-    int gradLeft = left - gradGap - gradWidth; // スライダの中心から左右対称な距離
-    int gradRight = gradLeft + gradWidth;
-    QLinearGradient gradient(gradLeft, top, gradLeft, bottom);
-    gradient.setColorAt(0.0, ColorManager::HIGH_COLOR);   // 赤
-    gradient.setColorAt(0.5, ColorManager::MIDDLE_COLOR); // 白
-    gradient.setColorAt(1.0, ColorManager::LOW_COLOR);    // 青
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(gradient);
-    painter.drawRect(gradLeft, top, gradWidth, bottom - top);
-
-    // Stress値のラベルを描画
-    painter.setPen(Qt::white);
-    QFont font = painter.font();
-    font.setPointSize(10);
-    painter.setFont(font);
-    // ラベルのX座標: グラデーションバーの左側に余白を設けて表示
-    int labelWidth = gradWidth + 28; // ラベルの幅を広げる
-    int labelX = gradLeft - labelWidth - 8; // さらに左に余白を追加
-    // 上側（最大値）
-    painter.drawText(labelX, top - 5, labelWidth, 20, Qt::AlignRight | Qt::AlignVCenter,
-                    QString::number(m_maxStress, 'g', 2));
-    // 下側（最小値）
-    painter.drawText(labelX, bottom - 15, labelWidth, 20, Qt::AlignRight | Qt::AlignVCenter,
-                    QString::number(m_minStress, 'g', 2));
-
-    for (int y : m_handles) {
-        // y座標を0.0〜1.0に正規化（bottomが0、topが1になるように）
-        double t = (double)(y - bottom) / (top - bottom); // top=1, bottom=0
-        double stress = m_minStress + t * (m_maxStress - m_minStress);
-        painter.drawText(labelX, y - 10, labelWidth, 20, Qt::AlignRight | Qt::AlignVCenter,
-                        QString::number(stress, 'g', 2));
-    }
-
-    // 長方形（スライダ本体）
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(60, 60, 60));
-    painter.drawRect(left, top, sliderWidth, bottom - top);
-
-    // 領域の色
-    std::vector<int> positions = {bottom};
-    for (auto it = m_handles.rbegin(); it != m_handles.rend(); ++it) positions.push_back(*it);
-    positions.push_back(top);
-    for (int i = 0; i < 4; ++i) {
-        // 領域の中心Y座標
-        int yCenter = (positions[i] + positions[i+1]) / 2;
-        // グラデーション範囲で正規化
-        double t = (double)(yCenter - top) / (bottom - top);
-        QColor regionColor = getGradientColor(t);
-        regionColor.setAlpha(190); // 完全不透明
-        painter.setBrush(regionColor);
-        painter.drawRect(left, positions[i], sliderWidth, positions[i+1] - positions[i]);
-    }
-
-    // ハンドル
-    for (int y : m_handles) {
-        painter.setPen(QPen(ColorManager::HANDLE_COLOR, 2));
-        painter.drawLine(gradLeft, y, right, y);
-        
-        // 右端に左向きの三角形を描画
-        int triangleSize = 13;
-        QPolygon triangle;
-        triangle << QPoint(right, y)
-                 << QPoint(right + triangleSize, y - triangleSize/2)
-                 << QPoint(right + triangleSize, y + triangleSize/2);
-        painter.setBrush(ColorManager::HANDLE_COLOR);
-        painter.setPen(Qt::NoPen);
-        painter.drawPolygon(triangle);
-    }
-
-    // パーセント入力欄の位置を更新
+    drawGradientBar(painter, bounds);
+    drawStressLabels(painter, bounds);
+    drawSliderBody(painter, bounds);
+    drawRegions(painter, bounds);
+    drawHandles(painter, bounds);
     updatePercentEditPositions();
-
-    // スライダー右側に-90度回転した「von Mises Stress[Pa]」ラベルを描画
-    painter.save();
-    QFont labelFont = painter.font();
-    labelFont.setPointSize(11); // お好みで調整
-    labelFont.setBold(true);
-    painter.setFont(labelFont);
-    painter.setPen(Qt::white);
-    // 描画位置を決める
-    int labelY = top + (bottom - top) / 2; // スライダー中央
-    int verticalLabelX = gradLeft - 60; // グラデーションバーより左に50px余白（必要に応じて調整）
-    painter.translate(verticalLabelX, labelY);
-    painter.rotate(-90);
-    QString verticalLabel = "von Mises Stress[Pa]";
-    QRect textRect(- (bottom - top) / 2, -40, (bottom - top), 80); // 幅・高さは調整
-    painter.drawText(textRect, Qt::AlignCenter, verticalLabel);
-    painter.restore();
-
-    // スライダー右側に-90度回転した「Infill Density [%]」ラベルを描画
-    painter.save();
-    QFont rightLabelFont = painter.font();
-    rightLabelFont.setPointSize(11);
-    rightLabelFont.setBold(true);
-    painter.setFont(rightLabelFont);
-    painter.setPen(Qt::white);
-    int rightLabelY = top + (bottom - top) / 2;
-    int rightLabelX = right + 70; // パーセント欄よりさらに右
-    painter.translate(rightLabelX, rightLabelY);
-    painter.rotate(-90);
-    QString rightVerticalLabel = "Infill Density [%]";
-    QRect rightTextRect(- (bottom - top) / 2, -40, (bottom - top), 80);
-    painter.drawText(rightTextRect, Qt::AlignCenter, rightVerticalLabel);
-    painter.restore();
+    drawAxisLabels(painter, bounds);
 }
 
 void DensitySlider::updatePercentEditPositions() {
-    int w = width();
-    int x = w / 2;
-    int sliderWidth = 30;
-    int right = x + sliderWidth / 2;
-    int top = m_margin;
-    int bottom = height() - m_margin;
-    std::vector<int> positions = {bottom};
-    for (auto it = m_handles.rbegin(); it != m_handles.rend(); ++it) positions.push_back(*it);
-    positions.push_back(top);
-    for (int i = 0; i < 4; ++i) {
+    SliderBounds bounds = getSliderBounds();
+    std::vector<int> positions = getRegionPositions();
+    for (int i = 0; i < REGION_COUNT; ++i) {
         int yCenter = (positions[i] + positions[i+1]) / 2;
-        int editX = right + 20; // スライダの右側に20px余白
+        int editX = bounds.right + PERCENT_EDIT_GAP;
         int editY = yCenter - m_percentEdits[i]->height() / 2;
         m_percentEdits[i]->move(editX, editY);
         m_percentEdits[i]->show();
@@ -233,26 +119,20 @@ void DensitySlider::resizeEvent(QResizeEvent* event) {
 }
 
 int DensitySlider::handleAtPosition(const QPoint& pos) const {
-    int w = width();
-    int x = w / 2;
-    int left = x - 15;
-    int gradWidth = 30;
-    int gradLeft = left - gradWidth - 30;
-    int right = x + 15;
-    int triangleSize = 13;
+    SliderBounds bounds = getSliderBounds();
     int tolerance = 6; // ピクセル単位の許容範囲
-    
+
     for (int i = 0; i < (int)m_handles.size(); ++i) {
         int y = m_handles[i];
-        
+
         // 線の範囲内かどうか
-        if (pos.x() >= gradLeft && pos.x() <= right && std::abs(pos.y() - y) <= tolerance) {
+        if (pos.x() >= bounds.gradLeft && pos.x() <= bounds.right && std::abs(pos.y() - y) <= tolerance) {
             return i;
         }
-        
+
         // 三角形の範囲内かどうか
-        if (pos.x() >= right && pos.x() <= right + triangleSize && 
-            pos.y() >= y - triangleSize/2 && pos.y() <= y + triangleSize/2) {
+        if (pos.x() >= bounds.right && pos.x() <= bounds.right + TRIANGLE_SIZE &&
+            pos.y() >= y - TRIANGLE_SIZE/2 && pos.y() <= y + TRIANGLE_SIZE/2) {
             return i;
         }
     }
@@ -301,9 +181,9 @@ std::vector<double> DensitySlider::regionPercents() const {
 }
 
 void DensitySlider::setRegionPercents(const std::vector<double>& percents) {
-    if (percents.size() == 4) {
+    if (percents.size() == REGION_COUNT) {
         m_regionPercents = percents;
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < REGION_COUNT; ++i) {
             m_percentEdits[i]->setText(QString::number(m_regionPercents[i], 'g', 2));
         }
         updateStressDensityMappings();
@@ -314,7 +194,7 @@ void DensitySlider::setRegionPercents(const std::vector<double>& percents) {
 
 void DensitySlider::onPercentEditChanged() {
     bool changed = false;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < REGION_COUNT; ++i) {
         bool ok = false;
         double val = m_percentEdits[i]->text().toDouble(&ok);
         if (ok && m_regionPercents[i] != val) {
@@ -334,53 +214,53 @@ std::vector<StressDensityMapping> DensitySlider::stressDensityMappings() const {
 }
 
 void DensitySlider::updateStressDensityMappings() {
-    // 領域数は4固定
-    assert(m_handles.size() == 3);
-    int top = m_margin;
-    int bottom = height() - m_margin;
-    
+    assert(m_handles.size() == HANDLE_COUNT);
+
     m_stressDensityMappings.clear();
-    
+
     // スライダーのハンドル位置から stress 値を計算
-    std::vector<double> handleStressValues;
-    for (int y : m_handles) {
-        double t = (double)(y - bottom) / (top - bottom);  // top=1, bottom=0に正規化
-        double stress = m_minStress + t * (m_maxStress - m_minStress);
-        handleStressValues.push_back(stress);
-    }
-    
-    // 4つの領域を作成
-    for (int i = 0; i < 4; ++i) {
-        double stressMin, stressMax;
-        
-        if (i == 0) {
-            // 最初の領域: vtuのmin_stress ～ スライダーの最初のハンドル値
-            stressMin = m_originalMinStress;
-            stressMax = handleStressValues[2];  // handles[2]は一番上のハンドル（最大stress）
-        } else if (i == 3) {
-            // 最後の領域: スライダーの最後のハンドル値 ～ vtuのmax_stress
-            stressMin = handleStressValues[0];  // handles[0]は一番下のハンドル（最小stress）
-            stressMax = m_originalMaxStress;
-        } else {
-            // 中間の領域: スライダーのハンドル値間
-            stressMax = handleStressValues[2 - i];      // 2番目の領域: handles[1] ～ handles[2]
-            stressMin = handleStressValues[2 - i + 1];  // 3番目の領域: handles[0] ～ handles[1]
-        }
-        
-        double density = m_regionPercents[i];
-        m_stressDensityMappings.push_back({stressMin, stressMax, density});
-    }
+    // handles[0] = 最も下のハンドル（最小stress側）
+    // handles[1] = 中央のハンドル
+    // handles[2] = 最も上のハンドル（最大stress側）
+    double stressAtHandle0 = yToStress(m_handles[0]);
+    double stressAtHandle1 = yToStress(m_handles[1]);
+    double stressAtHandle2 = yToStress(m_handles[2]);
+
+    // 4つの領域を作成（上から下へ）
+    // 領域0: originalMinStress ～ handle[2] (最上部、最大stress)
+    m_stressDensityMappings.push_back({
+        m_originalMinStress,
+        stressAtHandle2,
+        m_regionPercents[0]
+    });
+
+    // 領域1: handle[2] ～ handle[1]
+    m_stressDensityMappings.push_back({
+        stressAtHandle2,
+        stressAtHandle1,
+        m_regionPercents[1]
+    });
+
+    // 領域2: handle[1] ～ handle[0]
+    m_stressDensityMappings.push_back({
+        stressAtHandle1,
+        stressAtHandle0,
+        m_regionPercents[2]
+    });
+
+    // 領域3: handle[0] ～ originalMaxStress (最下部、最小stress)
+    m_stressDensityMappings.push_back({
+        stressAtHandle0,
+        m_originalMaxStress,
+        m_regionPercents[3]
+    });
 }
 
 std::vector<int> DensitySlider::stressThresholds() const {
-    int top = m_margin;
-    int bottom = height() - m_margin;
     std::vector<int> thresholds;
     thresholds.push_back(m_minStress);
     for (int y : m_handles) {
-        double t = (double)(y - bottom) / (top - bottom);
-        double stress = m_minStress + t * (m_maxStress - m_minStress);
-        thresholds.push_back(stress);
+        thresholds.push_back(yToStress(y));
     }
     thresholds.push_back(m_maxStress);
     std::sort(thresholds.begin(), thresholds.end()); // 昇順にソート
@@ -388,37 +268,161 @@ std::vector<int> DensitySlider::stressThresholds() const {
 }
 
 void DensitySlider::updateInitialHandles() {
-    int top = m_margin;
-    int bottom = height() - m_margin;
-    int availableHeight = bottom - top;
-    int segmentHeight = availableHeight / 4; // 4つの領域に分割
-    
-    m_handles[0] = top + segmentHeight;     // 1/4位置
-    m_handles[1] = top + 2 * segmentHeight; // 2/4位置  
-    m_handles[2] = top + 3 * segmentHeight; // 3/4位置
+    SliderBounds bounds = getSliderBounds();
+    int availableHeight = bounds.bottom - bounds.top;
+    int segmentHeight = availableHeight / REGION_COUNT;
+
+    m_handles[0] = bounds.top + segmentHeight;       // 1/4位置
+    m_handles[1] = bounds.top + 2 * segmentHeight;   // 2/4位置
+    m_handles[2] = bounds.top + 3 * segmentHeight;   // 3/4位置
 }
 
 std::vector<QColor> DensitySlider::getRegionColors() const {
     std::vector<QColor> colors;
-    int top = m_margin;
-    int bottom = height() - m_margin;
-    
-    // 4つの領域の位置を計算
-    std::vector<int> positions = {bottom};
-    for (auto it = m_handles.rbegin(); it != m_handles.rend(); ++it) {
-        positions.push_back(*it);
-    }
-    positions.push_back(top);
-    
+    SliderBounds bounds = getSliderBounds();
+    std::vector<int> positions = getRegionPositions();
+
     // 各領域の色を計算
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < REGION_COUNT; ++i) {
         // 領域の中心Y座標
         int yCenter = (positions[i] + positions[i+1]) / 2;
         // グラデーション範囲で正規化
-        double t = (double)(yCenter - top) / (bottom - top);
+        double t = (double)(yCenter - bounds.top) / (bounds.bottom - bounds.top);
         QColor regionColor = getGradientColor(t);
         colors.push_back(regionColor);
     }
-    
+
     return colors;
+}
+
+// Helper function to get slider bounds
+DensitySlider::SliderBounds DensitySlider::getSliderBounds() const {
+    int w = width();
+    int x = w / 2;
+    SliderBounds bounds;
+    bounds.left = x - SLIDER_WIDTH / 2;
+    bounds.right = x + SLIDER_WIDTH / 2;
+    bounds.top = m_margin;
+    bounds.bottom = height() - m_margin;
+    bounds.gradLeft = bounds.left - GRADIENT_GAP - GRADIENT_WIDTH;
+    bounds.gradRight = bounds.gradLeft + GRADIENT_WIDTH;
+    return bounds;
+}
+
+// Helper function to get region positions (bottom to top)
+std::vector<int> DensitySlider::getRegionPositions() const {
+    SliderBounds bounds = getSliderBounds();
+    std::vector<int> positions = {bounds.bottom};
+    for (auto it = m_handles.rbegin(); it != m_handles.rend(); ++it) {
+        positions.push_back(*it);
+    }
+    positions.push_back(bounds.top);
+    return positions;
+}
+
+// Helper function to convert Y coordinate to stress value
+double DensitySlider::yToStress(int y) const {
+    SliderBounds bounds = getSliderBounds();
+    double t = (double)(y - bounds.bottom) / (bounds.top - bounds.bottom);
+    return m_minStress + t * (m_maxStress - m_minStress);
+}
+
+// Drawing helper functions
+void DensitySlider::drawGradientBar(QPainter& painter, const SliderBounds& bounds) {
+    QLinearGradient gradient(bounds.gradLeft, bounds.top, bounds.gradLeft, bounds.bottom);
+    gradient.setColorAt(0.0, ColorManager::HIGH_COLOR);
+    gradient.setColorAt(0.5, ColorManager::MIDDLE_COLOR);
+    gradient.setColorAt(1.0, ColorManager::LOW_COLOR);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(gradient);
+    painter.drawRect(bounds.gradLeft, bounds.top, GRADIENT_WIDTH, bounds.bottom - bounds.top);
+}
+
+void DensitySlider::drawStressLabels(QPainter& painter, const SliderBounds& bounds) {
+    painter.setPen(Qt::white);
+    QFont font = painter.font();
+    font.setPointSize(10);
+    painter.setFont(font);
+
+    int labelWidth = GRADIENT_WIDTH + LABEL_EXTRA_WIDTH;
+    int labelX = bounds.gradLeft - labelWidth - LABEL_GAP;
+
+    // 上側（最大値）
+    painter.drawText(labelX, bounds.top - 5, labelWidth, 20, Qt::AlignRight | Qt::AlignVCenter,
+                    QString::number(m_maxStress, 'g', 2));
+
+    // 下側（最小値）
+    painter.drawText(labelX, bounds.bottom - 15, labelWidth, 20, Qt::AlignRight | Qt::AlignVCenter,
+                    QString::number(m_minStress, 'g', 2));
+
+    // ハンドル位置のストレス値
+    for (int y : m_handles) {
+        double stress = yToStress(y);
+        painter.drawText(labelX, y - 10, labelWidth, 20, Qt::AlignRight | Qt::AlignVCenter,
+                        QString::number(stress, 'g', 2));
+    }
+}
+
+void DensitySlider::drawSliderBody(QPainter& painter, const SliderBounds& bounds) {
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(60, 60, 60));
+    painter.drawRect(bounds.left, bounds.top, SLIDER_WIDTH, bounds.bottom - bounds.top);
+}
+
+void DensitySlider::drawRegions(QPainter& painter, const SliderBounds& bounds) {
+    std::vector<int> positions = getRegionPositions();
+    for (int i = 0; i < REGION_COUNT; ++i) {
+        int yCenter = (positions[i] + positions[i+1]) / 2;
+        double t = (double)(yCenter - bounds.top) / (bounds.bottom - bounds.top);
+        QColor regionColor = getGradientColor(t);
+        regionColor.setAlpha(190);
+        painter.setBrush(regionColor);
+        painter.drawRect(bounds.left, positions[i], SLIDER_WIDTH, positions[i+1] - positions[i]);
+    }
+}
+
+void DensitySlider::drawHandles(QPainter& painter, const SliderBounds& bounds) {
+    for (int y : m_handles) {
+        // ハンドル線を描画
+        painter.setPen(QPen(ColorManager::HANDLE_COLOR, 2));
+        painter.drawLine(bounds.gradLeft, y, bounds.right, y);
+
+        // 右端に三角形を描画
+        QPolygon triangle;
+        triangle << QPoint(bounds.right, y)
+                 << QPoint(bounds.right + TRIANGLE_SIZE, y - TRIANGLE_SIZE/2)
+                 << QPoint(bounds.right + TRIANGLE_SIZE, y + TRIANGLE_SIZE/2);
+        painter.setBrush(ColorManager::HANDLE_COLOR);
+        painter.setPen(Qt::NoPen);
+        painter.drawPolygon(triangle);
+    }
+}
+
+void DensitySlider::drawAxisLabels(QPainter& painter, const SliderBounds& bounds) {
+    QFont labelFont = painter.font();
+    labelFont.setPointSize(11);
+    labelFont.setBold(true);
+    painter.setFont(labelFont);
+    painter.setPen(Qt::white);
+
+    int centerY = bounds.top + (bounds.bottom - bounds.top) / 2;
+    int labelHeight = bounds.bottom - bounds.top;
+
+    // 左側ラベル: von Mises Stress[Pa]
+    painter.save();
+    int leftLabelX = bounds.gradLeft - VERTICAL_LABEL_DISTANCE;
+    painter.translate(leftLabelX, centerY);
+    painter.rotate(-90);
+    QRect leftTextRect(-labelHeight / 2, -40, labelHeight, 80);
+    painter.drawText(leftTextRect, Qt::AlignCenter, "von Mises Stress[Pa]");
+    painter.restore();
+
+    // 右側ラベル: Infill Density [%]
+    painter.save();
+    int rightLabelX = bounds.right + RIGHT_LABEL_DISTANCE;
+    painter.translate(rightLabelX, centerY);
+    painter.rotate(-90);
+    QRect rightTextRect(-labelHeight / 2, -40, labelHeight, 80);
+    painter.drawText(rightTextRect, Qt::AlignCenter, "Infill Density [%]");
+    painter.restore();
 } 
