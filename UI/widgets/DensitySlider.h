@@ -57,6 +57,7 @@ private:
     SliderBounds getSliderBounds() const;
     std::vector<int> getRegionPositions() const;
     double yToStress(int y) const;
+    int calculateDensityFromStress(double stress) const;
 
     // Drawing helper functions
     void drawGradientBar(QPainter& painter, const SliderBounds& bounds);

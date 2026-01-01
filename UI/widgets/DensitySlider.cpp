@@ -7,6 +7,7 @@
 #include <QResizeEvent>
 #include <QDoubleValidator>
 #include <cassert>
+#include <cmath>
 
 // ====================
 // Constructor and Size Hints
@@ -205,34 +206,39 @@ void DensitySlider::updateStressDensityMappings() {
     double stressAtHandle1 = yToStress(m_handles[1]);
     double stressAtHandle2 = yToStress(m_handles[2]);
 
-    // 4つの領域を作成（上から下へ）
-    // 領域0: originalMinStress ～ handle[2] (最上部、最大stress)
-    m_stressDensityMappings.push_back({
-        m_originalMinStress,
-        stressAtHandle2,
-        m_regionPercents[0]
-    });
+    // 各セクションの応力範囲と平均値を計算し、密度を設定
+    struct RegionStress {
+        double minStress;
+        double maxStress;
+    };
 
-    // 領域1: handle[2] ～ handle[1]
-    m_stressDensityMappings.push_back({
-        stressAtHandle2,
-        stressAtHandle1,
-        m_regionPercents[1]
-    });
+    std::vector<RegionStress> regions = {
+        {m_originalMinStress, stressAtHandle2},  // 領域0: 最上部
+        {stressAtHandle2, stressAtHandle1},      // 領域1
+        {stressAtHandle1, stressAtHandle0},      // 領域2
+        {stressAtHandle0, m_originalMaxStress}   // 領域3: 最下部
+    };
 
-    // 領域2: handle[1] ～ handle[0]
-    m_stressDensityMappings.push_back({
-        stressAtHandle1,
-        stressAtHandle0,
-        m_regionPercents[2]
-    });
+    // 各セクションの密度を応力値から計算
+    for (int i = 0; i < REGION_COUNT; ++i) {
+        double avgStress = (regions[i].minStress + regions[i].maxStress) / 2.0;
+        int calculatedDensity = calculateDensityFromStress(avgStress);
 
-    // 領域3: handle[0] ～ originalMaxStress (最下部、最小stress)
-    m_stressDensityMappings.push_back({
-        stressAtHandle0,
-        m_originalMaxStress,
-        m_regionPercents[3]
-    });
+        // m_regionPercentsを更新
+        m_regionPercents[i] = calculatedDensity;
+
+        // stressDensityMappingsに追加
+        m_stressDensityMappings.push_back({
+            regions[i].minStress,
+            regions[i].maxStress,
+            static_cast<double>(calculatedDensity)
+        });
+    }
+
+    // 入力欄を更新
+    for (int i = 0; i < REGION_COUNT; ++i) {
+        m_percentEdits[i]->setText(QString::number(m_regionPercents[i], 'g', 2));
+    }
 }
 
 void DensitySlider::updateInitialHandles() {
@@ -295,6 +301,31 @@ double DensitySlider::yToStress(int y) const {
     SliderBounds bounds = getSliderBounds();
     double t = (double)(y - bounds.bottom) / (bounds.top - bounds.bottom);
     return m_minStress + t * (m_maxStress - m_minStress);
+}
+
+int DensitySlider::calculateDensityFromStress(double stress) const {
+    // 定数
+    const double SAFE_FACTOR = 3.0;
+    const double YIELD_STRENGTH = 30.0;
+    const double C = 0.23;
+    const double M = 2.0 / 3.0;
+
+    // Pa から MPa に変換
+    double stressMPa = stress / 1e6;
+
+    // density = ((safe_factor * stress) / (yield_strength * C))^m
+    double numerator = SAFE_FACTOR * stressMPa;
+    double denominator = YIELD_STRENGTH * C;
+    double density = std::pow(numerator / denominator, M);
+
+    // パーセンテージに変換（0-1 → 0-100）
+    double densityPercent = density * 100.0;
+
+    // 整数に変換（0-100の範囲でクランプ）
+    int densityInt = static_cast<int>(std::round(densityPercent));
+    densityInt = std::clamp(densityInt, 0, 100);
+
+    return densityInt;
 }
 
 DensitySlider::SliderBounds DensitySlider::getSliderBounds() const {
