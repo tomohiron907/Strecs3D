@@ -18,4 +18,32 @@ const QColor ColorManager::HANDLE_COLOR = QColor(200, 200, 200, 255);           
 const QColor ColorManager::X_AXIS_COLOR = QColor(255, 77, 0, 255);               // X軸色（赤）
 const QColor ColorManager::Y_AXIS_COLOR = QColor(0, 150, 0, 255);               // Y軸色（緑）
 const QColor ColorManager::Z_AXIS_COLOR = QColor(0, 76, 161, 255);               // Z軸色（青）
-const QColor ColorManager::ORIGIN_COLOR = QColor(255, 255, 255, 255);           // 原点色（白） 
+const QColor ColorManager::ORIGIN_COLOR = QColor(255, 255, 255, 255);           // 原点色（白）
+
+// Gradient color calculation
+QColor ColorManager::getGradientColor(double t) {
+    // グラデーションストップの定義（staticで一度だけ初期化）
+    static const struct GradStop {
+        double pos;
+        QColor color;
+    } gradStops[] = {
+        {0.0, HIGH_COLOR},   // 赤
+        {0.5, MIDDLE_COLOR}, // 白
+        {1.0, LOW_COLOR}     // 青
+    };
+
+    if (t <= gradStops[0].pos) return gradStops[0].color;
+    if (t >= gradStops[2].pos) return gradStops[2].color;
+    for (int i = 0; i < 2; ++i) {
+        if (t >= gradStops[i].pos && t <= gradStops[i+1].pos) {
+            double localT = (t - gradStops[i].pos) / (gradStops[i+1].pos - gradStops[i].pos);
+            QColor c1 = gradStops[i].color;
+            QColor c2 = gradStops[i+1].color;
+            int r = c1.red()   + (c2.red()   - c1.red())   * localT;
+            int g = c1.green() + (c2.green() - c1.green()) * localT;
+            int b = c1.blue()  + (c2.blue()  - c1.blue())  * localT;
+            return QColor(r, g, b);
+        }
+    }
+    return QColor(); // fallback
+} 

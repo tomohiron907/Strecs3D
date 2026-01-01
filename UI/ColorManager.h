@@ -32,6 +32,9 @@ public:
     static const QColor Y_AXIS_COLOR;         // Y軸色（緑）
     static const QColor Z_AXIS_COLOR;         // Z軸色（青）
     static const QColor ORIGIN_COLOR;         // 原点色（白）
+
+    // Gradient color calculation
+    static QColor getGradientColor(double t);  // 指定した位置（0.0〜1.0）でグラデーション色を線形補間で取得
 };
 
 #endif // COLORMANAGER_H 

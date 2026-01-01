@@ -8,33 +8,9 @@
 #include <QDoubleValidator>
 #include <cassert>
 
-// 指定した位置（0.0〜1.0）でグラデーション色を線形補間で取得
-QColor getGradientColor(double t) {
-    // グラデーションストップの定義（staticで一度だけ初期化）
-    static const struct GradStop {
-        double pos;
-        QColor color;
-    } gradStops[] = {
-        {0.0, ColorManager::HIGH_COLOR},   // 赤
-        {0.5, ColorManager::MIDDLE_COLOR}, // 白
-        {1.0, ColorManager::LOW_COLOR}     // 青
-    };
-    
-    if (t <= gradStops[0].pos) return gradStops[0].color;
-    if (t >= gradStops[2].pos) return gradStops[2].color;
-    for (int i = 0; i < 2; ++i) {
-        if (t >= gradStops[i].pos && t <= gradStops[i+1].pos) {
-            double localT = (t - gradStops[i].pos) / (gradStops[i+1].pos - gradStops[i].pos);
-            QColor c1 = gradStops[i].color;
-            QColor c2 = gradStops[i+1].color;
-            int r = c1.red()   + (c2.red()   - c1.red())   * localT;
-            int g = c1.green() + (c2.green() - c1.green()) * localT;
-            int b = c1.blue()  + (c2.blue()  - c1.blue())  * localT;
-            return QColor(r, g, b);
-        }
-    }
-    return QColor(); // fallback
-}
+// ====================
+// Constructor and Size Hints
+// ====================
 
 DensitySlider::DensitySlider(QWidget* parent)
     : QWidget(parent)
@@ -66,9 +42,9 @@ QSize DensitySlider::sizeHint() const {
     return QSize(60, 300);
 }
 
-std::vector<int> DensitySlider::handlePositions() const {
-    return m_handles;
-}
+// ====================
+// Primary Public API
+// ====================
 
 void DensitySlider::setStressRange(double minStress, double maxStress) {
     m_minStress = minStress;
@@ -85,6 +61,67 @@ void DensitySlider::setOriginalStressRange(double minStress, double maxStress) {
     setStressRange(minStress, maxStress);
 }
 
+std::vector<StressDensityMapping> DensitySlider::stressDensityMappings() const {
+    return m_stressDensityMappings;
+}
+
+void DensitySlider::setRegionPercents(const std::vector<double>& percents) {
+    if (percents.size() == REGION_COUNT) {
+        m_regionPercents = percents;
+        for (int i = 0; i < REGION_COUNT; ++i) {
+            m_percentEdits[i]->setText(QString::number(m_regionPercents[i], 'g', 2));
+        }
+        updateStressDensityMappings();
+        update();
+        emit regionPercentsChanged(m_regionPercents);
+    }
+}
+
+std::vector<double> DensitySlider::regionPercents() const {
+    return m_regionPercents;
+}
+
+// ====================
+// Other Public API
+// ====================
+
+std::vector<int> DensitySlider::handlePositions() const {
+    return m_handles;
+}
+
+std::vector<int> DensitySlider::stressThresholds() const {
+    std::vector<int> thresholds;
+    thresholds.push_back(m_minStress);
+    for (int y : m_handles) {
+        thresholds.push_back(yToStress(y));
+    }
+    thresholds.push_back(m_maxStress);
+    std::sort(thresholds.begin(), thresholds.end()); // 昇順にソート
+    return thresholds;
+}
+
+std::vector<QColor> DensitySlider::getRegionColors() const {
+    std::vector<QColor> colors;
+    SliderBounds bounds = getSliderBounds();
+    std::vector<int> positions = getRegionPositions();
+
+    // 各領域の色を計算
+    for (int i = 0; i < REGION_COUNT; ++i) {
+        // 領域の中心Y座標
+        int yCenter = (positions[i] + positions[i+1]) / 2;
+        // グラデーション範囲で正規化
+        double t = (double)(yCenter - bounds.top) / (bounds.bottom - bounds.top);
+        QColor regionColor = ColorManager::getGradientColor(t);
+        colors.push_back(regionColor);
+    }
+
+    return colors;
+}
+
+// ====================
+// Event Handlers
+// ====================
+
 void DensitySlider::paintEvent(QPaintEvent*) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -99,44 +136,11 @@ void DensitySlider::paintEvent(QPaintEvent*) {
     drawAxisLabels(painter, bounds);
 }
 
-void DensitySlider::updatePercentEditPositions() {
-    SliderBounds bounds = getSliderBounds();
-    std::vector<int> positions = getRegionPositions();
-    for (int i = 0; i < REGION_COUNT; ++i) {
-        int yCenter = (positions[i] + positions[i+1]) / 2;
-        int editX = bounds.right + PERCENT_EDIT_GAP;
-        int editY = yCenter - m_percentEdits[i]->height() / 2;
-        m_percentEdits[i]->move(editX, editY);
-        m_percentEdits[i]->show();
-    }
-}
-
 void DensitySlider::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
     updatePercentEditPositions();
     updateInitialHandles();
     updateStressDensityMappings();
-}
-
-int DensitySlider::handleAtPosition(const QPoint& pos) const {
-    SliderBounds bounds = getSliderBounds();
-    int tolerance = 6; // ピクセル単位の許容範囲
-
-    for (int i = 0; i < (int)m_handles.size(); ++i) {
-        int y = m_handles[i];
-
-        // 線の範囲内かどうか
-        if (pos.x() >= bounds.gradLeft && pos.x() <= bounds.right && std::abs(pos.y() - y) <= tolerance) {
-            return i;
-        }
-
-        // 三角形の範囲内かどうか
-        if (pos.x() >= bounds.right && pos.x() <= bounds.right + TRIANGLE_SIZE &&
-            pos.y() >= y - TRIANGLE_SIZE/2 && pos.y() <= y + TRIANGLE_SIZE/2) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 void DensitySlider::mousePressEvent(QMouseEvent* event) {
@@ -163,34 +167,9 @@ void DensitySlider::mouseReleaseEvent(QMouseEvent*) {
     m_draggedHandle = -1;
 }
 
-void DensitySlider::clampHandles() {
-    int top = m_margin;
-    int bottom = height() - m_margin;
-    for (int i = 0; i < (int)m_handles.size(); ++i) {
-        if (i == 0)
-            m_handles[i] = std::clamp(m_handles[i], top, m_handles[i+1] - m_minDistance);
-        else if (i == (int)m_handles.size()-1)
-            m_handles[i] = std::clamp(m_handles[i], m_handles[i-1] + m_minDistance, bottom);
-        else
-            m_handles[i] = std::clamp(m_handles[i], m_handles[i-1] + m_minDistance, m_handles[i+1] - m_minDistance);
-    }
-}
-
-std::vector<double> DensitySlider::regionPercents() const {
-    return m_regionPercents;
-}
-
-void DensitySlider::setRegionPercents(const std::vector<double>& percents) {
-    if (percents.size() == REGION_COUNT) {
-        m_regionPercents = percents;
-        for (int i = 0; i < REGION_COUNT; ++i) {
-            m_percentEdits[i]->setText(QString::number(m_regionPercents[i], 'g', 2));
-        }
-        updateStressDensityMappings();
-        update();
-        emit regionPercentsChanged(m_regionPercents);
-    }
-}
+// ====================
+// Slots
+// ====================
 
 void DensitySlider::onPercentEditChanged() {
     bool changed = false;
@@ -209,9 +188,9 @@ void DensitySlider::onPercentEditChanged() {
     }
 }
 
-std::vector<StressDensityMapping> DensitySlider::stressDensityMappings() const {
-    return m_stressDensityMappings;
-}
+// ====================
+// Update and Calculation Helpers
+// ====================
 
 void DensitySlider::updateStressDensityMappings() {
     assert(m_handles.size() == HANDLE_COUNT);
@@ -256,17 +235,6 @@ void DensitySlider::updateStressDensityMappings() {
     });
 }
 
-std::vector<int> DensitySlider::stressThresholds() const {
-    std::vector<int> thresholds;
-    thresholds.push_back(m_minStress);
-    for (int y : m_handles) {
-        thresholds.push_back(yToStress(y));
-    }
-    thresholds.push_back(m_maxStress);
-    std::sort(thresholds.begin(), thresholds.end()); // 昇順にソート
-    return thresholds;
-}
-
 void DensitySlider::updateInitialHandles() {
     SliderBounds bounds = getSliderBounds();
     int availableHeight = bounds.bottom - bounds.top;
@@ -277,25 +245,58 @@ void DensitySlider::updateInitialHandles() {
     m_handles[2] = bounds.top + 3 * segmentHeight;   // 3/4位置
 }
 
-std::vector<QColor> DensitySlider::getRegionColors() const {
-    std::vector<QColor> colors;
+void DensitySlider::updatePercentEditPositions() {
     SliderBounds bounds = getSliderBounds();
     std::vector<int> positions = getRegionPositions();
-
-    // 各領域の色を計算
     for (int i = 0; i < REGION_COUNT; ++i) {
-        // 領域の中心Y座標
         int yCenter = (positions[i] + positions[i+1]) / 2;
-        // グラデーション範囲で正規化
-        double t = (double)(yCenter - bounds.top) / (bounds.bottom - bounds.top);
-        QColor regionColor = getGradientColor(t);
-        colors.push_back(regionColor);
+        int editX = bounds.right + PERCENT_EDIT_GAP;
+        int editY = yCenter - m_percentEdits[i]->height() / 2;
+        m_percentEdits[i]->move(editX, editY);
+        m_percentEdits[i]->show();
     }
-
-    return colors;
 }
 
-// Helper function to get slider bounds
+void DensitySlider::clampHandles() {
+    int top = m_margin;
+    int bottom = height() - m_margin;
+    for (int i = 0; i < (int)m_handles.size(); ++i) {
+        if (i == 0)
+            m_handles[i] = std::clamp(m_handles[i], top, m_handles[i+1] - m_minDistance);
+        else if (i == (int)m_handles.size()-1)
+            m_handles[i] = std::clamp(m_handles[i], m_handles[i-1] + m_minDistance, bottom);
+        else
+            m_handles[i] = std::clamp(m_handles[i], m_handles[i-1] + m_minDistance, m_handles[i+1] - m_minDistance);
+    }
+}
+
+int DensitySlider::handleAtPosition(const QPoint& pos) const {
+    SliderBounds bounds = getSliderBounds();
+    int tolerance = 6; // ピクセル単位の許容範囲
+
+    for (int i = 0; i < (int)m_handles.size(); ++i) {
+        int y = m_handles[i];
+
+        // 線の範囲内かどうか
+        if (pos.x() >= bounds.gradLeft && pos.x() <= bounds.right && std::abs(pos.y() - y) <= tolerance) {
+            return i;
+        }
+
+        // 三角形の範囲内かどうか
+        if (pos.x() >= bounds.right && pos.x() <= bounds.right + TRIANGLE_SIZE &&
+            pos.y() >= y - TRIANGLE_SIZE/2 && pos.y() <= y + TRIANGLE_SIZE/2) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+double DensitySlider::yToStress(int y) const {
+    SliderBounds bounds = getSliderBounds();
+    double t = (double)(y - bounds.bottom) / (bounds.top - bounds.bottom);
+    return m_minStress + t * (m_maxStress - m_minStress);
+}
+
 DensitySlider::SliderBounds DensitySlider::getSliderBounds() const {
     int w = width();
     int x = w / 2;
@@ -309,7 +310,6 @@ DensitySlider::SliderBounds DensitySlider::getSliderBounds() const {
     return bounds;
 }
 
-// Helper function to get region positions (bottom to top)
 std::vector<int> DensitySlider::getRegionPositions() const {
     SliderBounds bounds = getSliderBounds();
     std::vector<int> positions = {bounds.bottom};
@@ -320,14 +320,10 @@ std::vector<int> DensitySlider::getRegionPositions() const {
     return positions;
 }
 
-// Helper function to convert Y coordinate to stress value
-double DensitySlider::yToStress(int y) const {
-    SliderBounds bounds = getSliderBounds();
-    double t = (double)(y - bounds.bottom) / (bounds.top - bounds.bottom);
-    return m_minStress + t * (m_maxStress - m_minStress);
-}
+// ====================
+// Drawing Helpers
+// ====================
 
-// Drawing helper functions
 void DensitySlider::drawGradientBar(QPainter& painter, const SliderBounds& bounds) {
     QLinearGradient gradient(bounds.gradLeft, bounds.top, bounds.gradLeft, bounds.bottom);
     gradient.setColorAt(0.0, ColorManager::HIGH_COLOR);
@@ -374,7 +370,7 @@ void DensitySlider::drawRegions(QPainter& painter, const SliderBounds& bounds) {
     for (int i = 0; i < REGION_COUNT; ++i) {
         int yCenter = (positions[i] + positions[i+1]) / 2;
         double t = (double)(yCenter - bounds.top) / (bounds.bottom - bounds.top);
-        QColor regionColor = getGradientColor(t);
+        QColor regionColor = ColorManager::getGradientColor(t);
         regionColor.setAlpha(190);
         painter.setBrush(regionColor);
         painter.drawRect(bounds.left, positions[i], SLIDER_WIDTH, positions[i+1] - positions[i]);
