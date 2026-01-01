@@ -32,11 +32,17 @@ vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
 
 message(STATUS "Feature options: ${FEATURE_OPTIONS}")
 
+if(VCPKG_TARGET_IS_WINDOWS)
+    set(PLATFORM_SPECIFIC_OPTIONS "-DCMAKE_CXX_FLAGS=/bigobj /EHsc -DWIN32")
+else()
+    set(PLATFORM_SPECIFIC_OPTIONS "")
+endif()
+
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     DISABLE_PARALLEL_CONFIGURE
     OPTIONS
-        "-DCMAKE_CXX_FLAGS=/bigobj /EHsc -DWIN32"
+        ${PLATFORM_SPECIFIC_OPTIONS}
         # Force enable OCC when occ feature is specified
         -DENABLE_OCC=ON
         -DENABLE_OCC_CAF=ON
