@@ -221,8 +221,8 @@ void DensitySlider::updateStressDensityMappings() {
 
     // 各セクションの密度を応力値から計算
     for (int i = 0; i < REGION_COUNT; ++i) {
-        double avgStress = (regions[i].minStress + regions[i].maxStress) / 2.0;
-        int calculatedDensity = calculateDensityFromStress(avgStress);
+        //各セクションの最大値から密度を計算
+        int calculatedDensity = calculateDensityFromStress(regions[i].maxStress);
 
         // m_regionPercentsを更新
         m_regionPercents[i] = calculatedDensity;
