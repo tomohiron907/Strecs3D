@@ -187,13 +187,6 @@ void MainWindowUIAdapter::displayVtkFile(const std::string& vtkFile, VtkProcesso
     }
 }
 
-void MainWindowUIAdapter::displayStlFile(const std::string& stlFile, VtkProcessor* vtkProcessor)
-{
-    if (visualizationManager) {
-        visualizationManager->displayStlFile(stlFile, vtkProcessor);
-    }
-}
-
 void MainWindowUIAdapter::displayStepFile(const std::string& stepFile)
 {
     if (visualizationManager) {

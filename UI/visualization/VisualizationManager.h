@@ -1,44 +1,69 @@
 #pragma once
 
 #include <QObject>
-#include <QWidget>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
+#include <vtkSmartPointer.h>
+#include <vtkActor.h>
 
-class MainWindowUI;
-class VtkProcessor;
-class ObjectDisplayOptionsWidget;
-class SceneDataController;
+struct ObjectInfo {
+    vtkSmartPointer<vtkActor> actor;
+    std::string filename;
+    bool visible;
+    double opacity;
+};
+
+class ActorFactory;
 class SceneRenderer;
+class VtkProcessor;
 class UIState;
+class MainWindowUI;
+class QWidget;
 
 class VisualizationManager : public QObject {
     Q_OBJECT
+
 public:
-    VisualizationManager(MainWindowUI* ui);
+    explicit VisualizationManager(MainWindowUI* ui);
     ~VisualizationManager();
 
-    // ファイル表示
+    // --- Public Interface for ApplicationController ---
+
+    // File Display Operations
     void displayVtkFile(const std::string& vtkFile, VtkProcessor* vtkProcessor);
-    void displayStlFile(const std::string& stlFile, VtkProcessor* vtkProcessor);
     void displayStepFile(const std::string& stepFile);
     void showTempDividedStl(VtkProcessor* vtkProcessor, QWidget* parent = nullptr, UIState* uiState = nullptr);
 
-    // オブジェクト制御
+    // Object Control
     void setObjectVisible(const std::string& filename, bool visible);
     void setObjectOpacity(const std::string& filename, double opacity);
     void removeDividedStlActors();
     void hideAllStlObjects();
     void hideVtkObject();
-    
-    // ファイル情報取得
+
+    // Query Operations
     std::vector<std::string> getAllStlFilenames() const;
     std::string getVtkFilename() const;
+    const std::vector<ObjectInfo>& getObjectList() const;
 
+    // Rendering Control
+    void render();
+    void resetCamera();
 
 private:
-    std::unique_ptr<SceneDataController> dataController_;
-    std::unique_ptr<SceneRenderer> renderer_;
-    
-    void initializeComponents(MainWindowUI* ui);
-}; 
+    // Components
+    std::unique_ptr<ActorFactory> actorFactory_;
+    std::unique_ptr<SceneRenderer> sceneRenderer_;
+
+    // Data - ObjectInfo list is the single source of truth
+    std::vector<ObjectInfo> objectList_;
+
+    // Helper methods
+    void registerObject(const ObjectInfo& objInfo);
+    ObjectInfo* findObject(const std::string& filename);
+    void updateRenderingState();
+
+    // Connection to SceneRenderer signals
+    void connectSignals();
+};

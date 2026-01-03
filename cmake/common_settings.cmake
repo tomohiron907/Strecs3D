@@ -159,7 +159,7 @@ add_executable(Strecs3D
   core/processing/ProcessPipeline.cpp
   core/ui/UIState.cpp
   UI/visualization/VisualizationManager.cpp
-  UI/visualization/SceneDataController.cpp
+  UI/visualization/ActorFactory.cpp
   core/export/ExportManager.cpp
   core/processing/3mf/slicers/prusa/ModelConverter.cpp
   FEM/SimulationConditionExporter.cpp

@@ -12,49 +12,48 @@ struct ObjectInfo;
 class MainWindowUI;
 class VtkProcessor;
 class ObjectDisplayOptionsWidget;
+class TurntableInteractorStyle;
+class StepFacePickerStyle;
 
 class SceneRenderer : public QObject {
     Q_OBJECT
-    
+
 public:
-    SceneRenderer(MainWindowUI* ui);
+    explicit SceneRenderer(MainWindowUI* ui);
     ~SceneRenderer();
 
-    // レンダリング操作
+    // --- Rendering Operations ---
     void renderObjects(const std::vector<ObjectInfo>& objectList);
+    void render();
+    void clearRenderer();
+
+    // --- Actor Management (add/remove from renderer, NOT creation) ---
     void addActorToRenderer(vtkSmartPointer<vtkActor> actor);
     void removeActorFromRenderer(vtkSmartPointer<vtkActor> actor);
-    void clearRenderer();
-    void render();
-    
-    // カメラ操作
+
+    // --- Camera Control ---
     void resetCamera();
+    void setCameraPosition(double x, double y, double z);
+    void setCameraFocalPoint(double x, double y, double z);
+
+    // --- Interactor Styles ---
     void enableTurntableMode(bool enable = true);
     void setTurntableRotationSpeed(double speed);
-
-    // STEP面ピッカー設定
     void setupStepFacePicker(const std::vector<vtkSmartPointer<vtkActor>>& faceActors);
-    
-    // グリッド操作
-    void showGrid(bool show = true);
-    void hideGrid();
-    
-    // 座標軸操作
-    void showAxes(bool show = true);
-    void hideAxes();
-    
-    // スカラーバー
+
+    // --- Scalar Bar ---
     void setupScalarBar(VtkProcessor* vtkProcessor);
-    
-    // UI Widget管理
+    void removeScalarBar();
+
+    // --- Widget Management ---
     std::vector<ObjectDisplayOptionsWidget*> fetchMeshDisplayWidgets();
     void updateWidgetAndConnectSignals(
         const std::vector<ObjectDisplayOptionsWidget*>& widgets,
         int& widgetIndex,
         const std::string& filename,
         const std::string& filePath);
-    
-    // エラーハンドリング
+
+    // --- Error Handling ---
     void handleStlFileLoadError(const std::exception& e, QWidget* parent);
 
 signals:
@@ -63,15 +62,14 @@ signals:
 
 private:
     MainWindowUI* ui_;
-    vtkSmartPointer<vtkActor> gridActor_;
-    vtkSmartPointer<vtkActor> xAxisActor_;
-    vtkSmartPointer<vtkActor> yAxisActor_;
-    vtkSmartPointer<vtkActor> zAxisActor_;
-    vtkSmartPointer<vtkActor> originActor_;
-    vtkSmartPointer<class TurntableInteractorStyle> turntableStyle_;
-    vtkSmartPointer<class StepFacePickerStyle> stepFacePickerStyle_;
 
+    // Scalar bar for VTK visualization
+    vtkSmartPointer<vtkScalarBarActor> scalarBarActor_;
+
+    // Interactor styles (kept for lifecycle management)
+    vtkSmartPointer<TurntableInteractorStyle> turntableStyle_;
+    vtkSmartPointer<StepFacePickerStyle> stepFacePickerStyle_;
+
+    // Helper methods
     void connectWidgetSignals(ObjectDisplayOptionsWidget* widget, const std::string& filePath);
-    void createGrid();
-    void createAxes();
 };

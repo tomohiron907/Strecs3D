@@ -39,7 +39,6 @@ public:
     
     // 3D可視化制御
     void displayVtkFile(const std::string& vtkFile, VtkProcessor* vtkProcessor) override;
-    void displayStlFile(const std::string& stlFile, VtkProcessor* vtkProcessor) override;
     void displayStepFile(const std::string& stepFile) override;
     void showTempDividedStl(VtkProcessor* vtkProcessor) override;
     void setVisualizationObjectVisible(const std::string& filename, bool visible) override;

@@ -70,17 +70,9 @@ bool ApplicationController::openStlFile(const std::string& stlFile, IUserInterfa
 {
     if (!ui) return false;
 
-    // ObjectDisplayOptionsWidgetのファイル名を更新
-    ui->setStlFileName(QString::fromStdString(stlFile));
-
-    try {
-        ui->displayStlFile(stlFile, fileProcessor->getVtkProcessor().get());
-        return true;
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Error opening STL file: " << e.what() << std::endl;
-        return false;
-    }
+    // STL file direct display is no longer supported. Use STEP files instead.
+    std::cerr << "Direct STL file display is deprecated. Please use STEP files." << std::endl;
+    return false;
 }
 
 bool ApplicationController::openStepFile(const std::string& stepFile, IUserInterface* ui)

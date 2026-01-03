@@ -1,156 +1,278 @@
 #include "VisualizationManager.h"
-#include "SceneDataController.h"
+#include "ActorFactory.h"
 #include "SceneRenderer.h"
-#include "StepFacePickerStyle.h"
 #include "../../core/processing/VtkProcessor.h"
-#include "../../core/processing/StepReader.h"
+#include "../../core/ui/UIState.h"
+#include "../../utils/tempPathUtility.h"
 #include "../mainwindowui.h"
+#include <regex>
+#include <algorithm>
+#include <filesystem>
+#include <iostream>
 
 VisualizationManager::VisualizationManager(MainWindowUI* ui) : QObject() {
-    initializeComponents(ui);
-    // ソフトウェア起動時にカメラをリセット
-    renderer_->resetCamera();
+    actorFactory_ = std::make_unique<ActorFactory>();
+    sceneRenderer_ = std::make_unique<SceneRenderer>(ui);
+
+    // Create and register grid
+    auto gridActor = actorFactory_->createGridActor();
+    registerObject({gridActor, "__grid__", true, 0.3});
+
+    // Create and register axes
+    auto axisActors = actorFactory_->createAxisActors();
+    registerObject({axisActors.xAxis, "__x_axis__", true, 1.0});
+    registerObject({axisActors.yAxis, "__y_axis__", true, 1.0});
+    registerObject({axisActors.zAxis, "__z_axis__", true, 1.0});
+    registerObject({axisActors.origin, "__origin__", true, 1.0});
+
+    connectSignals();
+    sceneRenderer_->resetCamera();
+
+    // Render initial scene with grid, axes, and origin
+    sceneRenderer_->renderObjects(objectList_);
 }
 
 VisualizationManager::~VisualizationManager() = default;
 
-void VisualizationManager::initializeComponents(MainWindowUI* ui) {
-    dataController_ = std::make_unique<SceneDataController>();
-    renderer_ = std::make_unique<SceneRenderer>(ui);
-    
-    // Connect signals
-    connect(renderer_.get(), &SceneRenderer::objectVisibilityChanged,
-            [this](const std::string& filename, bool visible) {
-                dataController_->setObjectVisible(filename, visible);
-                renderer_->renderObjects(dataController_->getObjectList());
-            });
-    connect(renderer_.get(), &SceneRenderer::objectOpacityChanged,
-            [this](const std::string& filename, double opacity) {
-                dataController_->setObjectOpacity(filename, opacity);
-                renderer_->renderObjects(dataController_->getObjectList());
-            });
-}
+// --- File Display Operations ---
 
 void VisualizationManager::displayVtkFile(const std::string& vtkFile, VtkProcessor* vtkProcessor) {
     if (!vtkProcessor) return;
-    
-    auto importActor = dataController_->loadVtkFile(vtkFile, vtkProcessor);
-    if (importActor) {
-        renderer_->addActorToRenderer(importActor);
-        ObjectInfo objInfo{importActor, vtkFile, true, 1.0};
-        dataController_->registerObject(objInfo);
-        renderer_->setupScalarBar(vtkProcessor);
-        renderer_->renderObjects(dataController_->getObjectList());
-    }
-}
 
-void VisualizationManager::displayStlFile(const std::string& stlFile, VtkProcessor* vtkProcessor) {
-    if (!vtkProcessor) return;
-    
-    auto importActor = dataController_->loadStlFile(stlFile, vtkProcessor);
-    if (importActor) {
-        renderer_->addActorToRenderer(importActor);
-        ObjectInfo objInfo{importActor, stlFile, true, 1.0};
-        dataController_->registerObject(objInfo);
-        renderer_->renderObjects(dataController_->getObjectList());
-    }
+    auto actor = actorFactory_->createVtkActor(vtkFile, vtkProcessor);
+    if (!actor) return;
+
+    registerObject({actor, vtkFile, true, 1.0});
+    sceneRenderer_->addActorToRenderer(actor);
+    sceneRenderer_->setupScalarBar(vtkProcessor);
+    sceneRenderer_->renderObjects(objectList_);
 }
 
 void VisualizationManager::displayStepFile(const std::string& stepFile) {
-    StepReader stepReader;
+    auto stepActors = actorFactory_->createStepActors(stepFile);
 
-    if (!stepReader.readStepFile(stepFile)) {
+    if (stepActors.faceActors.empty()) {
         std::cerr << "Failed to load STEP file: " << stepFile << std::endl;
         return;
     }
 
-    // 個別の面アクターを取得して表示
-    auto faceActors = stepReader.getFaceActors();
-    for (size_t i = 0; i < faceActors.size(); ++i) {
-        renderer_->addActorToRenderer(faceActors[i]);
-        ObjectInfo objInfo{faceActors[i], stepFile + "_face_" + std::to_string(i), true, 1.0};
-        dataController_->registerObject(objInfo);
+    // Register each face actor
+    for (size_t i = 0; i < stepActors.faceActors.size(); ++i) {
+        std::string faceName = stepFile + "_face_" + std::to_string(i);
+        registerObject({stepActors.faceActors[i], faceName, true, 1.0});
+        sceneRenderer_->addActorToRenderer(stepActors.faceActors[i]);
     }
 
-    // エッジアクターを取得して表示
-    auto edgesActor = stepReader.getEdgesActor();
-    if (edgesActor) {
-        renderer_->addActorToRenderer(edgesActor);
-        ObjectInfo objInfo{edgesActor, stepFile + "_edges", true, 1.0};
-        dataController_->registerObject(objInfo);
+    // Register edges actor
+    if (stepActors.edgesActor) {
+        registerObject({stepActors.edgesActor, stepFile + "_edges", true, 1.0});
+        sceneRenderer_->addActorToRenderer(stepActors.edgesActor);
     }
 
-    // カスタムインタラクタースタイルを設定（面のホバー検出用）
-    renderer_->setupStepFacePicker(faceActors);
+    // Setup face picker for hover detection
+    sceneRenderer_->setupStepFacePicker(stepActors.faceActors);
 
-    renderer_->renderObjects(dataController_->getObjectList());
-    renderer_->resetCamera();
+    sceneRenderer_->renderObjects(objectList_);
+    sceneRenderer_->resetCamera();
 }
 
 void VisualizationManager::showTempDividedStl(VtkProcessor* vtkProcessor, QWidget* parent, UIState* uiState) {
     try {
-        auto stlFiles = dataController_->fetchDividedStlFiles();
-        if (stlFiles.empty()) {
-            throw std::runtime_error("No valid STL files found");
+        if (!vtkProcessor) {
+            throw std::runtime_error("VtkProcessor is null");
         }
+
+        // Fetch divided STL files from temp/div directory
+        std::filesystem::path tempPath = TempPathUtility::getTempSubDirPath("div");
+
+        std::vector<std::pair<std::filesystem::path, int>> stlFiles;
+        std::regex pattern(R"(^modifierMesh(\d+)\.stl$)");
+
+        if (std::filesystem::exists(tempPath) && std::filesystem::is_directory(tempPath)) {
+            for (const auto& entry : std::filesystem::directory_iterator(tempPath)) {
+                if (entry.is_regular_file() && entry.path().extension() == ".stl") {
+                    std::string filename = entry.path().filename().string();
+                    std::smatch match;
+
+                    if (std::regex_search(filename, match, pattern)) {
+                        int meshNumber = std::stoi(match[1].str());
+                        stlFiles.push_back({entry.path(), meshNumber});
+                    }
+                }
+            }
+        }
+
+        // Sort by mesh number
+        std::sort(stlFiles.begin(), stlFiles.end(),
+                  [](const auto& a, const auto& b) { return a.second < b.second; });
+
+        if (stlFiles.empty()) {
+            throw std::runtime_error("No valid STL files found in temp directory");
+        }
+
+        // Get stress range and mesh infos
         double minStress = vtkProcessor->getMinStress();
         double maxStress = vtkProcessor->getMaxStress();
         const auto& meshInfos = vtkProcessor->getMeshInfos();
-        auto widgets = renderer_->fetchMeshDisplayWidgets();
-        
-        auto actors = dataController_->loadDividedStlFiles(stlFiles, vtkProcessor, minStress, maxStress, meshInfos, uiState);
-        
+
+        // Create divided mesh actors
+        auto actors = actorFactory_->createDividedMeshActors(
+            stlFiles, vtkProcessor, minStress, maxStress, meshInfos, uiState);
+
+        // Get widgets for divided mesh display options
+        auto widgets = sceneRenderer_->fetchMeshDisplayWidgets();
+
+        // Register actors and setup widgets
         int widgetIndex = 0;
         for (size_t i = 0; i < stlFiles.size() && i < actors.size(); ++i) {
             const auto& [path, number] = stlFiles[i];
             std::string filename = path.filename().string();
-            renderer_->addActorToRenderer(actors[i]);
-            renderer_->updateWidgetAndConnectSignals(widgets, widgetIndex, filename, path.string());
+
+            registerObject({actors[i], path.string(), true, 1.0});
+            sceneRenderer_->addActorToRenderer(actors[i]);
+            sceneRenderer_->updateWidgetAndConnectSignals(widgets, widgetIndex, filename, path.string());
         }
-        
-        renderer_->renderObjects(dataController_->getObjectList());
+
+        sceneRenderer_->renderObjects(objectList_);
     }
     catch (const std::exception& e) {
-        renderer_->handleStlFileLoadError(e, parent);
+        sceneRenderer_->handleStlFileLoadError(e, parent);
     }
 }
 
- 
-
+// --- Object Control ---
 
 void VisualizationManager::setObjectVisible(const std::string& filename, bool visible) {
-    dataController_->setObjectVisible(filename, visible);
-    renderer_->renderObjects(dataController_->getObjectList());
+    auto* obj = findObject(filename);
+    if (!obj) return;
+
+    obj->visible = visible;
+    obj->actor->SetVisibility(visible ? 1 : 0);
+    sceneRenderer_->renderObjects(objectList_);
 }
 
 void VisualizationManager::setObjectOpacity(const std::string& filename, double opacity) {
-    dataController_->setObjectOpacity(filename, opacity);
-    renderer_->renderObjects(dataController_->getObjectList());
+    auto* obj = findObject(filename);
+    if (!obj) return;
+
+    obj->opacity = opacity;
+    obj->actor->GetProperty()->SetOpacity(opacity);
+    sceneRenderer_->renderObjects(objectList_);
 }
 
- 
-
 void VisualizationManager::removeDividedStlActors() {
-    dataController_->removeDividedStlActors();
-    renderer_->renderObjects(dataController_->getObjectList());
-} 
+    std::regex pattern(R"(modifierMesh\d+\.stl$)");
+
+    auto it = std::remove_if(objectList_.begin(), objectList_.end(),
+                             [&pattern](const ObjectInfo& obj) {
+                                 return std::regex_search(obj.filename, pattern);
+                             });
+
+    objectList_.erase(it, objectList_.end());
+    sceneRenderer_->renderObjects(objectList_);
+}
 
 void VisualizationManager::hideAllStlObjects() {
-    dataController_->hideAllStlObjects();
-    renderer_->renderObjects(dataController_->getObjectList());
+    for (auto& obj : objectList_) {
+        // Check if filename ends with ".stl"
+        if (obj.filename.length() >= 4 &&
+            obj.filename.substr(obj.filename.length() - 4) == ".stl") {
+            obj.visible = false;
+            obj.actor->SetVisibility(0);
+        }
+    }
+    sceneRenderer_->renderObjects(objectList_);
 }
 
 void VisualizationManager::hideVtkObject() {
-    dataController_->hideVtkObject();
-    renderer_->renderObjects(dataController_->getObjectList());
+    for (auto& obj : objectList_) {
+        // Check if filename ends with ".vtu" or ".vtk"
+        if (obj.filename.length() >= 4) {
+            std::string extension = obj.filename.substr(obj.filename.length() - 4);
+            if (extension == ".vtu" || extension == ".vtk") {
+                obj.visible = false;
+                obj.actor->SetVisibility(0);
+            }
+        }
+    }
+    sceneRenderer_->renderObjects(objectList_);
 }
 
+// --- Query Operations ---
+
 std::vector<std::string> VisualizationManager::getAllStlFilenames() const {
-    return dataController_->getAllStlFilenames();
+    std::vector<std::string> stlFilenames;
+
+    for (const auto& obj : objectList_) {
+        if (obj.filename.length() >= 4 &&
+            obj.filename.substr(obj.filename.length() - 4) == ".stl") {
+            stlFilenames.push_back(obj.filename);
+        }
+    }
+
+    return stlFilenames;
 }
 
 std::string VisualizationManager::getVtkFilename() const {
-    return dataController_->getVtkFilename();
+    for (const auto& obj : objectList_) {
+        if (obj.filename.length() >= 4) {
+            std::string extension = obj.filename.substr(obj.filename.length() - 4);
+            if (extension == ".vtu" || extension == ".vtk") {
+                return obj.filename;
+            }
+        }
+    }
+    return "";
 }
 
- 
+const std::vector<ObjectInfo>& VisualizationManager::getObjectList() const {
+    return objectList_;
+}
+
+// --- Rendering Control ---
+
+void VisualizationManager::render() {
+    sceneRenderer_->render();
+}
+
+void VisualizationManager::resetCamera() {
+    sceneRenderer_->resetCamera();
+}
+
+// --- Private Helper Methods ---
+
+void VisualizationManager::registerObject(const ObjectInfo& objInfo) {
+    objectList_.push_back(objInfo);
+}
+
+ObjectInfo* VisualizationManager::findObject(const std::string& filename) {
+    for (auto& obj : objectList_) {
+        // Exact match
+        if (obj.filename == filename) {
+            return &obj;
+        }
+
+        // Fuzzy match (for legacy compatibility)
+        if (obj.filename.find(filename) != std::string::npos ||
+            filename.find(obj.filename) != std::string::npos) {
+            return &obj;
+        }
+    }
+    return nullptr;
+}
+
+void VisualizationManager::updateRenderingState() {
+    sceneRenderer_->renderObjects(objectList_);
+}
+
+void VisualizationManager::connectSignals() {
+    connect(sceneRenderer_.get(), &SceneRenderer::objectVisibilityChanged,
+            [this](const std::string& filename, bool visible) {
+                setObjectVisible(filename, visible);
+            });
+
+    connect(sceneRenderer_.get(), &SceneRenderer::objectOpacityChanged,
+            [this](const std::string& filename, double opacity) {
+                setObjectOpacity(filename, opacity);
+            });
+}
