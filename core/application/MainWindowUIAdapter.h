@@ -17,11 +17,11 @@ public:
     
     // IUserInterface implementation
     void setVtkFileName(const QString& fileName) override;
-    void setStlFileName(const QString& fileName) override;
+    void setStepFileName(const QString& fileName) override;
     void setVtkVisibilityState(bool visible) override;
-    void setStlVisibilityState(bool visible) override;
+    void setStepVisibilityState(bool visible) override;
     void setVtkOpacity(double opacity) override;
-    void setStlOpacity(double opacity) override;
+    void setStepOpacity(double opacity) override;
     void setDividedMeshVisibility(int meshIndex, bool visible) override;
     void setDividedMeshOpacity(int meshIndex, double opacity) override;
     void setDividedMeshFileName(int meshIndex, const QString& fileName) override;
@@ -43,6 +43,8 @@ public:
     void showTempDividedStl(VtkProcessor* vtkProcessor) override;
     void setVisualizationObjectVisible(const std::string& filename, bool visible) override;
     void setVisualizationObjectOpacity(const std::string& filename, double opacity) override;
+    void setStepFileVisible(const std::string& stepFile, bool visible) override;
+    void setStepFileOpacity(const std::string& stepFile, double opacity) override;
     void removeDividedStlActors() override;
     void hideAllStlObjects() override;
     void hideVtkObject() override;

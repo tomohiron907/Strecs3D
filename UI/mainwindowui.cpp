@@ -337,20 +337,20 @@ void MainWindowUI::connectUIStateSignals()
     // DisplayOptionsContainerの各ウィジェットの変更をUIStateに反映
     if (displayOptionsContainer) {
         auto widgets = displayOptionsContainer->getAllDisplayWidgets();
-        
-        // STL Display Widget (Mesh)
+
+        // STEP Display Widget
         if (widgets.size() > 0 && widgets[0]) {
             connect(widgets[0], &ObjectDisplayOptionsWidget::visibilityToggled,
                     this, [this](bool visible) {
-                        DisplaySettings settings = uiState->getMeshDisplaySettings();
+                        DisplaySettings settings = uiState->getStepDisplaySettings();
                         settings.isVisible = visible;
-                        uiState->setMeshDisplaySettings(settings);
+                        uiState->setStepDisplaySettings(settings);
                     });
             connect(widgets[0], &ObjectDisplayOptionsWidget::opacityChanged,
                     this, [this](double opacity) {
-                        DisplaySettings settings = uiState->getMeshDisplaySettings();
+                        DisplaySettings settings = uiState->getStepDisplaySettings();
                         settings.opacity = opacity;
-                        uiState->setMeshDisplaySettings(settings);
+                        uiState->setStepDisplaySettings(settings);
                     });
         }
         
@@ -455,8 +455,8 @@ void MainWindowUI::updateUIFromState()
         
         // Update visibility and opacity settings
         if (widgets.size() > 0 && widgets[0]) {
-            widgets[0]->setVisibleState(uiState->getMeshDisplaySettings().isVisible);
-            widgets[0]->setOpacity(uiState->getMeshDisplaySettings().opacity);
+            widgets[0]->setVisibleState(uiState->getStepDisplaySettings().isVisible);
+            widgets[0]->setOpacity(uiState->getStepDisplaySettings().opacity);
         }
         if (widgets.size() > 1 && widgets[1]) {
             widgets[1]->setVisibleState(uiState->getVtuDisplaySettings().isVisible);

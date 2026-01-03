@@ -22,7 +22,6 @@ public:
 
     // ファイル操作
     bool openVtkFile(const std::string& vtkFile, IUserInterface* ui);
-    bool openStlFile(const std::string& stlFile, IUserInterface* ui);
     bool openStepFile(const std::string& stepFile, IUserInterface* ui);
 
     // STEPファイルから変換されたSTLファイルパスを取得

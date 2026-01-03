@@ -121,13 +121,13 @@ void UIState::setProcessingMode(ProcessingMode mode)
     }
 }
 
-void UIState::setMeshDisplaySettings(const DisplaySettings& settings)
+void UIState::setStepDisplaySettings(const DisplaySettings& settings)
 {
-    if (m_meshDisplaySettings.isVisible != settings.isVisible ||
-        m_meshDisplaySettings.opacity != settings.opacity) {
-        m_meshDisplaySettings = settings;
-        emit meshDisplaySettingsChanged(settings);
-        qDebug() << "UIState: Mesh display settings changed - Visible:" << settings.isVisible << "Opacity:" << settings.opacity;
+    if (m_stepDisplaySettings.isVisible != settings.isVisible ||
+        m_stepDisplaySettings.opacity != settings.opacity) {
+        m_stepDisplaySettings = settings;
+        emit stepDisplaySettingsChanged(settings);
+        qDebug() << "UIState: STEP display settings changed - Visible:" << settings.isVisible << "Opacity:" << settings.opacity;
     }
 }
 
@@ -224,7 +224,7 @@ void UIState::printDebugInfo() const
     }
 
     qDebug() << "Display Settings:";
-    qDebug() << "  Mesh: Visible=" << m_meshDisplaySettings.isVisible << "Opacity=" << m_meshDisplaySettings.opacity;
+    qDebug() << "  STEP: Visible=" << m_stepDisplaySettings.isVisible << "Opacity=" << m_stepDisplaySettings.opacity;
     qDebug() << "  VTU: Visible=" << m_vtuDisplaySettings.isVisible << "Opacity=" << m_vtuDisplaySettings.opacity;
     qDebug() << "  Divided Mesh 1: Visible=" << m_dividedMesh1Settings.isVisible << "Opacity=" << m_dividedMesh1Settings.opacity;
     qDebug() << "  Divided Mesh 2: Visible=" << m_dividedMesh2Settings.isVisible << "Opacity=" << m_dividedMesh2Settings.opacity;
@@ -279,7 +279,7 @@ QString UIState::getDebugString() const
     }
 
     debug += "Display Settings:\n";
-    debug += QString("  Mesh: Visible=%1, Opacity=%2\n").arg(m_meshDisplaySettings.isVisible).arg(m_meshDisplaySettings.opacity);
+    debug += QString("  STEP: Visible=%1, Opacity=%2\n").arg(m_stepDisplaySettings.isVisible).arg(m_stepDisplaySettings.opacity);
     debug += QString("  VTU: Visible=%1, Opacity=%2\n").arg(m_vtuDisplaySettings.isVisible).arg(m_vtuDisplaySettings.opacity);
     debug += QString("  Divided Mesh 1: Visible=%1, Opacity=%2\n").arg(m_dividedMesh1Settings.isVisible).arg(m_dividedMesh1Settings.opacity);
     debug += QString("  Divided Mesh 2: Visible=%1, Opacity=%2\n").arg(m_dividedMesh2Settings.isVisible).arg(m_dividedMesh2Settings.opacity);

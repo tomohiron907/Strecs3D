@@ -17,7 +17,7 @@
 class SetMeshOpacityCommand : public Command {
 public:
     enum class MeshType {
-        STL_MESH,
+        STEP_MESH,
         VTU_MESH,
         DIVIDED_MESH_1,
         DIVIDED_MESH_2,
@@ -54,10 +54,10 @@ private:
         DisplaySettings settings;
 
         switch (meshType_) {
-            case MeshType::STL_MESH:
-                settings = uiState_->getMeshDisplaySettings();
+            case MeshType::STEP_MESH:
+                settings = uiState_->getStepDisplaySettings();
                 settings.opacity = opacity_;
-                uiState_->setMeshDisplaySettings(settings);
+                uiState_->setStepDisplaySettings(settings);
                 break;
 
             case MeshType::VTU_MESH:

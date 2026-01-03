@@ -25,12 +25,12 @@ void MainWindowUIAdapter::setVtkFileName(const QString& fileName)
     }
 }
 
-void MainWindowUIAdapter::setStlFileName(const QString& fileName)
+void MainWindowUIAdapter::setStepFileName(const QString& fileName)
 {
     if (!ui) return;
-    auto stlDisplayWidget = ui->getObjectDisplayOptionsWidget();
-    if (stlDisplayWidget) {
-        stlDisplayWidget->setFileName(fileName);
+    auto stepDisplayWidget = ui->getStepDisplayWidget();
+    if (stepDisplayWidget) {
+        stepDisplayWidget->setFileName(fileName);
     }
 }
 
@@ -43,12 +43,12 @@ void MainWindowUIAdapter::setVtkVisibilityState(bool visible)
     }
 }
 
-void MainWindowUIAdapter::setStlVisibilityState(bool visible)
+void MainWindowUIAdapter::setStepVisibilityState(bool visible)
 {
     if (!ui) return;
-    auto stlWidget = ui->getObjectDisplayOptionsWidget();
-    if (stlWidget) {
-        stlWidget->setVisibleState(visible);
+    auto stepWidget = ui->getStepDisplayWidget();
+    if (stepWidget) {
+        stepWidget->setVisibleState(visible);
     }
 }
 
@@ -61,12 +61,12 @@ void MainWindowUIAdapter::setVtkOpacity(double opacity)
     }
 }
 
-void MainWindowUIAdapter::setStlOpacity(double opacity)
+void MainWindowUIAdapter::setStepOpacity(double opacity)
 {
     if (!ui) return;
-    auto stlWidget = ui->getObjectDisplayOptionsWidget();
-    if (stlWidget) {
-        stlWidget->setOpacity(opacity);
+    auto stepWidget = ui->getStepDisplayWidget();
+    if (stepWidget) {
+        stepWidget->setOpacity(opacity);
     }
 }
 
@@ -214,6 +214,20 @@ void MainWindowUIAdapter::setVisualizationObjectOpacity(const std::string& filen
 {
     if (visualizationManager) {
         visualizationManager->setObjectOpacity(filename, opacity);
+    }
+}
+
+void MainWindowUIAdapter::setStepFileVisible(const std::string& stepFile, bool visible)
+{
+    if (visualizationManager) {
+        visualizationManager->setStepFileVisible(stepFile, visible);
+    }
+}
+
+void MainWindowUIAdapter::setStepFileOpacity(const std::string& stepFile, double opacity)
+{
+    if (visualizationManager) {
+        visualizationManager->setStepFileOpacity(stepFile, opacity);
     }
 }
 

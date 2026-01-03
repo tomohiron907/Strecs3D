@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "core/application/MainWindowUIAdapter.h"
-#include "core/commands/file/OpenStlFileCommand.h"
 #include "core/commands/file/OpenVtkFileCommand.h"
 #include "core/commands/file/OpenStepFileCommand.h"
 #include "core/commands/processing/ProcessFilesCommand.h"
@@ -60,7 +59,7 @@ void MainWindow::setupWindow()
 void MainWindow::connectSignals()
 {
     // UI要素のシグナル接続
-    connect(ui->getOpenStlButton(), &QPushButton::clicked, this, &MainWindow::openSTLFile);
+    connect(ui->getOpenStlButton(), &QPushButton::clicked, this, &MainWindow::openSTEPFile);
     connect(ui->getOpenVtkButton(), &QPushButton::clicked, this, &MainWindow::openVTKFile);
     connect(ui->getOpenStepButton(), &QPushButton::clicked, this, &MainWindow::openSTEPFile);
     connect(ui->getConstrainButton(), &QPushButton::clicked, this, &MainWindow::onConstrainButtonClicked);
@@ -75,12 +74,12 @@ void MainWindow::connectSignals()
     connect(ui->getModeComboBox(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onModeComboBoxChanged);
 
     // Display Widgetのシグナル接続
-    auto objectDisplayWidget = ui->getObjectDisplayOptionsWidget();
-    if (objectDisplayWidget) {
-        connect(objectDisplayWidget, &ObjectDisplayOptionsWidget::visibilityToggled,
-                this, &MainWindow::onObjectVisibilityChanged);
-        connect(objectDisplayWidget, &ObjectDisplayOptionsWidget::opacityChanged,
-                this, &MainWindow::onObjectOpacityChanged);
+    auto stepDisplayWidget = ui->getStepDisplayWidget();
+    if (stepDisplayWidget) {
+        connect(stepDisplayWidget, &ObjectDisplayOptionsWidget::visibilityToggled,
+                this, &MainWindow::onStepObjectVisibilityChanged);
+        connect(stepDisplayWidget, &ObjectDisplayOptionsWidget::opacityChanged,
+                this, &MainWindow::onStepObjectOpacityChanged);
     }
 
     auto vtkDisplayWidget = ui->getVtkDisplayOptionsWidget();
@@ -125,34 +124,6 @@ void MainWindow::openVTKFile()
     updateProcessButtonState();
 }
 
-void MainWindow::openSTLFile()
-{
-    QString fileName = QFileDialog::getOpenFileName(this,
-                                                     "Open STL File",
-                                                     QDir::homePath(),
-                                                     "STL Files (*.stl)");
-    if (fileName.isEmpty()) {
-        return;
-    }
-
-    logMessage(QString("Loading STL file: %1").arg(fileName));
-
-    // コマンドパターンを使用してファイルを開く
-    auto command = std::make_unique<OpenStlFileCommand>(
-        appController.get(),
-        uiAdapter.get(),
-        fileName
-    );
-    command->execute();
-
-    // UIStateにファイルパスを設定
-    if (UIState* state = getUIState()) {
-        state->setStlFilePath(fileName);
-    }
-
-    updateProcessButtonState();
-}
-
 void MainWindow::openSTEPFile()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
@@ -183,6 +154,15 @@ void MainWindow::openSTEPFile()
             state->setStlFilePath(convertedStlPath);
             logMessage(QString("Converted STL file registered: %1").arg(convertedStlPath));
         }
+    }
+
+    // STEP display widgetのラベルと状態を更新
+    auto stepWidget = ui->getStepDisplayWidget();
+    if (stepWidget) {
+        QFileInfo fileInfo(fileName);
+        stepWidget->setFileName(fileInfo.fileName());
+        stepWidget->setVisibleState(true);
+        stepWidget->setOpacity(1.0);
     }
 
     updateProcessButtonState();
@@ -228,38 +208,38 @@ void MainWindow::export3mfFile()
     logMessage("3MF export completed successfully");
 }
 
-void MainWindow::onObjectVisibilityChanged(bool visible)
+void MainWindow::onStepObjectVisibilityChanged(bool visible)
 {
-    auto objectDisplayWidget = ui->getObjectDisplayOptionsWidget();
-    if (!objectDisplayWidget) return;
+    auto stepDisplayWidget = ui->getStepDisplayWidget();
+    if (!stepDisplayWidget) return;
 
-    QString fileName = objectDisplayWidget->getFileName();
+    QString fileName = stepDisplayWidget->getFileName();
 
     // コマンドパターンを使用してメッシュの表示/非表示を設定
     auto command = std::make_unique<SetMeshVisibilityCommand>(
         getUIState(),
         appController.get(),
         uiAdapter.get(),
-        SetMeshVisibilityCommand::MeshType::STL_MESH,
+        SetMeshVisibilityCommand::MeshType::STEP_MESH,
         fileName,
         visible
     );
     command->execute();
 }
 
-void MainWindow::onObjectOpacityChanged(double opacity)
+void MainWindow::onStepObjectOpacityChanged(double opacity)
 {
-    auto objectDisplayWidget = ui->getObjectDisplayOptionsWidget();
-    if (!objectDisplayWidget) return;
+    auto stepDisplayWidget = ui->getStepDisplayWidget();
+    if (!stepDisplayWidget) return;
 
-    QString fileName = objectDisplayWidget->getFileName();
+    QString fileName = stepDisplayWidget->getFileName();
 
     // コマンドパターンを使用してメッシュの不透明度を設定
     auto command = std::make_unique<SetMeshOpacityCommand>(
         getUIState(),
         appController.get(),
         uiAdapter.get(),
-        SetMeshOpacityCommand::MeshType::STL_MESH,
+        SetMeshOpacityCommand::MeshType::STEP_MESH,
         fileName,
         opacity
     );

@@ -42,9 +42,9 @@ bool ApplicationController::openVtkFile(const std::string& vtkFile, IUserInterfa
     ui->setVtkFileName(QString::fromStdString(vtkFile));
     ui->setVtkOpacity(1.0);
 
-    // STLを非表示にし、チェックボックスもオフ
-    ui->setStlVisibilityState(false);
-    ui->setStlOpacity(1.0);
+    // STEPを非表示にし、チェックボックスもオフ
+    ui->setStepVisibilityState(false);
+    ui->setStepOpacity(1.0);
     ui->hideAllStlObjects();
 
     try {
@@ -64,15 +64,6 @@ bool ApplicationController::openVtkFile(const std::string& vtkFile, IUserInterfa
         std::cerr << "Error opening VTK file: " << e.what() << std::endl;
         return false;
     }
-}
-
-bool ApplicationController::openStlFile(const std::string& stlFile, IUserInterface* ui)
-{
-    if (!ui) return false;
-
-    // STL file direct display is no longer supported. Use STEP files instead.
-    std::cerr << "Direct STL file display is deprecated. Please use STEP files." << std::endl;
-    return false;
 }
 
 bool ApplicationController::openStepFile(const std::string& stepFile, IUserInterface* ui)
@@ -338,16 +329,36 @@ void ApplicationController::setMeshVisibility(const std::string& fileName, bool 
 {
     if (!ui || fileName.empty()) return;
 
-    // IUserInterface経由で実際の可視化を更新
-    ui->setVisualizationObjectVisible(fileName, visible);
+    // Check if this is a STEP file (ends with .step or .stp)
+    std::string extension;
+    size_t dotPos = fileName.find_last_of(".");
+    if (dotPos != std::string::npos) {
+        extension = fileName.substr(dotPos + 1);
+    }
+
+    if (extension == "step" || extension == "stp") {
+        ui->setStepFileVisible(fileName, visible);
+    } else {
+        ui->setVisualizationObjectVisible(fileName, visible);
+    }
 }
 
 void ApplicationController::setMeshOpacity(const std::string& fileName, double opacity, IUserInterface* ui)
 {
     if (!ui || fileName.empty()) return;
 
-    // IUserInterface経由で実際の可視化を更新
-    ui->setVisualizationObjectOpacity(fileName, opacity);
+    // Check if this is a STEP file (ends with .step or .stp)
+    std::string extension;
+    size_t dotPos = fileName.find_last_of(".");
+    if (dotPos != std::string::npos) {
+        extension = fileName.substr(dotPos + 1);
+    }
+
+    if (extension == "step" || extension == "stp") {
+        ui->setStepFileOpacity(fileName, opacity);
+    } else {
+        ui->setVisualizationObjectOpacity(fileName, opacity);
+    }
 }
 
 bool ApplicationController::exportSimulationCondition(IUserInterface* ui, UIState* uiState, const QString& outputPath)

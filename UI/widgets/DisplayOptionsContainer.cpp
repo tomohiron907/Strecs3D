@@ -19,7 +19,7 @@ void DisplayOptionsContainer::setupUI()
     containerLayout->setSpacing(10);
 
     // 各表示オプションウィジェットを作成
-    stlDisplayWidget = new ObjectDisplayOptionsWidget("No STL file selected", this);
+    stepDisplayWidget = new ObjectDisplayOptionsWidget("No STEP file selected", this);
     vtkDisplayWidget = new ObjectDisplayOptionsWidget("No VTK file selected", this);
     dividedMeshWidget1 = new ObjectDisplayOptionsWidget("Divided Mesh 1", this);
     dividedMeshWidget2 = new ObjectDisplayOptionsWidget("Divided Mesh 2", this);
@@ -55,7 +55,7 @@ void DisplayOptionsContainer::setupUI()
     dividedLayout->addWidget(dividedMeshWidget4);
 
     // レイアウトに追加
-    containerLayout->addWidget(stlDisplayWidget);
+    containerLayout->addWidget(stepDisplayWidget);
     containerLayout->addWidget(vtkDisplayWidget);
     containerLayout->addSpacing(100); // 上2つと4つのフレームの間に隙間を追加
     containerLayout->addWidget(dividedFrame);
@@ -94,7 +94,7 @@ void DisplayOptionsContainer::setupStyle()
 QList<ObjectDisplayOptionsWidget*> DisplayOptionsContainer::getAllDisplayWidgets() const
 {
     QList<ObjectDisplayOptionsWidget*> widgets;
-    widgets.append(stlDisplayWidget);
+    widgets.append(stepDisplayWidget);
     widgets.append(vtkDisplayWidget);
     widgets.append(dividedMeshWidget1);
     widgets.append(dividedMeshWidget2);

@@ -38,6 +38,8 @@ public:
     // Object Control
     void setObjectVisible(const std::string& filename, bool visible);
     void setObjectOpacity(const std::string& filename, double opacity);
+    void setStepFileVisible(const std::string& stepFile, bool visible);
+    void setStepFileOpacity(const std::string& stepFile, double opacity);
     void removeDividedStlActors();
     void hideAllStlObjects();
     void hideVtkObject();

@@ -160,6 +160,34 @@ void VisualizationManager::setObjectOpacity(const std::string& filename, double 
     sceneRenderer_->renderObjects(objectList_);
 }
 
+void VisualizationManager::setStepFileVisible(const std::string& stepFile, bool visible) {
+    // Find all actors related to this STEP file (faces and edges)
+    for (auto& obj : objectList_) {
+        // Match actors whose filename contains stepFile and has _face_ or _edges suffix
+        if (obj.filename.find(stepFile) != std::string::npos &&
+            (obj.filename.find("_face_") != std::string::npos ||
+             obj.filename.find("_edges") != std::string::npos)) {
+            obj.visible = visible;
+            obj.actor->SetVisibility(visible ? 1 : 0);
+        }
+    }
+    sceneRenderer_->renderObjects(objectList_);
+}
+
+void VisualizationManager::setStepFileOpacity(const std::string& stepFile, double opacity) {
+    // Find all actors related to this STEP file (faces and edges)
+    for (auto& obj : objectList_) {
+        // Match actors whose filename contains stepFile and has _face_ or _edges suffix
+        if (obj.filename.find(stepFile) != std::string::npos &&
+            (obj.filename.find("_face_") != std::string::npos ||
+             obj.filename.find("_edges") != std::string::npos)) {
+            obj.opacity = opacity;
+            obj.actor->GetProperty()->SetOpacity(opacity);
+        }
+    }
+    sceneRenderer_->renderObjects(objectList_);
+}
+
 void VisualizationManager::removeDividedStlActors() {
     std::regex pattern(R"(modifierMesh\d+\.stl$)");
 

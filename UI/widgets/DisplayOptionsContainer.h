@@ -11,7 +11,7 @@ public:
     ~DisplayOptionsContainer() = default;
 
     // 各ウィジェットへのアクセサー
-    ObjectDisplayOptionsWidget* getStlDisplayWidget() const { return stlDisplayWidget; }
+    ObjectDisplayOptionsWidget* getStepDisplayWidget() const { return stepDisplayWidget; }
     ObjectDisplayOptionsWidget* getVtkDisplayWidget() const { return vtkDisplayWidget; }
     ObjectDisplayOptionsWidget* getDividedMeshWidget1() const { return dividedMeshWidget1; }
     ObjectDisplayOptionsWidget* getDividedMeshWidget2() const { return dividedMeshWidget2; }
@@ -25,7 +25,7 @@ private:
     void setupUI();
     void setupStyle();
 
-    ObjectDisplayOptionsWidget* stlDisplayWidget;
+    ObjectDisplayOptionsWidget* stepDisplayWidget;
     ObjectDisplayOptionsWidget* vtkDisplayWidget;
     ObjectDisplayOptionsWidget* dividedMeshWidget1;
     ObjectDisplayOptionsWidget* dividedMeshWidget2;

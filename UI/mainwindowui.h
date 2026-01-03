@@ -47,8 +47,8 @@ public:
     DisplayOptionsContainer* getDisplayOptionsContainer() const { return displayOptionsContainer; }
     UIState* getUIState() const { return uiState; }
     
-    // 個別のウィジェットへのアクセサー（後方互換性のため）
-    ObjectDisplayOptionsWidget* getObjectDisplayOptionsWidget() const { return displayOptionsContainer->getStlDisplayWidget(); }
+    // 個別のウィジェットへのアクセサー
+    ObjectDisplayOptionsWidget* getStepDisplayWidget() const { return displayOptionsContainer->getStepDisplayWidget(); }
     ObjectDisplayOptionsWidget* getVtkDisplayOptionsWidget() const { return displayOptionsContainer->getVtkDisplayWidget(); }
     ObjectDisplayOptionsWidget* getDividedMeshWidget1() const { return displayOptionsContainer->getDividedMeshWidget1(); }
     ObjectDisplayOptionsWidget* getDividedMeshWidget2() const { return displayOptionsContainer->getDividedMeshWidget2(); }

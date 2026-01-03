@@ -60,8 +60,8 @@ public:
     ProcessingMode getProcessingMode() const { return m_processingMode; }
 
     // Display Settings for different objects
-    void setMeshDisplaySettings(const DisplaySettings& settings);
-    DisplaySettings getMeshDisplaySettings() const { return m_meshDisplaySettings; }
+    void setStepDisplaySettings(const DisplaySettings& settings);
+    DisplaySettings getStepDisplaySettings() const { return m_stepDisplaySettings; }
 
     void setVtuDisplaySettings(const DisplaySettings& settings);
     DisplaySettings getVtuDisplaySettings() const { return m_vtuDisplaySettings; }
@@ -91,7 +91,7 @@ signals:
     void boundaryConditionChanged(const BoundaryCondition& condition);
     void densitySliderColorsChanged(const std::vector<QColor>& colors);
     void processingModeChanged(ProcessingMode mode);
-    void meshDisplaySettingsChanged(const DisplaySettings& settings);
+    void stepDisplaySettingsChanged(const DisplaySettings& settings);
     void vtuDisplaySettingsChanged(const DisplaySettings& settings);
     void dividedMesh1SettingsChanged(const DisplaySettings& settings);
     void dividedMesh2SettingsChanged(const DisplaySettings& settings);
@@ -121,7 +121,7 @@ private:
     ProcessingMode m_processingMode = ProcessingMode::CURA;
 
     // Display settings
-    DisplaySettings m_meshDisplaySettings;
+    DisplaySettings m_stepDisplaySettings;
     DisplaySettings m_vtuDisplaySettings;
     DisplaySettings m_dividedMesh1Settings;
     DisplaySettings m_dividedMesh2Settings;

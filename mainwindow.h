@@ -29,12 +29,11 @@ public:
 
 public slots:
     void openVTKFile();
-    void openSTLFile();
     void openSTEPFile();
     void processFiles();
     void export3mfFile();
-    void onObjectVisibilityChanged(bool visible);
-    void onObjectOpacityChanged(double opacity);
+    void onStepObjectVisibilityChanged(bool visible);
+    void onStepObjectOpacityChanged(double opacity);
     void onVtkObjectVisibilityChanged(bool visible);
     void onVtkObjectOpacityChanged(double opacity);
     void onDensitySliderChanged(); // DensitySliderが変更された時の処理
