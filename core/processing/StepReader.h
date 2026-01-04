@@ -8,6 +8,13 @@
 
 class TopoDS_Shape;
 
+// 面のジオメトリ情報を保持する構造体
+struct FaceGeometry {
+    double centerX, centerY, centerZ;  // 面の中心座標
+    double normalX, normalY, normalZ;  // 面の法線ベクトル
+    bool isValid;                       // 取得成功フラグ
+};
+
 class StepReader {
 public:
     StepReader();
@@ -28,6 +35,9 @@ public:
 
     // 面ごとのアクターを取得（ホバー検出用）
     std::vector<vtkSmartPointer<vtkActor>> getFaceActors() const;
+
+    // 面の中心と法線を取得（surface_idは1-based）
+    FaceGeometry getFaceGeometry(int surfaceId) const;
 
 private:
     TopoDS_Shape* shape_;

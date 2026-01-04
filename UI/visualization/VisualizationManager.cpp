@@ -1,8 +1,11 @@
 #include "VisualizationManager.h"
 #include "ActorFactory.h"
 #include "SceneRenderer.h"
+#include "BoundaryConditionVisualizer.h"
 #include "../../core/processing/VtkProcessor.h"
+#include "../../core/processing/StepReader.h"
 #include "../../core/ui/UIState.h"
+#include "../../core/types/BoundaryCondition.h"
 #include "../../utils/tempPathUtility.h"
 #include "../mainwindowui.h"
 #include <regex>
@@ -13,6 +16,8 @@
 VisualizationManager::VisualizationManager(MainWindowUI* ui) : QObject() {
     actorFactory_ = std::make_unique<ActorFactory>();
     sceneRenderer_ = std::make_unique<SceneRenderer>(ui);
+    bcVisualizer_ = std::make_unique<BoundaryConditionVisualizer>();
+    currentStepReader_ = nullptr;
 
     // Create and register grid
     auto gridActor = actorFactory_->createGridActor();
@@ -49,10 +54,19 @@ void VisualizationManager::displayVtkFile(const std::string& vtkFile, VtkProcess
 }
 
 void VisualizationManager::displayStepFile(const std::string& stepFile) {
+    // Create and hold StepReader for boundary condition visualization
+    currentStepReader_ = std::make_shared<StepReader>();
+    if (!currentStepReader_->readStepFile(stepFile)) {
+        std::cerr << "Failed to load STEP file: " << stepFile << std::endl;
+        currentStepReader_.reset();
+        return;
+    }
+
     auto stepActors = actorFactory_->createStepActors(stepFile);
 
     if (stepActors.faceActors.empty()) {
-        std::cerr << "Failed to load STEP file: " << stepFile << std::endl;
+        std::cerr << "Failed to create STEP actors: " << stepFile << std::endl;
+        currentStepReader_.reset();
         return;
     }
 
@@ -303,4 +317,53 @@ void VisualizationManager::connectSignals() {
             [this](const std::string& filename, double opacity) {
                 setObjectOpacity(filename, opacity);
             });
+}
+
+// --- Boundary Condition Display ---
+
+void VisualizationManager::displayBoundaryConditions(const BoundaryCondition& condition) {
+    // Clear existing boundary condition actors
+    clearBoundaryConditions();
+
+    // Check if STEP file is loaded
+    if (!currentStepReader_ || !currentStepReader_->isValid()) {
+        std::cerr << "STEP file not loaded - cannot display boundary conditions" << std::endl;
+        return;
+    }
+
+    // If no boundary conditions, just return
+    if (condition.constraints.empty() && condition.loads.empty()) {
+        return;
+    }
+
+    // Create boundary condition actors
+    auto bcActors = bcVisualizer_->createBoundaryConditionActors(condition, currentStepReader_.get());
+
+    // Add constraint actors
+    for (auto& actor : bcActors.constraintActors) {
+        sceneRenderer_->addActorToRenderer(actor);
+        boundaryConditionActors_.push_back(actor);
+    }
+
+    // Add load actors
+    for (auto& actor : bcActors.loadActors) {
+        sceneRenderer_->addActorToRenderer(actor);
+        boundaryConditionActors_.push_back(actor);
+    }
+
+    // Render
+    render();
+}
+
+void VisualizationManager::clearBoundaryConditions() {
+    // Remove all boundary condition actors from renderer
+    for (auto& actor : boundaryConditionActors_) {
+        sceneRenderer_->removeActorFromRenderer(actor);
+    }
+
+    // Clear the list
+    boundaryConditionActors_.clear();
+
+    // Render
+    render();
 }

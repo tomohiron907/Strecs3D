@@ -51,8 +51,9 @@ public:
     std::vector<std::string> getAllStlFilenames() const override;
     std::string getVtkFilename() const override;
     
-    // Adapter specific method
+    // Adapter specific methods
     MainWindowUI* getMainWindowUI() const { return ui; }
+    VisualizationManager* getVisualizationManager() const { return visualizationManager.get(); }
 
 private:
     ObjectDisplayOptionsWidget* getDividedMeshWidget(int meshIndex) const;

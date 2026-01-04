@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "core/application/MainWindowUIAdapter.h"
+#include "UI/visualization/VisualizationManager.h"
 #include "core/commands/file/OpenVtkFileCommand.h"
 #include "core/commands/file/OpenStepFileCommand.h"
 #include "core/commands/processing/ProcessFilesCommand.h"
@@ -89,6 +90,10 @@ void MainWindow::connectSignals()
         connect(vtkDisplayWidget, &ObjectDisplayOptionsWidget::opacityChanged,
                 this, &MainWindow::onVtkObjectOpacityChanged);
     }
+
+    // UIStateのシグナル接続
+    connect(ui->getUIState(), &UIState::boundaryConditionChanged,
+            this, &MainWindow::onBoundaryConditionChanged);
 
     // 初期状態でUIStateを更新
     updateUIStateFromWidgets();
@@ -592,4 +597,21 @@ void MainWindow::onSimulateButtonClicked()
     logMessage("FEM analysis pipeline completed.");
 
     updateProcessButtonState();
+}
+
+void MainWindow::onBoundaryConditionChanged()
+{
+    UIState* state = getUIState();
+    if (!state) {
+        return;
+    }
+
+    BoundaryCondition condition = state->getBoundaryCondition();
+
+    if (uiAdapter) {
+        auto* vizManager = uiAdapter->getVisualizationManager();
+        if (vizManager) {
+            vizManager->displayBoundaryConditions(condition);
+        }
+    }
 }

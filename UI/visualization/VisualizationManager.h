@@ -20,6 +20,9 @@ class VtkProcessor;
 class UIState;
 class MainWindowUI;
 class QWidget;
+class BoundaryConditionVisualizer;
+class StepReader;
+struct BoundaryCondition;
 
 class VisualizationManager : public QObject {
     Q_OBJECT
@@ -53,13 +56,24 @@ public:
     void render();
     void resetCamera();
 
+    // Boundary Condition Display
+    void displayBoundaryConditions(const BoundaryCondition& condition);
+    void clearBoundaryConditions();
+
 private:
     // Components
     std::unique_ptr<ActorFactory> actorFactory_;
     std::unique_ptr<SceneRenderer> sceneRenderer_;
+    std::unique_ptr<BoundaryConditionVisualizer> bcVisualizer_;
 
     // Data - ObjectInfo list is the single source of truth
     std::vector<ObjectInfo> objectList_;
+
+    // StepReader reference for boundary condition visualization
+    std::shared_ptr<StepReader> currentStepReader_;
+
+    // Boundary condition actors
+    std::vector<vtkSmartPointer<vtkActor>> boundaryConditionActors_;
 
     // Helper methods
     void registerObject(const ObjectInfo& objInfo);

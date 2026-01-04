@@ -11,9 +11,13 @@
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <Poly_Triangulation.hxx>
 #include <BRepAdaptor_Curve.hxx>
+#include <BRepAdaptor_Surface.hxx>
 #include <GCPnts_UniformAbscissa.hxx>
 #include <gp_Pnt.hxx>
 #include <TColgp_Array1OfPnt.hxx>
+#include <GProp_GProps.hxx>
+#include <BRepGProp.hxx>
+#include <GeomLProp_SLProps.hxx>
 
 // VTK includes
 #include <vtkSmartPointer.h>
@@ -348,4 +352,55 @@ std::vector<vtkSmartPointer<vtkActor>> StepReader::getFaceActors() const
     }
 
     return faceActors;
+}
+
+FaceGeometry StepReader::getFaceGeometry(int surfaceId) const {
+    FaceGeometry result;
+    result.isValid = false;
+
+    // surfaceIdは1-based、内部インデックスは0-based
+    int targetIndex = surfaceId - 1;
+    if (!isValid_ || targetIndex < 0) {
+        return result;
+    }
+
+    int currentIndex = 0;
+    for (TopExp_Explorer faceExp(*shape_, TopAbs_FACE); faceExp.More(); faceExp.Next()) {
+        if (currentIndex == targetIndex) {
+            TopoDS_Face face = TopoDS::Face(faceExp.Current());
+
+            // 面の中心を計算（重心）
+            GProp_GProps props;
+            BRepGProp::SurfaceProperties(face, props);
+            gp_Pnt center = props.CentreOfMass();
+
+            result.centerX = center.X();
+            result.centerY = center.Y();
+            result.centerZ = center.Z();
+
+            // 面の法線を計算
+            BRepAdaptor_Surface surface(face);
+            double u = (surface.FirstUParameter() + surface.LastUParameter()) / 2.0;
+            double v = (surface.FirstVParameter() + surface.LastVParameter()) / 2.0;
+
+            GeomLProp_SLProps slProps(surface.Surface().Surface(), u, v, 1, 1e-6);
+
+            if (slProps.IsNormalDefined()) {
+                gp_Dir normal = slProps.Normal();
+                if (face.Orientation() == TopAbs_REVERSED) {
+                    normal.Reverse();
+                }
+
+                result.normalX = normal.X();
+                result.normalY = normal.Y();
+                result.normalZ = normal.Z();
+                result.isValid = true;
+            }
+
+            return result;
+        }
+        currentIndex++;
+    }
+
+    return result;
 }
