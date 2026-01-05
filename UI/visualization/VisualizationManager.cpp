@@ -340,13 +340,19 @@ void VisualizationManager::displayBoundaryConditions(const BoundaryCondition& co
     auto bcActors = bcVisualizer_->createBoundaryConditionActors(condition, currentStepReader_.get());
 
     // Add constraint actors
+    int constraintIndex = 0;
     for (auto& actor : bcActors.constraintActors) {
+        std::string actorName = "__bc_constraint_" + std::to_string(constraintIndex++);
+        registerObject({actor, actorName, true, 0.8});
         sceneRenderer_->addActorToRenderer(actor);
         boundaryConditionActors_.push_back(actor);
     }
 
     // Add load actors
+    int loadIndex = 0;
     for (auto& actor : bcActors.loadActors) {
+        std::string actorName = "__bc_load_" + std::to_string(loadIndex++);
+        registerObject({actor, actorName, true, 0.8});
         sceneRenderer_->addActorToRenderer(actor);
         boundaryConditionActors_.push_back(actor);
     }
@@ -356,6 +362,14 @@ void VisualizationManager::displayBoundaryConditions(const BoundaryCondition& co
 }
 
 void VisualizationManager::clearBoundaryConditions() {
+    // Remove all boundary condition actors from objectList_
+    objectList_.erase(
+        std::remove_if(objectList_.begin(), objectList_.end(),
+                       [](const ObjectInfo& obj) {
+                           return obj.filename.find("__bc_") == 0;
+                       }),
+        objectList_.end());
+
     // Remove all boundary condition actors from renderer
     for (auto& actor : boundaryConditionActors_) {
         sceneRenderer_->removeActorFromRenderer(actor);
