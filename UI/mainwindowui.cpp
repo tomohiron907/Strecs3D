@@ -11,8 +11,6 @@
 #include <iostream>
 #include "widgets/Button.h"
 #include "ColorManager.h"
-#include "widgets/ObjectDisplayOptionsWidget.h"
-#include "widgets/DisplayOptionsContainer.h"
 
 MainWindowUI::MainWindowUI(MainWindow* mainWindow)
     : mainWindow(mainWindow)
@@ -48,11 +46,11 @@ bool MainWindowUI::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == vtkWidget) {
         if (event->type() == QEvent::Resize) {
-            resizeDisplayOptionsContainer();
+            setupWidgetPositioning();
         }
         // Block touch events to fix macOS trackpad issue
-        else if (event->type() == QEvent::TouchBegin || 
-                 event->type() == QEvent::TouchUpdate || 
+        else if (event->type() == QEvent::TouchBegin ||
+                 event->type() == QEvent::TouchUpdate ||
                  event->type() == QEvent::TouchEnd) {
             return true; // Block the event
         }
@@ -62,20 +60,7 @@ bool MainWindowUI::eventFilter(QObject* watched, QEvent* event)
 
 void MainWindowUI::resizeEvent(QResizeEvent* event)
 {
-    // QWidget::resizeEvent(event); // 呼び出しを削除またはコメントアウト
-    resizeDisplayOptionsContainer();
-}
-
-void MainWindowUI::resizeDisplayOptionsContainer()
-{
-    if (!displayOptionsContainer || !vtkWidget) return;
-    
-    QWidget* rightPaneWidget = displayOptionsContainer->parentWidget();
-    if (rightPaneWidget) {
-        int x = vtkWidget->width() - rightPaneWidget->width() - WIDGET_MARGIN;
-        int y = WIDGET_MARGIN;
-        rightPaneWidget->move(x, y);
-    }
+    setupWidgetPositioning();
 }
 
 void MainWindowUI::setupStyle()
@@ -181,24 +166,9 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
 
 void MainWindowUI::createRightPaneWidget(QWidget* vtkParent)
 {
-    QVBoxLayout* rightPaneLayout = new QVBoxLayout();
-    rightPaneLayout->setContentsMargins(LAYOUT_SPACING, LAYOUT_SPACING, LAYOUT_SPACING, LAYOUT_SPACING);
-    rightPaneLayout->setSpacing(LAYOUT_SPACING);
-    
-    displayOptionsContainer = new DisplayOptionsContainer(vtkParent);
-    displayOptionsContainer->setFixedWidth(DISPLAY_OPTIONS_WIDTH);
-    displayOptionsContainer->setMaximumHeight(1000);
-    rightPaneLayout->addWidget(displayOptionsContainer);
-    
+    // 右側ペインには3mf exportボタンのみを表示
     export3mfButton->setFixedWidth(DISPLAY_OPTIONS_WIDTH);
-    rightPaneLayout->addSpacing(EXPORT_BUTTON_TOP_SPACING);
-    rightPaneLayout->addWidget(export3mfButton);
-    rightPaneLayout->addStretch();
-    
-    QWidget* rightPaneWidget = new QWidget(vtkParent);
-    rightPaneWidget->setLayout(rightPaneLayout);
-    rightPaneWidget->setFixedWidth(RIGHT_PANE_WIDTH);
-    rightPaneWidget->setStyleSheet("QWidget { background-color:rgba(45, 45, 45, 0); border-radius: 10px; }");
+    export3mfButton->setParent(vtkParent);
 }
 
 void MainWindowUI::createVtkWidget()
@@ -228,31 +198,28 @@ void MainWindowUI::setupWidgetPositioning()
             break;
         }
     }
-    
+
     if (leftPaneWidget) {
         leftPaneWidget->adjustSize();
         leftPaneWidget->move(WIDGET_MARGIN, WIDGET_MARGIN);
         leftPaneWidget->raise();
         leftPaneWidget->show();
     }
-    
-    // Find and position right pane widget
-    QWidget* rightPaneWidget = nullptr;
-    for (QObject* child : vtkWidget->children()) {
-        QWidget* widget = qobject_cast<QWidget*>(child);
-        if (widget && widget->width() == RIGHT_PANE_WIDTH) {
-            rightPaneWidget = widget;
-            break;
-        }
+
+    // Position export3mf button on the right side
+    if (export3mfButton && vtkWidget) {
+        int x = vtkWidget->width() - export3mfButton->width() - WIDGET_MARGIN;
+        int y = WIDGET_MARGIN;
+        export3mfButton->move(x, y);
+        export3mfButton->raise();
+        export3mfButton->show();
     }
-    
-    if (rightPaneWidget) {
-        rightPaneWidget->raise();
-        rightPaneWidget->show();
+
+    static bool eventFilterInstalled = false;
+    if (!eventFilterInstalled) {
+        vtkWidget->installEventFilter(this);
+        eventFilterInstalled = true;
     }
-    
-    vtkWidget->installEventFilter(this);
-    resizeDisplayOptionsContainer();
 }
 
 void MainWindowUI::setButtonIconSize(const QSize& size)
@@ -333,104 +300,6 @@ void MainWindowUI::connectUIStateSignals()
                 }
                 uiState->setProcessingMode(mode);
             });
-
-    // DisplayOptionsContainerの各ウィジェットの変更をUIStateに反映
-    if (displayOptionsContainer) {
-        auto widgets = displayOptionsContainer->getAllDisplayWidgets();
-
-        // STEP Display Widget
-        if (widgets.size() > 0 && widgets[0]) {
-            connect(widgets[0], &ObjectDisplayOptionsWidget::visibilityToggled,
-                    this, [this](bool visible) {
-                        DisplaySettings settings = uiState->getStepDisplaySettings();
-                        settings.isVisible = visible;
-                        uiState->setStepDisplaySettings(settings);
-                    });
-            connect(widgets[0], &ObjectDisplayOptionsWidget::opacityChanged,
-                    this, [this](double opacity) {
-                        DisplaySettings settings = uiState->getStepDisplaySettings();
-                        settings.opacity = opacity;
-                        uiState->setStepDisplaySettings(settings);
-                    });
-        }
-        
-        // VTK Display Widget (VTU)
-        if (widgets.size() > 1 && widgets[1]) {
-            connect(widgets[1], &ObjectDisplayOptionsWidget::visibilityToggled,
-                    this, [this](bool visible) {
-                        DisplaySettings settings = uiState->getVtuDisplaySettings();
-                        settings.isVisible = visible;
-                        uiState->setVtuDisplaySettings(settings);
-                    });
-            connect(widgets[1], &ObjectDisplayOptionsWidget::opacityChanged,
-                    this, [this](double opacity) {
-                        DisplaySettings settings = uiState->getVtuDisplaySettings();
-                        settings.opacity = opacity;
-                        uiState->setVtuDisplaySettings(settings);
-                    });
-        }
-        
-        // Divided Mesh Widgets
-        if (widgets.size() > 2 && widgets[2]) {
-            connect(widgets[2], &ObjectDisplayOptionsWidget::visibilityToggled,
-                    this, [this](bool visible) {
-                        DisplaySettings settings = uiState->getDividedMesh1Settings();
-                        settings.isVisible = visible;
-                        uiState->setDividedMesh1Settings(settings);
-                    });
-            connect(widgets[2], &ObjectDisplayOptionsWidget::opacityChanged,
-                    this, [this](double opacity) {
-                        DisplaySettings settings = uiState->getDividedMesh1Settings();
-                        settings.opacity = opacity;
-                        uiState->setDividedMesh1Settings(settings);
-                    });
-        }
-        
-        if (widgets.size() > 3 && widgets[3]) {
-            connect(widgets[3], &ObjectDisplayOptionsWidget::visibilityToggled,
-                    this, [this](bool visible) {
-                        DisplaySettings settings = uiState->getDividedMesh2Settings();
-                        settings.isVisible = visible;
-                        uiState->setDividedMesh2Settings(settings);
-                    });
-            connect(widgets[3], &ObjectDisplayOptionsWidget::opacityChanged,
-                    this, [this](double opacity) {
-                        DisplaySettings settings = uiState->getDividedMesh2Settings();
-                        settings.opacity = opacity;
-                        uiState->setDividedMesh2Settings(settings);
-                    });
-        }
-        
-        if (widgets.size() > 4 && widgets[4]) {
-            connect(widgets[4], &ObjectDisplayOptionsWidget::visibilityToggled,
-                    this, [this](bool visible) {
-                        DisplaySettings settings = uiState->getDividedMesh3Settings();
-                        settings.isVisible = visible;
-                        uiState->setDividedMesh3Settings(settings);
-                    });
-            connect(widgets[4], &ObjectDisplayOptionsWidget::opacityChanged,
-                    this, [this](double opacity) {
-                        DisplaySettings settings = uiState->getDividedMesh3Settings();
-                        settings.opacity = opacity;
-                        uiState->setDividedMesh3Settings(settings);
-                    });
-        }
-        
-        if (widgets.size() > 5 && widgets[5]) {
-            connect(widgets[5], &ObjectDisplayOptionsWidget::visibilityToggled,
-                    this, [this](bool visible) {
-                        DisplaySettings settings = uiState->getDividedMesh4Settings();
-                        settings.isVisible = visible;
-                        uiState->setDividedMesh4Settings(settings);
-                    });
-            connect(widgets[5], &ObjectDisplayOptionsWidget::opacityChanged,
-                    this, [this](double opacity) {
-                        DisplaySettings settings = uiState->getDividedMesh4Settings();
-                        settings.opacity = opacity;
-                        uiState->setDividedMesh4Settings(settings);
-                    });
-        }
-    }
 }
 
 void MainWindowUI::updateUIFromState()
@@ -439,7 +308,7 @@ void MainWindowUI::updateUIFromState()
     if (stressRangeWidget) {
         stressRangeWidget->setStressRange(uiState->getMinStress(), uiState->getMaxStress());
     }
-    
+
     if (modeComboBox) {
         int index = 0;
         switch(uiState->getProcessingMode()) {
@@ -448,35 +317,5 @@ void MainWindowUI::updateUIFromState()
             case ProcessingMode::PRUSA: index = 2; break;
         }
         modeComboBox->setCurrentIndex(index);
-    }
-    
-    if (displayOptionsContainer) {
-        auto widgets = displayOptionsContainer->getAllDisplayWidgets();
-        
-        // Update visibility and opacity settings
-        if (widgets.size() > 0 && widgets[0]) {
-            widgets[0]->setVisibleState(uiState->getStepDisplaySettings().isVisible);
-            widgets[0]->setOpacity(uiState->getStepDisplaySettings().opacity);
-        }
-        if (widgets.size() > 1 && widgets[1]) {
-            widgets[1]->setVisibleState(uiState->getVtuDisplaySettings().isVisible);
-            widgets[1]->setOpacity(uiState->getVtuDisplaySettings().opacity);
-        }
-        if (widgets.size() > 2 && widgets[2]) {
-            widgets[2]->setVisibleState(uiState->getDividedMesh1Settings().isVisible);
-            widgets[2]->setOpacity(uiState->getDividedMesh1Settings().opacity);
-        }
-        if (widgets.size() > 3 && widgets[3]) {
-            widgets[3]->setVisibleState(uiState->getDividedMesh2Settings().isVisible);
-            widgets[3]->setOpacity(uiState->getDividedMesh2Settings().opacity);
-        }
-        if (widgets.size() > 4 && widgets[4]) {
-            widgets[4]->setVisibleState(uiState->getDividedMesh3Settings().isVisible);
-            widgets[4]->setOpacity(uiState->getDividedMesh3Settings().opacity);
-        }
-        if (widgets.size() > 5 && widgets[5]) {
-            widgets[5]->setVisibleState(uiState->getDividedMesh4Settings().isVisible);
-            widgets[5]->setOpacity(uiState->getDividedMesh4Settings().opacity);
-        }
     }
 } 

@@ -14,8 +14,6 @@
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkRenderer.h>
 #include "widgets/ModeComboBox.h"
-#include "widgets/ObjectDisplayOptionsWidget.h"
-#include "widgets/DisplayOptionsContainer.h"
 #include "../core/ui/UIState.h"
 #include <QObject>
 #include <QTouchEvent>
@@ -44,16 +42,7 @@ public:
     DensitySlider* getRangeSlider() const { return rangeSlider; }
     StressRangeWidget* getStressRangeWidget() const { return stressRangeWidget; }
     MessageConsole* getMessageConsole() const { return messageConsole; }
-    DisplayOptionsContainer* getDisplayOptionsContainer() const { return displayOptionsContainer; }
     UIState* getUIState() const { return uiState; }
-    
-    // 個別のウィジェットへのアクセサー
-    ObjectDisplayOptionsWidget* getStepDisplayWidget() const { return displayOptionsContainer->getStepDisplayWidget(); }
-    ObjectDisplayOptionsWidget* getVtkDisplayOptionsWidget() const { return displayOptionsContainer->getVtkDisplayWidget(); }
-    ObjectDisplayOptionsWidget* getDividedMeshWidget1() const { return displayOptionsContainer->getDividedMeshWidget1(); }
-    ObjectDisplayOptionsWidget* getDividedMeshWidget2() const { return displayOptionsContainer->getDividedMeshWidget2(); }
-    ObjectDisplayOptionsWidget* getDividedMeshWidget3() const { return displayOptionsContainer->getDividedMeshWidget3(); }
-    ObjectDisplayOptionsWidget* getDividedMeshWidget4() const { return displayOptionsContainer->getDividedMeshWidget4(); }
 
     // アイコンサイズ一括設定
     void setButtonIconSize(const QSize& size);
@@ -65,7 +54,6 @@ public:
 private:
 
 public slots:
-    void resizeDisplayOptionsContainer();
     void resizeEvent(QResizeEvent* event);
     bool eventFilter(QObject* watched, QEvent* event);
 
@@ -112,7 +100,6 @@ private:
     DensitySlider* rangeSlider;
     StressRangeWidget* stressRangeWidget;
     MessageConsole* messageConsole;
-    DisplayOptionsContainer* displayOptionsContainer;
     UIState* uiState;
 };
 

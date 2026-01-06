@@ -18,80 +18,56 @@ MainWindowUIAdapter::~MainWindowUIAdapter() = default;
 
 void MainWindowUIAdapter::setVtkFileName(const QString& fileName)
 {
-    if (!ui) return;
-    auto vtkDisplayWidget = ui->getVtkDisplayOptionsWidget();
-    if (vtkDisplayWidget) {
-        vtkDisplayWidget->setFileName(fileName);
-    }
+    // DisplayOptionsContainerが削除されたため、空の実装
+    // 表示機能自体は保持されるが、UIウィジェットとの接続は行わない
 }
 
 void MainWindowUIAdapter::setStepFileName(const QString& fileName)
 {
-    if (!ui) return;
-    auto stepDisplayWidget = ui->getStepDisplayWidget();
-    if (stepDisplayWidget) {
-        stepDisplayWidget->setFileName(fileName);
-    }
+    // DisplayOptionsContainerが削除されたため、空の実装
+    // 表示機能自体は保持されるが、UIウィジェットとの接続は行わない
 }
 
 void MainWindowUIAdapter::setVtkVisibilityState(bool visible)
 {
-    if (!ui) return;
-    auto vtkWidget = ui->getVtkDisplayOptionsWidget();
-    if (vtkWidget) {
-        vtkWidget->setVisibleState(visible);
-    }
+    // DisplayOptionsContainerが削除されたため、空の実装
+    // 表示機能自体は保持されるが、UIウィジェットとの接続は行わない
 }
 
 void MainWindowUIAdapter::setStepVisibilityState(bool visible)
 {
-    if (!ui) return;
-    auto stepWidget = ui->getStepDisplayWidget();
-    if (stepWidget) {
-        stepWidget->setVisibleState(visible);
-    }
+    // DisplayOptionsContainerが削除されたため、空の実装
+    // 表示機能自体は保持されるが、UIウィジェットとの接続は行わない
 }
 
 void MainWindowUIAdapter::setVtkOpacity(double opacity)
 {
-    if (!ui) return;
-    auto vtkWidget = ui->getVtkDisplayOptionsWidget();
-    if (vtkWidget) {
-        vtkWidget->setOpacity(opacity);
-    }
+    // DisplayOptionsContainerが削除されたため、空の実装
+    // 表示機能自体は保持されるが、UIウィジェットとの接続は行わない
 }
 
 void MainWindowUIAdapter::setStepOpacity(double opacity)
 {
-    if (!ui) return;
-    auto stepWidget = ui->getStepDisplayWidget();
-    if (stepWidget) {
-        stepWidget->setOpacity(opacity);
-    }
+    // DisplayOptionsContainerが削除されたため、空の実装
+    // 表示機能自体は保持されるが、UIウィジェットとの接続は行わない
 }
 
 void MainWindowUIAdapter::setDividedMeshVisibility(int meshIndex, bool visible)
 {
-    auto widget = getDividedMeshWidget(meshIndex);
-    if (widget) {
-        widget->setVisibleState(visible);
-    }
+    // DisplayOptionsContainerが削除されたため、空の実装
+    // 表示機能自体は保持されるが、UIウィジェットとの接続は行わない
 }
 
 void MainWindowUIAdapter::setDividedMeshOpacity(int meshIndex, double opacity)
 {
-    auto widget = getDividedMeshWidget(meshIndex);
-    if (widget) {
-        widget->setOpacity(opacity);
-    }
+    // DisplayOptionsContainerが削除されたため、空の実装
+    // 表示機能自体は保持されるが、UIウィジェットとの接続は行わない
 }
 
 void MainWindowUIAdapter::setDividedMeshFileName(int meshIndex, const QString& fileName)
 {
-    auto widget = getDividedMeshWidget(meshIndex);
-    if (widget) {
-        widget->setFileName(fileName);
-    }
+    // DisplayOptionsContainerが削除されたため、空の実装
+    // 表示機能自体は保持されるが、UIウィジェットとの接続は行わない
 }
 
 void MainWindowUIAdapter::initializeStressConfiguration(double minStress, double maxStress)
@@ -168,15 +144,8 @@ void MainWindowUIAdapter::showProcessingSuccess()
 
 ObjectDisplayOptionsWidget* MainWindowUIAdapter::getDividedMeshWidget(int meshIndex) const
 {
-    if (!ui || meshIndex < 0 || meshIndex >= ApplicationController::DIVIDED_MESH_COUNT) return nullptr;
-    
-    switch (meshIndex) {
-        case 0: return ui->getDividedMeshWidget1();
-        case 1: return ui->getDividedMeshWidget2();
-        case 2: return ui->getDividedMeshWidget3();
-        case 3: return ui->getDividedMeshWidget4();
-        default: return nullptr;
-    }
+    // DisplayOptionsContainerが削除されたため、常にnullptrを返す
+    return nullptr;
 }
 
 // 3D可視化制御の実装

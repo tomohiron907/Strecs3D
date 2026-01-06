@@ -195,12 +195,9 @@ void SceneRenderer::removeScalarBar() {
 }
 
 std::vector<ObjectDisplayOptionsWidget*> SceneRenderer::fetchMeshDisplayWidgets() {
-    return {
-        ui_->getDividedMeshWidget1(),
-        ui_->getDividedMeshWidget2(),
-        ui_->getDividedMeshWidget3(),
-        ui_->getDividedMeshWidget4()
-    };
+    // DisplayOptionsContainerが削除されたため、空のベクターを返す
+    // メッシュの表示機能自体は保持されるが、UIウィジェットとの接続は行わない
+    return {};
 }
 
 void SceneRenderer::updateWidgetAndConnectSignals(

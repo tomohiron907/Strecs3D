@@ -74,23 +74,6 @@ void MainWindow::connectSignals()
     connect(ui->getStressRangeWidget(), &StressRangeWidget::stressRangeChanged, this, &MainWindow::onStressRangeChanged);
     connect(ui->getModeComboBox(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onModeComboBoxChanged);
 
-    // Display Widgetのシグナル接続
-    auto stepDisplayWidget = ui->getStepDisplayWidget();
-    if (stepDisplayWidget) {
-        connect(stepDisplayWidget, &ObjectDisplayOptionsWidget::visibilityToggled,
-                this, &MainWindow::onStepObjectVisibilityChanged);
-        connect(stepDisplayWidget, &ObjectDisplayOptionsWidget::opacityChanged,
-                this, &MainWindow::onStepObjectOpacityChanged);
-    }
-
-    auto vtkDisplayWidget = ui->getVtkDisplayOptionsWidget();
-    if (vtkDisplayWidget) {
-        connect(vtkDisplayWidget, &ObjectDisplayOptionsWidget::visibilityToggled,
-                this, &MainWindow::onVtkObjectVisibilityChanged);
-        connect(vtkDisplayWidget, &ObjectDisplayOptionsWidget::opacityChanged,
-                this, &MainWindow::onVtkObjectOpacityChanged);
-    }
-
     // UIStateのシグナル接続
     connect(ui->getUIState(), &UIState::boundaryConditionChanged,
             this, &MainWindow::onBoundaryConditionChanged);
@@ -161,15 +144,6 @@ void MainWindow::openSTEPFile()
         }
     }
 
-    // STEP display widgetのラベルと状態を更新
-    auto stepWidget = ui->getStepDisplayWidget();
-    if (stepWidget) {
-        QFileInfo fileInfo(fileName);
-        stepWidget->setFileName(fileInfo.fileName());
-        stepWidget->setVisibleState(true);
-        stepWidget->setOpacity(1.0);
-    }
-
     updateProcessButtonState();
 }
 
@@ -215,14 +189,15 @@ void MainWindow::export3mfFile()
 
 void MainWindow::onStepObjectVisibilityChanged(bool visible)
 {
-    auto stepDisplayWidget = ui->getStepDisplayWidget();
-    if (!stepDisplayWidget) return;
+    UIState* state = getUIState();
+    if (!state) return;
 
-    QString fileName = stepDisplayWidget->getFileName();
+    QString fileName = state->getStepFilePath();
+    if (fileName.isEmpty()) return;
 
     // コマンドパターンを使用してメッシュの表示/非表示を設定
     auto command = std::make_unique<SetMeshVisibilityCommand>(
-        getUIState(),
+        state,
         appController.get(),
         uiAdapter.get(),
         SetMeshVisibilityCommand::MeshType::STEP_MESH,
@@ -234,14 +209,15 @@ void MainWindow::onStepObjectVisibilityChanged(bool visible)
 
 void MainWindow::onStepObjectOpacityChanged(double opacity)
 {
-    auto stepDisplayWidget = ui->getStepDisplayWidget();
-    if (!stepDisplayWidget) return;
+    UIState* state = getUIState();
+    if (!state) return;
 
-    QString fileName = stepDisplayWidget->getFileName();
+    QString fileName = state->getStepFilePath();
+    if (fileName.isEmpty()) return;
 
     // コマンドパターンを使用してメッシュの不透明度を設定
     auto command = std::make_unique<SetMeshOpacityCommand>(
-        getUIState(),
+        state,
         appController.get(),
         uiAdapter.get(),
         SetMeshOpacityCommand::MeshType::STEP_MESH,
@@ -253,14 +229,15 @@ void MainWindow::onStepObjectOpacityChanged(double opacity)
 
 void MainWindow::onVtkObjectVisibilityChanged(bool visible)
 {
-    auto vtkDisplayWidget = ui->getVtkDisplayOptionsWidget();
-    if (!vtkDisplayWidget) return;
+    UIState* state = getUIState();
+    if (!state) return;
 
-    QString fileName = vtkDisplayWidget->getFileName();
+    QString fileName = state->getVtkFilePath();
+    if (fileName.isEmpty()) return;
 
     // コマンドパターンを使用してメッシュの表示/非表示を設定
     auto command = std::make_unique<SetMeshVisibilityCommand>(
-        getUIState(),
+        state,
         appController.get(),
         uiAdapter.get(),
         SetMeshVisibilityCommand::MeshType::VTU_MESH,
@@ -272,14 +249,15 @@ void MainWindow::onVtkObjectVisibilityChanged(bool visible)
 
 void MainWindow::onVtkObjectOpacityChanged(double opacity)
 {
-    auto vtkDisplayWidget = ui->getVtkDisplayOptionsWidget();
-    if (!vtkDisplayWidget) return;
+    UIState* state = getUIState();
+    if (!state) return;
 
-    QString fileName = vtkDisplayWidget->getFileName();
+    QString fileName = state->getVtkFilePath();
+    if (fileName.isEmpty()) return;
 
     // コマンドパターンを使用してメッシュの不透明度を設定
     auto command = std::make_unique<SetMeshOpacityCommand>(
-        getUIState(),
+        state,
         appController.get(),
         uiAdapter.get(),
         SetMeshOpacityCommand::MeshType::VTU_MESH,
