@@ -14,6 +14,8 @@
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkRenderer.h>
 #include "widgets/ModeComboBox.h"
+#include "widgets/ObjectListWidget.h"
+#include "widgets/PropertyWidget.h"
 #include "../core/ui/UIState.h"
 #include <QObject>
 #include <QTouchEvent>
@@ -42,6 +44,8 @@ public:
     DensitySlider* getRangeSlider() const { return rangeSlider; }
     StressRangeWidget* getStressRangeWidget() const { return stressRangeWidget; }
     MessageConsole* getMessageConsole() const { return messageConsole; }
+    ObjectListWidget* getObjectListWidget() const { return objectListWidget; }
+    PropertyWidget* getPropertyWidget() const { return propertyWidget; }
     UIState* getUIState() const { return uiState; }
 
     // アイコンサイズ一括設定
@@ -100,6 +104,9 @@ private:
     DensitySlider* rangeSlider;
     StressRangeWidget* stressRangeWidget;
     MessageConsole* messageConsole;
+    ObjectListWidget* objectListWidget;
+    PropertyWidget* propertyWidget;
+    QWidget* rightPaneWidget;
     UIState* uiState;
 };
 

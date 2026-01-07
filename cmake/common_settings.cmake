@@ -137,6 +137,8 @@ add_executable(Strecs3D
   UI/widgets/ModeComboBox.cpp
   UI/widgets/ObjectDisplayOptionsWidget.cpp
   UI/widgets/DisplayOptionsContainer.cpp
+  UI/widgets/ObjectListWidget.cpp
+  UI/widgets/PropertyWidget.cpp
   UI/widgets/CustomCheckBox.cpp
   UI/dialogs/ConstraintDialog.cpp
   UI/dialogs/LoadDialog.cpp

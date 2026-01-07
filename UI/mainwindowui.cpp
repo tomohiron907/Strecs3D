@@ -166,9 +166,35 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
 
 void MainWindowUI::createRightPaneWidget(QWidget* vtkParent)
 {
-    // 右側ペインには3mf exportボタンのみを表示
-    export3mfButton->setFixedWidth(DISPLAY_OPTIONS_WIDTH);
-    export3mfButton->setParent(vtkParent);
+    // 右側ペインのコンテナ作成
+    rightPaneWidget = new QWidget(centralWidget);
+    QVBoxLayout* rightLayout = new QVBoxLayout(rightPaneWidget);
+    rightLayout->setContentsMargins(10, 10, 10, 10);
+    rightLayout->setSpacing(10);
+
+    // オブジェクトリスト作成
+    objectListWidget = new ObjectListWidget(rightPaneWidget);
+    objectListWidget->setUIState(uiState);
+    rightLayout->addWidget(objectListWidget, 1);
+
+    // プロパティウィジェット作成
+    propertyWidget = new PropertyWidget(rightPaneWidget);
+    propertyWidget->setUIState(uiState);
+    rightLayout->addWidget(propertyWidget, 1);
+
+    // Exportボタンをここに移動
+    export3mfButton->setParent(rightPaneWidget);
+    export3mfButton->setFixedWidth(DISPLAY_OPTIONS_WIDTH - 20); // マージン考慮
+    rightLayout->addWidget(export3mfButton);
+
+    // コンテナの設定
+    rightPaneWidget->setParent(vtkParent);
+    rightPaneWidget->setStyleSheet("QWidget { background-color:rgba(45, 45, 45, 0); border-radius: 10px; }");
+    rightPaneWidget->setFixedWidth(RIGHT_PANE_WIDTH);
+    
+    // シグナル接続
+    connect(objectListWidget, &ObjectListWidget::objectSelected, 
+            propertyWidget, &PropertyWidget::onObjectSelected);
 }
 
 void MainWindowUI::createVtkWidget()
@@ -206,13 +232,16 @@ void MainWindowUI::setupWidgetPositioning()
         leftPaneWidget->show();
     }
 
-    // Position export3mf button on the right side
-    if (export3mfButton && vtkWidget) {
-        int x = vtkWidget->width() - export3mfButton->width() - WIDGET_MARGIN;
+    // Position right pane widget
+    if (rightPaneWidget && vtkWidget) {
+        int x = vtkWidget->width() - rightPaneWidget->width() - WIDGET_MARGIN;
         int y = WIDGET_MARGIN;
-        export3mfButton->move(x, y);
-        export3mfButton->raise();
-        export3mfButton->show();
+        // 高さは親ウィジェットに合わせる（マージン分引く）
+        int h = vtkWidget->height() - (WIDGET_MARGIN * 2);
+        
+        rightPaneWidget->setGeometry(x, y, RIGHT_PANE_WIDTH, h);
+        rightPaneWidget->raise();
+        rightPaneWidget->show();
     }
 
     static bool eventFilterInstalled = false;
