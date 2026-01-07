@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QLabel>
+#include <QPushButton>
 #include "../../../core/ui/UIState.h"
 
 class ConstraintPropertyWidget : public QWidget {
@@ -15,14 +16,22 @@ public:
     void setUIState(UIState* uiState);
     void setTarget(int index); // Set which constraint to edit
 
+signals:
+    void okClicked();
+
 private:
     void setupUI();
     void updateData();
     void pushData();
+    void updateOkButtonStyle();
+    void updateOkButtonState();
     
     UIState* m_uiState = nullptr;
     int m_currentIndex = -1;
     
     QLineEdit* m_nameEdit;
     QSpinBox* m_surfaceIdSpinBox;
+    QPushButton* m_okButton;
+
+    void onOkClicked();
 };

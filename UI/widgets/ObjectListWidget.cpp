@@ -275,6 +275,12 @@ void ObjectListWidget::onSelectionChanged()
 
 void ObjectListWidget::onSelectedObjectChangedFromState(const SelectedObjectInfo& selection)
 {
+    // 選択なしの場合はツリーの選択を解除
+    if (selection.type == ObjectType::NONE) {
+        clearSelection();
+        return;
+    }
+    
     // 現在の選択と一致しているかチェック
     QList<QTreeWidgetItem*> selectedItemsList = selectedItems();
     if (!selectedItemsList.isEmpty()) {
@@ -284,9 +290,6 @@ void ObjectListWidget::onSelectedObjectChangedFromState(const SelectedObjectInfo
             currentItem->index == selection.index) {
             return; // 既に選択されているので何もしない（ループ防止）
         }
-    } else if (selection.type == ObjectType::NONE) {
-        clearSelection();
-        return;
     }
 
     // リスト内のアイテムを探して選択する
