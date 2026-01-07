@@ -18,11 +18,34 @@ void ObjectListWidget::setupUI()
     setAnimated(true);
     
     // スタイル設定（オプション）
-    setStyleSheet(
-        "QTreeWidget { background-color: #2b2b2b; color: #e0e0e0; border: none; }"
-        "QTreeWidget::item:selected { background-color: #4a4a4a; }"
-        "QHeaderView::section { background-color: #333333; color: #e0e0e0; border: none; padding: 4px; }"
-    );
+    // スタイル設定（オプション）
+    // MessageConsoleと同様の角丸ウィジェットスタイルを適用
+    setStyleSheet(R"(
+        QTreeWidget {
+            background-color: rgba(26, 26, 26, 180);
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        QTreeWidget::item:selected {
+            background-color: #4a4a4a;
+        }
+        /* ヘッダーの背景を透明にして、親ウィジェット（QTreeWidget）の角丸が見えるようにする */
+        QHeaderView::section {
+            background-color: transparent;
+            color: #e0e0e0;
+            border: none;
+            padding: 4px;
+            border-bottom: 1px solid #444; /* ヘッダー下の区切り線 */
+        }
+        QHeaderView {
+            background-color: transparent;
+            border: none;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+    )");
 }
 
 void ObjectListWidget::setUIState(UIState* uiState)

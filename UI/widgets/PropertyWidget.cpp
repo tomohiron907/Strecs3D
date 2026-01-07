@@ -1,5 +1,6 @@
 #include "PropertyWidget.h"
 #include <QScrollArea>
+#include <QFrame>
 #include <QDebug>
 
 PropertyWidget::PropertyWidget(QWidget* parent)
@@ -10,20 +11,49 @@ PropertyWidget::PropertyWidget(QWidget* parent)
 
 void PropertyWidget::setupUI()
 {
+    // Main layout for the widget itself
     m_mainLayout = new QVBoxLayout(this);
     m_mainLayout->setContentsMargins(0, 0, 0, 0);
+
+    // Container Frame to provide the unified rounded border look
+    QFrame* containerFrame = new QFrame(this);
+    containerFrame->setStyleSheet(R"(
+        QFrame {
+            background-color: rgba(26, 26, 26, 180);
+            border: 1px solid #444;
+            border-radius: 4px;
+        }
+        QLabel {
+            border: none;
+            background-color: transparent;
+        }
+    )");
+
+    QVBoxLayout* containerLayout = new QVBoxLayout(containerFrame);
+    containerLayout->setContentsMargins(0, 0, 0, 0);
+    containerLayout->setSpacing(0);
+
     // Title
-    m_titleLabel = new QLabel("Properties", this);
-    m_titleLabel->setStyleSheet("font-weight: bold; font-size: 14px; padding: 5px; color: #ffffff; background-color: #333333;");
-    m_mainLayout->addWidget(m_titleLabel);
+    m_titleLabel = new QLabel("Properties", containerFrame);
+    // Remove specific background and borders so it blends into the container,
+    // or style specifically if needed (e.g., bottom border).
+    // Adding a bottom border to separate title from content visually if desired, 
+    // or keep it clean. Let's keep it clean but maybe bolder.
+    m_titleLabel->setStyleSheet("font-weight: bold; font-size: 14px; padding: 8px; color: #ffffff; border-bottom: 1px solid #444;");
+    containerLayout->addWidget(m_titleLabel);
 
     // Scroll Area for properties
-    QScrollArea* scrollArea = new QScrollArea(this);
+    QScrollArea* scrollArea = new QScrollArea(containerFrame);
     scrollArea->setWidgetResizable(true);
     scrollArea->setFrameShape(QFrame::NoFrame);
-    scrollArea->setStyleSheet("background-color: #2b2b2b; color: #e0e0e0;");
+    // Valid stylesheet for scrollarea inside the container
+    scrollArea->setStyleSheet("QScrollArea { background-color: transparent; border: none; }");
 
     m_contentWidget = new QWidget();
+    // Ensure content widget is transparent so the frame background shows through
+    m_contentWidget->setAttribute(Qt::WA_TranslucentBackground);
+    m_contentWidget->setStyleSheet("background-color: transparent;"); 
+    
     m_formLayout = new QFormLayout(m_contentWidget);
     m_formLayout->setLabelAlignment(Qt::AlignLeft);
     m_formLayout->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
@@ -31,7 +61,10 @@ void PropertyWidget::setupUI()
     m_formLayout->setContentsMargins(10, 10, 10, 10);
 
     scrollArea->setWidget(m_contentWidget);
-    m_mainLayout->addWidget(scrollArea);
+    containerLayout->addWidget(scrollArea);
+
+    // Add the container to the main layout
+    m_mainLayout->addWidget(containerFrame);
 }
 
 void PropertyWidget::setUIState(UIState* uiState)
