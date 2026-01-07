@@ -45,3 +45,5 @@ result/
 .claude/
 
 vcpkg_installed/
+
+.cache/
