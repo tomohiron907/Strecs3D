@@ -3,10 +3,13 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
-#include <QFormLayout>
 #include <QLabel>
+#include <QStackedWidget>
 #include "ObjectListWidget.h"
 #include "../../core/ui/UIState.h"
+#include "properties/StepPropertyWidget.h"
+#include "properties/ConstraintPropertyWidget.h"
+#include "properties/LoadPropertyWidget.h"
 
 class PropertyWidget : public QWidget {
     Q_OBJECT
@@ -22,16 +25,22 @@ public slots:
 
 private:
     void setupUI();
-    void clearProperties();
-    void addProperty(const QString& label, const QString& value);
-    void addSectionHeader(const QString& title);
 
     UIState* m_uiState = nullptr;
     
     QVBoxLayout* m_mainLayout;
-    QFormLayout* m_formLayout;
     QLabel* m_titleLabel;
-    QWidget* m_contentWidget;
+    QStackedWidget* m_stackedWidget;
+    
+    // Property Widgets
+    StepPropertyWidget* m_stepWidget;
+    ConstraintPropertyWidget* m_constraintWidget;
+    LoadPropertyWidget* m_loadWidget;
+    QWidget* m_emptyWidget;
+    
+    // Legacy placeholders or future implementations
+    QWidget* m_simulationWidget; 
+    QWidget* m_infillWidget;
 };
 
 #endif // PROPERTYWIDGET_H

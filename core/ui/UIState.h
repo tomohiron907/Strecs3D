@@ -74,7 +74,11 @@ public:
     void addConstraintCondition(const ConstraintCondition& constraint);
     void addLoadCondition(const LoadCondition& load);
     void clearConstraintConditions();
+    void updateConstraintCondition(int index, const ConstraintCondition& constraint);
+    void removeConstraintCondition(int index);
     void clearLoadConditions();
+    void updateLoadCondition(int index, const LoadCondition& load);
+    void removeLoadCondition(int index);
 
     // Simulation Result 関連
     void setSimulationResultFileInfo(const ObjectFileInfo& info);

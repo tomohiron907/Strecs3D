@@ -84,6 +84,23 @@ void ObjectListWidget::onObjectListChanged(const ObjectListData& objectList)
 
 void ObjectListWidget::clearAndRebuild()
 {
+    // Save current selection
+    ObjectType selectedType = ObjectType::ROOT_STEP; // Default dummy
+    QString selectedId = "";
+    int selectedIndex = -1;
+    bool hasSelection = false;
+
+    QList<QTreeWidgetItem*> selectedItemsList = selectedItems();
+    if (!selectedItemsList.isEmpty()) {
+        ObjectTreeItem* item = static_cast<ObjectTreeItem*>(selectedItemsList.first());
+        if (item) {
+            selectedType = item->type;
+            selectedId = item->id;
+            selectedIndex = item->index;
+            hasSelection = true;
+        }
+    }
+
     clear();
     
     if (!m_uiState) return;
@@ -157,6 +174,7 @@ void ObjectListWidget::clearAndRebuild()
                     m_bcConstraintsRoot = new ObjectTreeItem(m_bcRoot);
                     m_bcConstraintsRoot->setText(0, QString("Constraints (%1)").arg(data.boundaryCondition.constraints.size()));
                     m_bcConstraintsRoot->setExpanded(true);
+                    m_bcConstraintsRoot->type = ObjectType::ROOT_BC_CONSTRAINTS;
                     
                     for (size_t i = 0; i < data.boundaryCondition.constraints.size(); ++i) {
                         const auto& c = data.boundaryCondition.constraints[i];
@@ -172,6 +190,7 @@ void ObjectListWidget::clearAndRebuild()
                     m_bcLoadsRoot = new ObjectTreeItem(m_bcRoot);
                     m_bcLoadsRoot->setText(0, QString("Loads (%1)").arg(data.boundaryCondition.loads.size()));
                     m_bcLoadsRoot->setExpanded(true);
+                    m_bcLoadsRoot->type = ObjectType::ROOT_BC_LOADS;
                     
                     for (size_t i = 0; i < data.boundaryCondition.loads.size(); ++i) {
                         const auto& l = data.boundaryCondition.loads[i];
@@ -182,6 +201,34 @@ void ObjectListWidget::clearAndRebuild()
                     }
                 }
             }
+        }
+    }
+
+    // Restore selection
+    if (hasSelection) {
+        // Find item recursively
+        QTreeWidgetItemIterator it(this);
+        while (*it) {
+            ObjectTreeItem* item = static_cast<ObjectTreeItem*>(*it);
+            if (item->type == selectedType) {
+                bool match = true;
+                if (selectedType == ObjectType::ITEM_INFILL_REGION) {
+                    if (item->id != selectedId) match = false;
+                } else if (selectedType == ObjectType::ITEM_BC_CONSTRAINT || selectedType == ObjectType::ITEM_BC_LOAD) {
+                    if (item->index != selectedIndex) match = false;
+                }
+                
+                if (match) {
+                    // Temporarily block signals to prevent recursive selection resets if any
+                    // But here we WANT to trigger onSelectionChanged eventually? 
+                    // No, usually we just want to highlight it. onSelectionChanged emits objectSelected.
+                    // If we re-select, it might re-emit, effectively refreshing the property widget.
+                    // That is actually DESIRED if the object data changed (e.g. name update).
+                    setCurrentItem(item);
+                    break;
+                }
+            }
+            ++it;
         }
     }
 }
@@ -215,5 +262,28 @@ void ObjectListWidget::onSelectionChanged()
     ObjectTreeItem* item = static_cast<ObjectTreeItem*>(selected.first());
     if (item) {
         emit objectSelected(item->type, item->id, item->index);
+    }
+}
+
+void ObjectListWidget::selectObject(ObjectType type, const QString& id, int index)
+{
+    QTreeWidgetItemIterator it(this);
+    while (*it) {
+        ObjectTreeItem* item = static_cast<ObjectTreeItem*>(*it);
+        if (item->type == type) {
+            bool match = true;
+            if (!id.isEmpty() && item->id != id) match = false;
+            if (index >= 0 && item->index != index) match = false;
+            
+            if (match) {
+                // Clear existing selection first to ensure clean state
+                clearSelection();
+                setCurrentItem(item);
+                // Also ensure it is visible
+                scrollToItem(item);
+                return;
+            }
+        }
+        ++it;
     }
 }

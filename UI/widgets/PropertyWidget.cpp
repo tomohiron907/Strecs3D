@@ -1,5 +1,4 @@
 #include "PropertyWidget.h"
-#include <QScrollArea>
 #include <QFrame>
 #include <QDebug>
 
@@ -35,34 +34,47 @@ void PropertyWidget::setupUI()
 
     // Title
     m_titleLabel = new QLabel("Properties", containerFrame);
-    // Remove specific background and borders so it blends into the container,
-    // or style specifically if needed (e.g., bottom border).
-    // Adding a bottom border to separate title from content visually if desired, 
-    // or keep it clean. Let's keep it clean but maybe bolder.
     m_titleLabel->setStyleSheet("font-weight: bold; font-size: 14px; padding: 8px; color: #ffffff; border-bottom: 1px solid #444;");
     containerLayout->addWidget(m_titleLabel);
 
-    // Scroll Area for properties
-    QScrollArea* scrollArea = new QScrollArea(containerFrame);
-    scrollArea->setWidgetResizable(true);
-    scrollArea->setFrameShape(QFrame::NoFrame);
-    // Valid stylesheet for scrollarea inside the container
-    scrollArea->setStyleSheet("QScrollArea { background-color: transparent; border: none; }");
-
-    m_contentWidget = new QWidget();
-    // Ensure content widget is transparent so the frame background shows through
-    m_contentWidget->setAttribute(Qt::WA_TranslucentBackground);
-    m_contentWidget->setStyleSheet("background-color: transparent;"); 
+    // Stacked Widget for content
+    m_stackedWidget = new QStackedWidget(containerFrame);
+    m_stackedWidget->setStyleSheet("background-color: transparent;");
     
-    m_formLayout = new QFormLayout(m_contentWidget);
-    m_formLayout->setLabelAlignment(Qt::AlignLeft);
-    m_formLayout->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
-    m_formLayout->setSpacing(10);
-    m_formLayout->setContentsMargins(10, 10, 10, 10);
-    m_formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
+    // 0: Empty/Info
+    m_emptyWidget = new QWidget();
+    QVBoxLayout* emptyLayout = new QVBoxLayout(m_emptyWidget);
+    QLabel* infoLabel = new QLabel("Select an item to view properties.");
+    infoLabel->setAlignment(Qt::AlignCenter);
+    infoLabel->setStyleSheet("color: #888;");
+    emptyLayout->addWidget(infoLabel);
+    m_stackedWidget->addWidget(m_emptyWidget);
+    
+    // 1: Step Properties
+    m_stepWidget = new StepPropertyWidget();
+    m_stackedWidget->addWidget(m_stepWidget);
+    
+    // 2: Constraint Properties
+    m_constraintWidget = new ConstraintPropertyWidget();
+    m_stackedWidget->addWidget(m_constraintWidget);
+    
+    // 3: Load Properties
+    m_loadWidget = new LoadPropertyWidget();
+    m_stackedWidget->addWidget(m_loadWidget);
+    
+    // 4: Simulation (Placeholders for now)
+    m_simulationWidget = new QWidget(); // TODO: Implement specific widget
+    QVBoxLayout* simLayout = new QVBoxLayout(m_simulationWidget);
+    simLayout->addWidget(new QLabel("Simulation Result Properties (Read-only for now)"));
+    m_stackedWidget->addWidget(m_simulationWidget);
 
-    scrollArea->setWidget(m_contentWidget);
-    containerLayout->addWidget(scrollArea);
+    // 5: Infill (Placeholders for now)
+    m_infillWidget = new QWidget(); // TODO: Implement specific widget
+    QVBoxLayout* infillLayout = new QVBoxLayout(m_infillWidget);
+    infillLayout->addWidget(new QLabel("Infill Region Properties"));
+    m_stackedWidget->addWidget(m_infillWidget);
+
+    containerLayout->addWidget(m_stackedWidget);
 
     // Add the container to the main layout
     m_mainLayout->addWidget(containerFrame);
@@ -71,100 +83,53 @@ void PropertyWidget::setupUI()
 void PropertyWidget::setUIState(UIState* uiState)
 {
     m_uiState = uiState;
-}
-
-void PropertyWidget::clearProperties()
-{
-    // Clear form layout
-    QLayoutItem* item;
-    while ((item = m_formLayout->takeAt(0)) != nullptr) {
-        if (item->widget()) {
-            delete item->widget();
-        }
-        delete item;
-    }
-}
-
-void PropertyWidget::addProperty(const QString& label, const QString& value)
-{
-    QLabel* labelWidget = new QLabel(label);
-    labelWidget->setStyleSheet("color: #aaaaaa;");
-    
-    QLabel* valueWidget = new QLabel(value);
-    valueWidget->setStyleSheet("color: #ffffff;");
-    valueWidget->setWordWrap(true);
-    valueWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    
-    m_formLayout->addRow(labelWidget, valueWidget);
-}
-
-void PropertyWidget::addSectionHeader(const QString& title)
-{
-    QLabel* header = new QLabel(title);
-    header->setStyleSheet("font-weight: bold; color: #dddddd; margin-top: 10px; margin-bottom: 5px;");
-    m_formLayout->addRow(header);
+    if (m_stepWidget) m_stepWidget->setUIState(uiState);
+    if (m_constraintWidget) m_constraintWidget->setUIState(uiState);
+    if (m_loadWidget) m_loadWidget->setUIState(uiState);
 }
 
 void PropertyWidget::onObjectSelected(ObjectType type, const QString& id, int index)
 {
-    clearProperties();
-    
     if (!m_uiState) return;
     
-    ObjectListData data = m_uiState->getObjectList();
-
     switch (type) {
-        case ObjectType::ITEM_STEP: {
+        case ObjectType::ITEM_STEP:
+        case ObjectType::ROOT_STEP: {
             m_titleLabel->setText("Model Properties");
-            ObjectFileInfo info = data.step;
-            addProperty("Filename", info.filename);
-            addProperty("Path", info.filePath);
-            addProperty("Visible", info.isVisible ? "Yes" : "No");
-            addProperty("Transparency", QString::number(info.transparency));
+            m_stackedWidget->setCurrentWidget(m_stepWidget);
+            m_stepWidget->updateData(); // Force refresh
             break;
         }
-        case ObjectType::ITEM_SIMULATION: {
+        case ObjectType::ITEM_SIMULATION:
+        case ObjectType::ROOT_SIMULATION: {
             m_titleLabel->setText("Simulation Result");
-            ObjectFileInfo info = data.simulationResult;
-            addProperty("Filename", info.filename);
-            addProperty("Path", info.filePath);
-            addProperty("Visible", info.isVisible ? "Yes" : "No");
+            m_stackedWidget->setCurrentWidget(m_simulationWidget);
             break;
         }
         case ObjectType::ITEM_INFILL_REGION: {
             m_titleLabel->setText("Infill Region");
-            InfillRegionInfo info = m_uiState->getInfillRegion(id);
-            addProperty("Name", info.name);
-            addProperty("Key", id);
-            addProperty("Visible", info.isVisible ? "Yes" : "No");
+            m_stackedWidget->setCurrentWidget(m_infillWidget);
             break;
         }
         case ObjectType::ITEM_BC_CONSTRAINT: {
-            m_titleLabel->setText("Constraint");
-            if (index >= 0 && index < (int)data.boundaryCondition.constraints.size()) {
-                const auto& c = data.boundaryCondition.constraints[index];
-                addProperty("Name", QString::fromStdString(c.name));
-                addProperty("Surface ID", QString::number(c.surface_id));
-            }
+            m_titleLabel->setText("Constraint Condition");
+            m_constraintWidget->setTarget(index);
+            m_stackedWidget->setCurrentWidget(m_constraintWidget);
             break;
         }
         case ObjectType::ITEM_BC_LOAD: {
             m_titleLabel->setText("Load Condition");
-            if (index >= 0 && index < (int)data.boundaryCondition.loads.size()) {
-                const auto& l = data.boundaryCondition.loads[index];
-                addProperty("Name", QString::fromStdString(l.name));
-                addProperty("Surface ID", QString::number(l.surface_id));
-                addProperty("Magnitude", QString::number(l.magnitude));
-                addProperty("Direction", QString("X: %1\nY: %2\nZ: %3")
-                                         .arg(l.direction.x)
-                                         .arg(l.direction.y)
-                                         .arg(l.direction.z));
-            }
+            m_loadWidget->setTarget(index);
+            m_stackedWidget->setCurrentWidget(m_loadWidget);
             break;
         }
+        case ObjectType::ROOT_BC:
+        case ObjectType::ROOT_BC_CONSTRAINTS:
+        case ObjectType::ROOT_BC_LOADS:
+        case ObjectType::ROOT_INFILL:
         default:
             m_titleLabel->setText("Properties");
-            addProperty("Info", "Select an item to view properties.");
+            m_stackedWidget->setCurrentWidget(m_emptyWidget);
             break;
     }
 }

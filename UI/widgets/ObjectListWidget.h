@@ -12,6 +12,8 @@ enum class ObjectType {
     ROOT_SIMULATION,
     ROOT_INFILL,
     ROOT_BC,
+    ROOT_BC_CONSTRAINTS,
+    ROOT_BC_LOADS,
     
     ITEM_STEP,
     ITEM_SIMULATION,
@@ -39,6 +41,7 @@ public:
     ~ObjectListWidget() = default;
 
     void setUIState(UIState* uiState);
+    void selectObject(ObjectType type, const QString& id = "", int index = -1);
 
 signals:
     void objectSelected(ObjectType type, const QString& id, int index);

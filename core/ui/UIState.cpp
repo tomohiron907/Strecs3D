@@ -122,6 +122,56 @@ void UIState::addLoadCondition(const LoadCondition& load)
              << "Total loads:" << m_objectList.boundaryCondition.loads.size();
 }
 
+void UIState::updateConstraintCondition(int index, const ConstraintCondition& constraint)
+{
+    if (index >= 0 && index < (int)m_objectList.boundaryCondition.constraints.size()) {
+        m_objectList.boundaryCondition.constraints[index] = constraint;
+        emit boundaryConditionChanged(m_objectList.boundaryCondition);
+        qDebug() << "UIState: Constraint condition updated at index:" << index;
+    }
+}
+
+void UIState::removeConstraintCondition(int index)
+{
+    if (index >= 0 && index < (int)m_objectList.boundaryCondition.constraints.size()) {
+        m_objectList.boundaryCondition.constraints.erase(m_objectList.boundaryCondition.constraints.begin() + index);
+        
+        // Remove from display order if both loads and constraints are empty
+        if (m_objectList.boundaryCondition.constraints.empty() && m_objectList.boundaryCondition.loads.empty()) {
+            auto it = std::remove(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_BC);
+            m_objectList.displayOrder.erase(it, m_objectList.displayOrder.end());
+        }
+        
+        emit boundaryConditionChanged(m_objectList.boundaryCondition);
+        qDebug() << "UIState: Constraint condition removed at index:" << index;
+    }
+}
+
+void UIState::updateLoadCondition(int index, const LoadCondition& load)
+{
+    if (index >= 0 && index < (int)m_objectList.boundaryCondition.loads.size()) {
+        m_objectList.boundaryCondition.loads[index] = load;
+        emit boundaryConditionChanged(m_objectList.boundaryCondition);
+        qDebug() << "UIState: Load condition updated at index:" << index;
+    }
+}
+
+void UIState::removeLoadCondition(int index)
+{
+    if (index >= 0 && index < (int)m_objectList.boundaryCondition.loads.size()) {
+        m_objectList.boundaryCondition.loads.erase(m_objectList.boundaryCondition.loads.begin() + index);
+
+        // Remove from display order if both loads and constraints are empty
+        if (m_objectList.boundaryCondition.constraints.empty() && m_objectList.boundaryCondition.loads.empty()) {
+            auto it = std::remove(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_BC);
+            m_objectList.displayOrder.erase(it, m_objectList.displayOrder.end());
+        }
+        
+        emit boundaryConditionChanged(m_objectList.boundaryCondition);
+        qDebug() << "UIState: Load condition removed at index:" << index;
+    }
+}
+
 void UIState::clearConstraintConditions()
 {
     m_objectList.boundaryCondition.constraints.clear();

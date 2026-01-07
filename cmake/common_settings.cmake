@@ -139,9 +139,10 @@ add_executable(Strecs3D
   UI/widgets/DisplayOptionsContainer.cpp
   UI/widgets/ObjectListWidget.cpp
   UI/widgets/PropertyWidget.cpp
+  UI/widgets/properties/StepPropertyWidget.cpp
+  UI/widgets/properties/ConstraintPropertyWidget.cpp
+  UI/widgets/properties/LoadPropertyWidget.cpp
   UI/widgets/CustomCheckBox.cpp
-  UI/dialogs/ConstraintDialog.cpp
-  UI/dialogs/LoadDialog.cpp
   UI/visualization/SceneRenderer.cpp
   UI/visualization/TurntableInteractorStyle.cpp
   UI/visualization/StepFacePickerStyle.cpp

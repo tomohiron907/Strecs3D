@@ -13,8 +13,7 @@
 #include "core/commands/state/SetLoadConditionCommand.h"
 #include "core/commands/visualization/SetMeshVisibilityCommand.h"
 #include "core/commands/visualization/SetMeshOpacityCommand.h"
-#include "UI/dialogs/ConstraintDialog.h"
-#include "UI/dialogs/LoadDialog.h"
+#include "core/commands/visualization/SetMeshOpacityCommand.h"
 #include "utils/tempPathUtility.h"
 #include <QPushButton>
 #include <QFileDialog>
@@ -413,128 +412,49 @@ void MainWindow::showUIStateDebugInfo()
 
 void MainWindow::onConstrainButtonClicked()
 {
-    // ConstraintDialogを開く（モーダルレス）
-    ConstraintDialog* dialog = new ConstraintDialog(this);
-
-    // UIStateから既存の拘束条件を取得してダイアログにロード
     UIState* state = getUIState();
-    if (state) {
-        BoundaryCondition boundaryCondition = state->getBoundaryCondition();
-        std::vector<int> existingSurfaceIds;
+    if (!state) return;
 
-        for (const auto& constraint : boundaryCondition.constraints) {
-            existingSurfaceIds.push_back(constraint.surface_id);
-        }
+    // Create a new default constraint
+    ConstraintCondition constraint;
+    constraint.name = "New Constraint";
+    constraint.surface_id = 1; // Default
 
-        dialog->loadSurfaceIds(existingSurfaceIds);
+    // Add directly to state
+    state->addConstraintCondition(constraint);
+    
+    // Select the new item
+    // It's the last one
+    int index = state->getBoundaryCondition().constraints.size() - 1;
+    if (ui && ui->getObjectListWidget()) {
+        ui->getObjectListWidget()->selectObject(ObjectType::ITEM_BC_CONSTRAINT, "", index);
     }
-
-    // ダイアログが閉じられたときの処理
-    connect(dialog, &QDialog::accepted, this, [this, dialog]() {
-        // OKが押された場合、選択されたsurface_idを取得
-        std::vector<int> surfaceIds = dialog->getSelectedSurfaceIds();
-
-        // 各surface_idに対してSetConstraintConditionCommandを実行
-        UIState* state = getUIState();
-        if (!state) {
-            dialog->deleteLater();
-            return;
-        }
-
-        // 既存の拘束条件をクリア（新しいデータで上書き）
-        state->clearConstraintConditions();
-
-        // テーブルIDは1から始まる
-        int tableId = 1;
-        for (int surfaceId : surfaceIds) {
-            ConstraintCondition constraint;
-            constraint.surface_id = surfaceId;
-            constraint.name = "Constraint_" + std::to_string(tableId);
-
-            auto command = std::make_unique<SetConstraintConditionCommand>(
-                state,
-                constraint
-            );
-            command->execute();
-
-            tableId++;
-        }
-
-        if (!surfaceIds.empty()) {
-            logMessage(QString("Total %1 constraint condition(s) set.").arg(surfaceIds.size()));
-        } else {
-            logMessage("All constraint conditions cleared.");
-        }
-
-        dialog->deleteLater();
-    });
-
-    // ダイアログがキャンセルされたときの処理
-    connect(dialog, &QDialog::rejected, this, [dialog]() {
-        dialog->deleteLater();
-    });
-
-    // モーダルレスで表示
-    dialog->show();
+    
+    logMessage("Added new Constraint Condition.");
 }
 
 void MainWindow::onLoadButtonClicked()
 {
-    // LoadDialogを開く（モーダルレス）
-    LoadDialog* dialog = new LoadDialog(this);
-
-    // UIStateから既存の荷重条件を取得してダイアログにロード
     UIState* state = getUIState();
-    if (state) {
-        BoundaryCondition boundaryCondition = state->getBoundaryCondition();
-        dialog->loadLoadConditions(boundaryCondition.loads);
+    if (!state) return;
+
+    // Create a new default load
+    LoadCondition load;
+    load.name = "New Load";
+    load.surface_id = 1;
+    load.magnitude = 100.0;
+    load.direction = {0, 0, -1}; // Default Z down
+
+    // Add directly to state
+    state->addLoadCondition(load);
+    
+    // Select the new item
+    int index = state->getBoundaryCondition().loads.size() - 1;
+    if (ui && ui->getObjectListWidget()) {
+        ui->getObjectListWidget()->selectObject(ObjectType::ITEM_BC_LOAD, "", index);
     }
-
-    // ダイアログが閉じられたときの処理
-    connect(dialog, &QDialog::accepted, this, [this, dialog]() {
-        // OKが押された場合、選択された荷重条件を取得
-        std::vector<LoadCondition> loadConditions = dialog->getSelectedLoadConditions();
-
-        // 各荷重条件に対してSetLoadConditionCommandを実行
-        UIState* state = getUIState();
-        if (!state) {
-            dialog->deleteLater();
-            return;
-        }
-
-        // 既存の荷重条件をクリア（新しいデータで上書き）
-        state->clearLoadConditions();
-
-        // テーブルIDは1から始まる
-        int tableId = 1;
-        for (LoadCondition& load : loadConditions) {
-            load.name = "Load_" + std::to_string(tableId);
-
-            auto command = std::make_unique<SetLoadConditionCommand>(
-                state,
-                load
-            );
-            command->execute();
-
-            tableId++;
-        }
-
-        if (!loadConditions.empty()) {
-            logMessage(QString("Total %1 load condition(s) set.").arg(loadConditions.size()));
-        } else {
-            logMessage("All load conditions cleared.");
-        }
-
-        dialog->deleteLater();
-    });
-
-    // ダイアログがキャンセルされたときの処理
-    connect(dialog, &QDialog::rejected, this, [dialog]() {
-        dialog->deleteLater();
-    });
-
-    // モーダルレスで表示
-    dialog->show();
+    
+    logMessage("Added new Load Condition.");
 }
 
 void MainWindow::onSimulateButtonClicked()
