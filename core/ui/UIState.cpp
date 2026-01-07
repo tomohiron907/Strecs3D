@@ -350,6 +350,18 @@ void UIState::setProcessingMode(ProcessingMode mode)
     }
 }
 
+// ========== 選択状態管理 ==========
+void UIState::setSelectedObject(ObjectType type, const QString& id, int index)
+{
+    if (m_selectedObject.type != type || m_selectedObject.id != id || m_selectedObject.index != index) {
+        m_selectedObject.type = type;
+        m_selectedObject.id = id;
+        m_selectedObject.index = index;
+        emit selectedObjectChanged(m_selectedObject);
+        qDebug() << "UIState: Selected object changed - Type:" << (int)type << "ID:" << id << "Index:" << index;
+    }
+}
+
 // ========== デバッグ用メソッド ==========
 void UIState::printDebugInfo() const
 {

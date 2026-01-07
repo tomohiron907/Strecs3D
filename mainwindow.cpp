@@ -438,10 +438,9 @@ void MainWindow::onConstrainButtonClicked()
     
     // Select the new item
     // It's the last one
+    // Select the new item via UIState
     int index = state->getBoundaryCondition().constraints.size() - 1;
-    if (ui && ui->getObjectListWidget()) {
-        ui->getObjectListWidget()->selectObject(ObjectType::ITEM_BC_CONSTRAINT, "", index);
-    }
+    state->setSelectedObject(ObjectType::ITEM_BC_CONSTRAINT, "", index);
     
     logMessage("Added new Constraint Condition.");
 }
@@ -466,10 +465,9 @@ void MainWindow::onLoadButtonClicked()
     command->execute();
     
     // Select the new item
+    // Select the new item via UIState
     int index = state->getBoundaryCondition().loads.size() - 1;
-    if (ui && ui->getObjectListWidget()) {
-        ui->getObjectListWidget()->selectObject(ObjectType::ITEM_BC_LOAD, "", index);
-    }
+    state->setSelectedObject(ObjectType::ITEM_BC_LOAD, "", index);
     
     logMessage("Added new Load Condition.");
 }
@@ -533,58 +531,51 @@ void MainWindow::onBoundaryConditionChanged()
 void MainWindow::onFaceClicked(int faceId)
 {
     // Check if an object is selected in the list
-    if (!ui || !ui->getObjectListWidget()) return;
+    UIState* state = getUIState();
+    if (!state) return;
 
-    QList<QTreeWidgetItem*> selectedItems = ui->getObjectListWidget()->selectedItems();
-    if (selectedItems.isEmpty()) return;
+    // Use selection from UIState
+    SelectedObjectInfo selection = state->getSelectedObject();
 
-    // Use dynamic cast to check if it's our custom item
-    for (auto* widgetItem : selectedItems) {
-        ObjectTreeItem* item = dynamic_cast<ObjectTreeItem*>(widgetItem);
-        if (item && item->type == ObjectType::ITEM_BC_CONSTRAINT) {
-            // Update the constraint at this index
-            UIState* state = getUIState();
-            if (state && item->index >= 0) {
-                // Get current to keep name
-                BoundaryCondition bc = state->getBoundaryCondition();
-                if (item->index < (int)bc.constraints.size()) {
-                    ConstraintCondition c = bc.constraints[item->index];
-                    c.surface_id = faceId;
-                    
-                    // Command pattern: Update constraint
-                    auto command = std::make_unique<UpdateConstraintConditionCommand>(
-                        state,
-                        item->index,
-                        c
-                    );
-                    command->execute();
+    if (selection.type == ObjectType::ITEM_BC_CONSTRAINT) {
+        // Update the constraint at this index
+        if (selection.index >= 0) {
+            // Get current to keep name
+            BoundaryCondition bc = state->getBoundaryCondition();
+            if (selection.index < (int)bc.constraints.size()) {
+                ConstraintCondition c = bc.constraints[selection.index];
+                c.surface_id = faceId;
+                
+                // Command pattern: Update constraint
+                auto command = std::make_unique<UpdateConstraintConditionCommand>(
+                    state,
+                    selection.index,
+                    c
+                );
+                command->execute();
 
-                    logMessage(QString("Updated Constraint '%1' to Surface ID: %2").arg(QString::fromStdString(c.name)).arg(faceId));
-                }
+                logMessage(QString("Updated Constraint '%1' to Surface ID: %2").arg(QString::fromStdString(c.name)).arg(faceId));
             }
-            break; // Only handle single selection
-        } else if (item && item->type == ObjectType::ITEM_BC_LOAD) {
-             // Update the load at this index
-            UIState* state = getUIState();
-            if (state && item->index >= 0) {
-                // Get current to keep name/values
-                BoundaryCondition bc = state->getBoundaryCondition();
-                if (item->index < (int)bc.loads.size()) {
-                    LoadCondition l = bc.loads[item->index];
-                    l.surface_id = faceId;
-                    
-                    // Command pattern: Update load
-                    auto command = std::make_unique<UpdateLoadConditionCommand>(
-                        state,
-                        item->index,
-                        l
-                    );
-                    command->execute();
+        }
+    } else if (selection.type == ObjectType::ITEM_BC_LOAD) {
+            // Update the load at this index
+        if (selection.index >= 0) {
+            // Get current to keep name/values
+            BoundaryCondition bc = state->getBoundaryCondition();
+            if (selection.index < (int)bc.loads.size()) {
+                LoadCondition l = bc.loads[selection.index];
+                l.surface_id = faceId;
+                
+                // Command pattern: Update load
+                auto command = std::make_unique<UpdateLoadConditionCommand>(
+                    state,
+                    selection.index,
+                    l
+                );
+                command->execute();
 
-                    logMessage(QString("Updated Load '%1' to Surface ID: %2").arg(QString::fromStdString(l.name)).arg(faceId));
-                }
+                logMessage(QString("Updated Load '%1' to Surface ID: %2").arg(QString::fromStdString(l.name)).arg(faceId));
             }
-            break;
         }
     }
 }

@@ -74,6 +74,9 @@ void ObjectListWidget::setUIState(UIState* uiState)
         });
         
         connect(m_uiState, &UIState::boundaryConditionChanged, this, &ObjectListWidget::onBoundaryConditionChanged);
+        
+        // Connect selection signal
+        connect(m_uiState, &UIState::selectedObjectChanged, this, &ObjectListWidget::onSelectedObjectChangedFromState);
     }
 }
 
@@ -261,8 +264,33 @@ void ObjectListWidget::onSelectionChanged()
     
     ObjectTreeItem* item = static_cast<ObjectTreeItem*>(selected.first());
     if (item) {
+        // UIStateを更新
+        if (m_uiState) {
+            m_uiState->setSelectedObject(item->type, item->id, item->index);
+        }
+        
         emit objectSelected(item->type, item->id, item->index);
     }
+}
+
+void ObjectListWidget::onSelectedObjectChangedFromState(const SelectedObjectInfo& selection)
+{
+    // 現在の選択と一致しているかチェック
+    QList<QTreeWidgetItem*> selectedItemsList = selectedItems();
+    if (!selectedItemsList.isEmpty()) {
+        ObjectTreeItem* currentItem = static_cast<ObjectTreeItem*>(selectedItemsList.first());
+        if (currentItem->type == selection.type && 
+            currentItem->id == selection.id && 
+            currentItem->index == selection.index) {
+            return; // 既に選択されているので何もしない（ループ防止）
+        }
+    } else if (selection.type == ObjectType::NONE) {
+        clearSelection();
+        return;
+    }
+
+    // リスト内のアイテムを探して選択する
+    selectObject(selection.type, selection.id, selection.index);
 }
 
 void ObjectListWidget::selectObject(ObjectType type, const QString& id, int index)

@@ -7,7 +7,17 @@
 #include <map>
 #include "../types/StressDensityMapping.h"
 #include "../types/BoundaryCondition.h"
+#include <vector>
+#include <map>
+#include "../types/StressDensityMapping.h"
+#include "../types/BoundaryCondition.h"
+#include "../types/ObjectType.h"
 
+struct SelectedObjectInfo {
+    ObjectType type = ObjectType::NONE;
+    QString id = "";
+    int index = -1;
+};
 enum class ProcessingMode {
     BAMBU,
     CURA,
@@ -115,6 +125,10 @@ public:
     void setProcessingMode(ProcessingMode mode);
     ProcessingMode getProcessingMode() const { return m_processingMode; }
 
+    // 選択状態管理
+    void setSelectedObject(ObjectType type, const QString& id = "", int index = -1);
+    SelectedObjectInfo getSelectedObject() const { return m_selectedObject; }
+
     // デバッグ用メソッド
     void printDebugInfo() const;
     QString getDebugString() const;
@@ -149,6 +163,9 @@ signals:
     void stressDensityMappingsChanged(const std::vector<StressDensityMapping>& mappings);
     void densitySliderColorsChanged(const std::vector<QColor>& colors);
     void processingModeChanged(ProcessingMode mode);
+    
+    // 選択状態変更シグナル
+    void selectedObjectChanged(const SelectedObjectInfo& selection);
 
 private:
     // 階層構造のメインデータ
@@ -160,4 +177,7 @@ private:
     std::vector<StressDensityMapping> m_stressDensityMappings;
     std::vector<QColor> m_densitySliderColors;
     ProcessingMode m_processingMode = ProcessingMode::CURA;
+    
+    // 選択状態
+    SelectedObjectInfo m_selectedObject;
 };

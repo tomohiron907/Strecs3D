@@ -7,20 +7,7 @@
 #include "../../core/ui/UIState.h"
 
 // オブジェクトの種類を識別するための列挙型
-enum class ObjectType {
-    ROOT_STEP,
-    ROOT_SIMULATION,
-    ROOT_INFILL,
-    ROOT_BC,
-    ROOT_BC_CONSTRAINTS,
-    ROOT_BC_LOADS,
-    
-    ITEM_STEP,
-    ITEM_SIMULATION,
-    ITEM_INFILL_REGION,
-    ITEM_BC_CONSTRAINT,
-    ITEM_BC_LOAD
-};
+#include "../../core/types/ObjectType.h"
 
 // ツリーアイテムにデータを保持させるためのカスタムアイテム
 class ObjectTreeItem : public QTreeWidgetItem {
@@ -59,6 +46,9 @@ private slots:
 private:
     void setupUI();
     void clearAndRebuild();
+    
+    // UIStateからの選択変更通知を受け取るスロット
+    void onSelectedObjectChangedFromState(const SelectedObjectInfo& selection);
     
     UIState* m_uiState = nullptr;
     
