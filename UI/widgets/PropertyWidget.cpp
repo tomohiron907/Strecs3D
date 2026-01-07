@@ -59,6 +59,7 @@ void PropertyWidget::setupUI()
     m_formLayout->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
     m_formLayout->setSpacing(10);
     m_formLayout->setContentsMargins(10, 10, 10, 10);
+    m_formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
     scrollArea->setWidget(m_contentWidget);
     containerLayout->addWidget(scrollArea);
@@ -88,9 +89,12 @@ void PropertyWidget::addProperty(const QString& label, const QString& value)
 {
     QLabel* labelWidget = new QLabel(label);
     labelWidget->setStyleSheet("color: #aaaaaa;");
+    
     QLabel* valueWidget = new QLabel(value);
     valueWidget->setStyleSheet("color: #ffffff;");
     valueWidget->setWordWrap(true);
+    valueWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    
     m_formLayout->addRow(labelWidget, valueWidget);
 }
 

@@ -34,9 +34,11 @@ void ObjectListWidget::setupUI()
         /* ヘッダーの背景を透明にして、親ウィジェット（QTreeWidget）の角丸が見えるようにする */
         QHeaderView::section {
             background-color: transparent;
-            color: #e0e0e0;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 14px;
             border: none;
-            padding: 4px;
+            padding: 4px 8px;
             border-bottom: 1px solid #444; /* ヘッダー下の区切り線 */
         }
         QHeaderView {
