@@ -233,6 +233,9 @@ void ApplicationController::loadAndDisplayTempStlFiles(IUserInterface* ui)
     }
 
     ui->showTempDividedStl(fileProcessor->getVtkProcessor().get());
+
+    // 分割メッシュをUIStateのInfillRegionに登録
+    registerDividedMeshesToUIState(ui);
 }
 
 void ApplicationController::cleanupTempFiles()
@@ -323,6 +326,17 @@ void ApplicationController::resetDividedMeshWidgets(IUserInterface* ui)
         ui->setDividedMeshFileName(i, QString("Divided Mesh %1").arg(i + 1));
         ui->setDividedMeshOpacity(i, 1.0);
     }
+}
+
+void ApplicationController::registerDividedMeshesToUIState(IUserInterface* ui)
+{
+    if (!ui || !fileProcessor->getVtkProcessor()) return;
+
+    // VtkProcessorから分割メッシュ情報を取得
+    const auto& meshInfos = fileProcessor->getVtkProcessor()->getMeshInfos();
+
+    // UI層を通じてUIStateに登録（UI層の責務）
+    ui->registerDividedMeshes(meshInfos);
 }
 
 void ApplicationController::setMeshVisibility(const std::string& fileName, bool visible, IUserInterface* ui)

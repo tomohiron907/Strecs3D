@@ -61,19 +61,19 @@ private:
                 break;
 
             case MeshType::DIVIDED_MESH_1:
-                uiState_->setInfillRegionTransparency("mesh1", opacity_);
+                uiState_->setInfillRegionTransparency("modifierMesh00", opacity_);
                 break;
 
             case MeshType::DIVIDED_MESH_2:
-                uiState_->setInfillRegionTransparency("mesh2", opacity_);
+                uiState_->setInfillRegionTransparency("modifierMesh01", opacity_);
                 break;
 
             case MeshType::DIVIDED_MESH_3:
-                uiState_->setInfillRegionTransparency("mesh3", opacity_);
+                uiState_->setInfillRegionTransparency("modifierMesh02", opacity_);
                 break;
 
             case MeshType::DIVIDED_MESH_4:
-                uiState_->setInfillRegionTransparency("mesh4", opacity_);
+                uiState_->setInfillRegionTransparency("modifierMesh03", opacity_);
                 break;
         }
     }

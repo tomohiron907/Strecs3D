@@ -8,6 +8,9 @@
 struct StressDensityMapping;
 class VtkProcessor;
 
+// MeshInfo の完全な定義が必要
+#include "../processing/VtkProcessor.h"
+
 class IUserInterface : public QObject {
     Q_OBJECT
 public:
@@ -55,6 +58,9 @@ public:
     virtual void hideVtkObject() = 0;
     virtual std::vector<std::string> getAllStlFilenames() const = 0;
     virtual std::string getVtkFilename() const = 0;
+
+    // UIState管理（UI層の責務）
+    virtual void registerDividedMeshes(const std::vector<MeshInfo>& meshInfos) = 0;
 
 public slots:
     // ApplicationControllerからのシグナルを受信するスロット

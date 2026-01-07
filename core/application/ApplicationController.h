@@ -73,5 +73,6 @@ private:
     void showSuccessMessage(IUserInterface* ui);
     void handleProcessingError(const std::exception& e, IUserInterface* ui);
     void resetDividedMeshWidgets(IUserInterface* ui);
+    void registerDividedMeshesToUIState(IUserInterface* ui);
 
 }; 

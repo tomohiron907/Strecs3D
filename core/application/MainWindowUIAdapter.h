@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QMessageBox>
 #include <memory>
+#include <vector>
 #include "../interfaces/IUserInterface.h"
 #include "../../UI/mainwindowui.h"
 
@@ -50,7 +51,10 @@ public:
     void hideVtkObject() override;
     std::vector<std::string> getAllStlFilenames() const override;
     std::string getVtkFilename() const override;
-    
+
+    // UIState管理（UI層の責務）
+    void registerDividedMeshes(const std::vector<MeshInfo>& meshInfos) override;
+
     // Adapter specific methods
     MainWindowUI* getMainWindowUI() const { return ui; }
     VisualizationManager* getVisualizationManager() const { return visualizationManager.get(); }

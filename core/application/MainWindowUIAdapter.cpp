@@ -2,8 +2,11 @@
 #include "ApplicationController.h"
 #include "../../UI/widgets/DensitySlider.h"
 #include "../../UI/visualization/VisualizationManager.h"
+#include "../processing/VtkProcessor.h"
+#include "../ui/UIState.h"
 #include <algorithm>
 #include <vector>
+#include <filesystem>
 
 MainWindowUIAdapter::MainWindowUIAdapter(MainWindowUI* ui, QObject* parent) 
     : IUserInterface(parent), ui(ui)
@@ -235,4 +238,40 @@ std::string MainWindowUIAdapter::getVtkFilename() const
         return visualizationManager->getVtkFilename();
     }
     return "";
+}
+
+void MainWindowUIAdapter::registerDividedMeshes(const std::vector<MeshInfo>& meshInfos)
+{
+    if (!ui) return;
+
+    auto* uiState = ui->getUIState();
+    if (!uiState) return;
+
+    // 各分割メッシュをInfillRegionとして登録
+    constexpr int DIVIDED_MESH_COUNT = 4;
+    for (size_t i = 0; i < meshInfos.size() && i < DIVIDED_MESH_COUNT; ++i) {
+        const auto& meshInfo = meshInfos[i];
+
+        // InfillRegionInfo を作成
+        InfillRegionInfo regionInfo;
+
+        // ファイル名を抽出
+        std::filesystem::path filePath(meshInfo.filePath);
+        regionInfo.filename = QString::fromStdString(filePath.filename().string());
+
+        // 名前をファイル名と同じにする
+        regionInfo.name = regionInfo.filename;
+
+        regionInfo.filePath = QString::fromStdString(meshInfo.filePath);
+        regionInfo.isVisible = true;
+        regionInfo.transparency = 1.0;
+
+        // UIStateに登録（キー: ファイル名ベース、拡張子なし "modifierMesh00", "modifierMesh01", ...）
+        QString key = QString::fromStdString(filePath.stem().string());
+        uiState->addInfillRegion(key, regionInfo);
+
+        qDebug() << "Registered divided mesh to UIState:" << key
+                 << "Name:" << regionInfo.name
+                 << "Path:" << regionInfo.filePath;
+    }
 }

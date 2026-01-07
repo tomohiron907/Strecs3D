@@ -61,19 +61,19 @@ private:
                 break;
 
             case MeshType::DIVIDED_MESH_1:
-                uiState_->setInfillRegionVisibility("mesh1", visible_);
+                uiState_->setInfillRegionVisibility("modifierMesh00", visible_);
                 break;
 
             case MeshType::DIVIDED_MESH_2:
-                uiState_->setInfillRegionVisibility("mesh2", visible_);
+                uiState_->setInfillRegionVisibility("modifierMesh01", visible_);
                 break;
 
             case MeshType::DIVIDED_MESH_3:
-                uiState_->setInfillRegionVisibility("mesh3", visible_);
+                uiState_->setInfillRegionVisibility("modifierMesh02", visible_);
                 break;
 
             case MeshType::DIVIDED_MESH_4:
-                uiState_->setInfillRegionVisibility("mesh4", visible_);
+                uiState_->setInfillRegionVisibility("modifierMesh03", visible_);
                 break;
         }
     }
