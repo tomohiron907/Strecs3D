@@ -61,7 +61,7 @@ public:
     void clearBoundaryConditions();
 
 signals:
-    void faceClicked(int faceId);
+    void faceClicked(int faceId, double nx, double ny, double nz);
 
 private:
     // Components

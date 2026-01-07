@@ -5,6 +5,7 @@
 #include <vtkTextActor.h>
 #include <vtkObjectFactory.h>
 #include <vtkActor2DCollection.h>
+#include <vtkCellPicker.h>
 #include <iostream>
 
 vtkStandardNewMacro(StepFacePickerStyle);
@@ -97,9 +98,18 @@ void StepFacePickerStyle::OnLeftButtonDown()
     int* clickPos = this->Interactor->GetEventPosition();
 
     // ピッキングを実行
-    picker_->Pick(clickPos[0], clickPos[1], 0, renderer_);
+    vtkSmartPointer<vtkCellPicker> cellPicker = vtkSmartPointer<vtkCellPicker>::New();
+    cellPicker->PickFromListOn();
+    
+    // Add faces to pick list
+    for (auto& actor : faceActors_) {
+        cellPicker->AddPickList(actor);
+    }
+    
+    // Pick
+    cellPicker->Pick(clickPos[0], clickPos[1], 0, renderer_);
 
-    vtkActor* pickedActor = picker_->GetActor();
+    vtkActor* pickedActor = cellPicker->GetActor();
 
     if (pickedActor) {
         // ピックされたアクターが面アクターのリストに含まれているか確認
@@ -112,7 +122,9 @@ void StepFacePickerStyle::OnLeftButtonDown()
         }
 
         if (faceIndex >= 0 && onFaceClicked_) {
-            onFaceClicked_(faceIndex + 1); // 1-based index for UI
+            double normal[3];
+            cellPicker->GetPickNormal(normal);
+            onFaceClicked_(faceIndex + 1, normal); // 1-based index for UI
         }
     }
 

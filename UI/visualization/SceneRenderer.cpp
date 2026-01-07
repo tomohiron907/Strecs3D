@@ -165,8 +165,8 @@ void SceneRenderer::setupStepFacePicker(const std::vector<vtkSmartPointer<vtkAct
 
     stepFacePickerStyle_->SetFaceActors(faceActors);
     stepFacePickerStyle_->SetRenderer(ui_->getRenderer());
-    stepFacePickerStyle_->SetOnFaceClicked([this](int faceId) {
-        emit faceClicked(faceId);
+    stepFacePickerStyle_->SetOnFaceClicked([this](int faceId, const double* normal) {
+        emit faceClicked(faceId, normal[0], normal[1], normal[2]);
     });
     interactor->SetInteractorStyle(stepFacePickerStyle_);
 }

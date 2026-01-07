@@ -528,7 +528,7 @@ void MainWindow::onBoundaryConditionChanged()
     }
 }
 
-void MainWindow::onFaceClicked(int faceId)
+void MainWindow::onFaceClicked(int faceId, double nx, double ny, double nz)
 {
     // Check if an object is selected in the list
     UIState* state = getUIState();
@@ -565,6 +565,7 @@ void MainWindow::onFaceClicked(int faceId)
             if (selection.index < (int)bc.loads.size()) {
                 LoadCondition l = bc.loads[selection.index];
                 l.surface_id = faceId;
+                l.direction = {-nx, -ny, -nz}; // Automatically input inverse normal vector
                 
                 // Command pattern: Update load
                 auto command = std::make_unique<UpdateLoadConditionCommand>(
@@ -574,7 +575,12 @@ void MainWindow::onFaceClicked(int faceId)
                 );
                 command->execute();
 
-                logMessage(QString("Updated Load '%1' to Surface ID: %2").arg(QString::fromStdString(l.name)).arg(faceId));
+                logMessage(QString("Updated Load '%1' to Surface ID: %2, Direction: (%3, %4, %5)")
+                    .arg(QString::fromStdString(l.name))
+                    .arg(faceId)
+                    .arg(-nx, 0, 'f', 2)
+                    .arg(-ny, 0, 'f', 2)
+                    .arg(-nz, 0, 'f', 2));
             }
         }
     }

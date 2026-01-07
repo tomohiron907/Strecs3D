@@ -319,8 +319,8 @@ void VisualizationManager::connectSignals() {
             });
 
     connect(sceneRenderer_.get(), &SceneRenderer::faceClicked,
-            [this](int faceId) {
-                emit faceClicked(faceId);
+            [this](int faceId, double nx, double ny, double nz) {
+                emit faceClicked(faceId, nx, ny, nz);
             });
 }
 
