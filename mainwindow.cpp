@@ -106,7 +106,7 @@ void MainWindow::openVTKFile()
 
     // UIStateにファイルパスを設定
     if (UIState* state = getUIState()) {
-        state->setVtkFilePath(fileName);
+        state->setSimulationResultFilePath(fileName);
     }
 
     updateProcessButtonState();
@@ -136,11 +136,10 @@ void MainWindow::openSTEPFile()
     if (UIState* state = getUIState()) {
         state->setStepFilePath(fileName);
 
-        // 変換されたSTLファイルパスもUIStateに登録
+        // 変換されたSTLファイルパスのログ（UIStateには保存しない）
         QString convertedStlPath = appController->getConvertedStlPath();
         if (!convertedStlPath.isEmpty()) {
-            state->setStlFilePath(convertedStlPath);
-            logMessage(QString("Converted STL file registered: %1").arg(convertedStlPath));
+            logMessage(QString("Converted STL file generated: %1").arg(convertedStlPath));
         }
     }
 
@@ -232,7 +231,7 @@ void MainWindow::onVtkObjectVisibilityChanged(bool visible)
     UIState* state = getUIState();
     if (!state) return;
 
-    QString fileName = state->getVtkFilePath();
+    QString fileName = state->getSimulationResultFilePath();
     if (fileName.isEmpty()) return;
 
     // コマンドパターンを使用してメッシュの表示/非表示を設定
@@ -252,7 +251,7 @@ void MainWindow::onVtkObjectOpacityChanged(double opacity)
     UIState* state = getUIState();
     if (!state) return;
 
-    QString fileName = state->getVtkFilePath();
+    QString fileName = state->getSimulationResultFilePath();
     if (fileName.isEmpty()) return;
 
     // コマンドパターンを使用してメッシュの不透明度を設定

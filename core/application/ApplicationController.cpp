@@ -144,12 +144,12 @@ bool ApplicationController::validateFiles(IUserInterface* ui)
     auto* uiState = getUIState(ui);
     if (!uiState) return false;
 
-    if (uiState->getVtkFilePath().isEmpty()) {
+    if (uiState->getSimulationResultFilePath().isEmpty()) {
         ui->showWarningMessage("Warning", "No VTK file selected");
         return false;
     }
-    if (uiState->getStlFilePath().isEmpty()) {
-        ui->showWarningMessage("Warning", "No STL file selected");
+    if (convertedStlPath_.isEmpty()) {
+        ui->showWarningMessage("Warning", "No STL file available (STEP file not loaded or conversion failed)");
         return false;
     }
     return true;
@@ -163,8 +163,8 @@ bool ApplicationController::initializeVtkProcessor(IUserInterface* ui)
     if (!uiState) return false;
 
     auto thresholds = getStressThresholds(uiState);
-    std::string vtkFile = uiState->getVtkFilePath().toStdString();
-    std::string stlFile = uiState->getStlFilePath().toStdString();
+    std::string vtkFile = uiState->getSimulationResultFilePath().toStdString();
+    std::string stlFile = convertedStlPath_.toStdString();
 
     if (!fileProcessor->initializeVtkProcessor(vtkFile, stlFile, thresholds, nullptr)) {
         ui->showCriticalMessage("Error", "Failed to initialize VTK processor");
@@ -261,7 +261,7 @@ bool ApplicationController::export3mfFile(IUserInterface* ui)
     auto* uiState = getUIState(ui);
     if (!uiState) return false;
 
-    std::string stlFile = uiState->getStlFilePath().toStdString();
+    std::string stlFile = convertedStlPath_.toStdString();
     return exportManager->export3mfFile(stlFile, nullptr);
 }
 
@@ -443,7 +443,7 @@ bool ApplicationController::runFEMPipeline(IUserInterface* ui, UIState* uiState,
         openVtkFile(vtuFilePath.toStdString(), ui);
 
         // UIStateにもVTUファイルパスを保存
-        uiState->setVtkFilePath(vtuFilePath);
+        uiState->setSimulationResultFilePath(vtuFilePath);
 
         return true;
     }
@@ -454,13 +454,13 @@ bool ApplicationController::runFEMPipeline(IUserInterface* ui, UIState* uiState,
 bool ApplicationController::isStlFileLoaded(UIState* uiState) const
 {
     if (!uiState) return false;
-    return !uiState->getStlFilePath().isEmpty();
+    return !convertedStlPath_.isEmpty();
 }
 
 bool ApplicationController::isVtkFileLoaded(UIState* uiState) const
 {
     if (!uiState) return false;
-    return !uiState->getVtkFilePath().isEmpty();
+    return !uiState->getSimulationResultFilePath().isEmpty();
 }
 
 bool ApplicationController::areBothFilesLoaded(UIState* uiState) const

@@ -4,6 +4,7 @@
 #include <QString>
 #include <QColor>
 #include <vector>
+#include <map>
 #include "../types/StressDensityMapping.h"
 #include "../types/BoundaryCondition.h"
 
@@ -13,9 +14,29 @@ enum class ProcessingMode {
     PRUSA
 };
 
-struct DisplaySettings {
+// オブジェクトファイル情報
+struct ObjectFileInfo {
+    QString filename;
+    QString filePath;
     bool isVisible = true;
-    double opacity = 1.0;
+    double transparency = 1.0;
+};
+
+// インフィル領域情報
+struct InfillRegionInfo {
+    QString name;
+    QString filename;
+    QString filePath;
+    bool isVisible = true;
+    double transparency = 1.0;
+};
+
+// オブジェクトリストデータ（階層構造）
+struct ObjectListData {
+    ObjectFileInfo step;
+    BoundaryCondition boundaryCondition;
+    ObjectFileInfo simulationResult;
+    std::map<QString, InfillRegionInfo> infillRegions;
 };
 
 class UIState : public QObject {
@@ -25,106 +46,106 @@ public:
     explicit UIState(QObject* parent = nullptr);
     ~UIState() = default;
 
-    // ファイルパス
-    void setStlFilePath(const QString& path);
-    QString getStlFilePath() const { return m_stlFilePath; }
+    // オブジェクトリスト全体の取得・設定
+    ObjectListData getObjectList() const { return m_objectList; }
+    void setObjectList(const ObjectListData& objectList);
 
-    void setVtkFilePath(const QString& path);
-    QString getVtkFilePath() const { return m_vtkFilePath; }
-
+    // STEP ファイル関連
+    void setStepFileInfo(const ObjectFileInfo& info);
+    ObjectFileInfo getStepFileInfo() const { return m_objectList.step; }
     void setStepFilePath(const QString& path);
-    QString getStepFilePath() const { return m_stepFilePath; }
+    QString getStepFilePath() const { return m_objectList.step.filePath; }
+    void setStepVisibility(bool visible);
+    bool getStepVisibility() const { return m_objectList.step.isVisible; }
+    void setStepTransparency(double transparency);
+    double getStepTransparency() const { return m_objectList.step.transparency; }
 
-    // Stress Range
-    void setStressRange(double minStress, double maxStress);
-    double getMinStress() const { return m_minStress; }
-    double getMaxStress() const { return m_maxStress; }
-
-    // Stress Density Mapping
-    void setStressDensityMappings(const std::vector<StressDensityMapping>& mappings);
-    std::vector<StressDensityMapping> getStressDensityMappings() const { return m_stressDensityMappings; }
-
-    // Boundary Condition
-    BoundaryCondition getBoundaryCondition() const { return m_boundaryCondition; }
+    // Boundary Condition 関連
+    BoundaryCondition getBoundaryCondition() const { return m_objectList.boundaryCondition; }
+    void setBoundaryCondition(const BoundaryCondition& bc);
     void addConstraintCondition(const ConstraintCondition& constraint);
     void addLoadCondition(const LoadCondition& load);
     void clearConstraintConditions();
     void clearLoadConditions();
 
-    // Density Slider colors
+    // Simulation Result 関連
+    void setSimulationResultFileInfo(const ObjectFileInfo& info);
+    ObjectFileInfo getSimulationResultFileInfo() const { return m_objectList.simulationResult; }
+    void setSimulationResultFilePath(const QString& path);
+    QString getSimulationResultFilePath() const { return m_objectList.simulationResult.filePath; }
+    void setSimulationResultVisibility(bool visible);
+    bool getSimulationResultVisibility() const { return m_objectList.simulationResult.isVisible; }
+    void setSimulationResultTransparency(double transparency);
+    double getSimulationResultTransparency() const { return m_objectList.simulationResult.transparency; }
+
+    // Infill Regions 関連
+    void addInfillRegion(const QString& key, const InfillRegionInfo& info);
+    void removeInfillRegion(const QString& key);
+    InfillRegionInfo getInfillRegion(const QString& key) const;
+    std::map<QString, InfillRegionInfo> getAllInfillRegions() const { return m_objectList.infillRegions; }
+    void setInfillRegionVisibility(const QString& key, bool visible);
+    void setInfillRegionTransparency(const QString& key, double transparency);
+
+    // Stress Range（階層外のデータ）
+    void setStressRange(double minStress, double maxStress);
+    double getMinStress() const { return m_minStress; }
+    double getMaxStress() const { return m_maxStress; }
+
+    // Stress Density Mapping（階層外のデータ）
+    void setStressDensityMappings(const std::vector<StressDensityMapping>& mappings);
+    std::vector<StressDensityMapping> getStressDensityMappings() const { return m_stressDensityMappings; }
+
+    // Density Slider colors（階層外のデータ）
     void setDensitySliderColors(const std::vector<QColor>& colors);
     std::vector<QColor> getDensitySliderColors() const { return m_densitySliderColors; }
 
-    // Processing Mode
+    // Processing Mode（階層外のデータ）
     void setProcessingMode(ProcessingMode mode);
     ProcessingMode getProcessingMode() const { return m_processingMode; }
-
-    // Display Settings for different objects
-    void setStepDisplaySettings(const DisplaySettings& settings);
-    DisplaySettings getStepDisplaySettings() const { return m_stepDisplaySettings; }
-
-    void setVtuDisplaySettings(const DisplaySettings& settings);
-    DisplaySettings getVtuDisplaySettings() const { return m_vtuDisplaySettings; }
-
-    void setDividedMesh1Settings(const DisplaySettings& settings);
-    DisplaySettings getDividedMesh1Settings() const { return m_dividedMesh1Settings; }
-
-    void setDividedMesh2Settings(const DisplaySettings& settings);
-    DisplaySettings getDividedMesh2Settings() const { return m_dividedMesh2Settings; }
-
-    void setDividedMesh3Settings(const DisplaySettings& settings);
-    DisplaySettings getDividedMesh3Settings() const { return m_dividedMesh3Settings; }
-
-    void setDividedMesh4Settings(const DisplaySettings& settings);
-    DisplaySettings getDividedMesh4Settings() const { return m_dividedMesh4Settings; }
 
     // デバッグ用メソッド
     void printDebugInfo() const;
     QString getDebugString() const;
 
 signals:
-    void stlFilePathChanged(const QString& path);
-    void vtkFilePathChanged(const QString& path);
+    // オブジェクトリスト全体の変更
+    void objectListChanged(const ObjectListData& objectList);
+
+    // STEP関連のシグナル
+    void stepFileInfoChanged(const ObjectFileInfo& info);
     void stepFilePathChanged(const QString& path);
+    void stepVisibilityChanged(bool visible);
+    void stepTransparencyChanged(double transparency);
+
+    // Boundary Condition関連のシグナル
+    void boundaryConditionChanged(const BoundaryCondition& condition);
+
+    // Simulation Result関連のシグナル
+    void simulationResultFileInfoChanged(const ObjectFileInfo& info);
+    void simulationResultFilePathChanged(const QString& path);
+    void simulationResultVisibilityChanged(bool visible);
+    void simulationResultTransparencyChanged(double transparency);
+
+    // Infill Regions関連のシグナル
+    void infillRegionAdded(const QString& key, const InfillRegionInfo& info);
+    void infillRegionRemoved(const QString& key);
+    void infillRegionVisibilityChanged(const QString& key, bool visible);
+    void infillRegionTransparencyChanged(const QString& key, double transparency);
+
+    // 階層外のデータのシグナル
     void stressRangeChanged(double minStress, double maxStress);
     void stressDensityMappingsChanged(const std::vector<StressDensityMapping>& mappings);
-    void boundaryConditionChanged(const BoundaryCondition& condition);
     void densitySliderColorsChanged(const std::vector<QColor>& colors);
     void processingModeChanged(ProcessingMode mode);
-    void stepDisplaySettingsChanged(const DisplaySettings& settings);
-    void vtuDisplaySettingsChanged(const DisplaySettings& settings);
-    void dividedMesh1SettingsChanged(const DisplaySettings& settings);
-    void dividedMesh2SettingsChanged(const DisplaySettings& settings);
-    void dividedMesh3SettingsChanged(const DisplaySettings& settings);
-    void dividedMesh4SettingsChanged(const DisplaySettings& settings);
 
 private:
-    // File paths
-    QString m_stlFilePath;
-    QString m_vtkFilePath;
-    QString m_stepFilePath;
+    // 階層構造のメインデータ
+    ObjectListData m_objectList;
 
-    // Stress range
+    // 階層外のデータ
     double m_minStress = 0.0;
     double m_maxStress = 1.0;
-
-    // Stress density mappings
     std::vector<StressDensityMapping> m_stressDensityMappings;
-
-    // Boundary condition
-    BoundaryCondition m_boundaryCondition;
-
-    // Density slider colors
     std::vector<QColor> m_densitySliderColors;
-
-    // Processing mode
     ProcessingMode m_processingMode = ProcessingMode::CURA;
-
-    // Display settings
-    DisplaySettings m_stepDisplaySettings;
-    DisplaySettings m_vtuDisplaySettings;
-    DisplaySettings m_dividedMesh1Settings;
-    DisplaySettings m_dividedMesh2Settings;
-    DisplaySettings m_dividedMesh3Settings;
-    DisplaySettings m_dividedMesh4Settings;
 };

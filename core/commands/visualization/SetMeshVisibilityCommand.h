@@ -51,43 +51,29 @@ private:
     void updateUIState() {
         if (!uiState_) return;
 
-        DisplaySettings settings;
-
         switch (meshType_) {
             case MeshType::STEP_MESH:
-                settings = uiState_->getStepDisplaySettings();
-                settings.isVisible = visible_;
-                uiState_->setStepDisplaySettings(settings);
+                uiState_->setStepVisibility(visible_);
                 break;
 
             case MeshType::VTU_MESH:
-                settings = uiState_->getVtuDisplaySettings();
-                settings.isVisible = visible_;
-                uiState_->setVtuDisplaySettings(settings);
+                uiState_->setSimulationResultVisibility(visible_);
                 break;
 
             case MeshType::DIVIDED_MESH_1:
-                settings = uiState_->getDividedMesh1Settings();
-                settings.isVisible = visible_;
-                uiState_->setDividedMesh1Settings(settings);
+                uiState_->setInfillRegionVisibility("mesh1", visible_);
                 break;
 
             case MeshType::DIVIDED_MESH_2:
-                settings = uiState_->getDividedMesh2Settings();
-                settings.isVisible = visible_;
-                uiState_->setDividedMesh2Settings(settings);
+                uiState_->setInfillRegionVisibility("mesh2", visible_);
                 break;
 
             case MeshType::DIVIDED_MESH_3:
-                settings = uiState_->getDividedMesh3Settings();
-                settings.isVisible = visible_;
-                uiState_->setDividedMesh3Settings(settings);
+                uiState_->setInfillRegionVisibility("mesh3", visible_);
                 break;
 
             case MeshType::DIVIDED_MESH_4:
-                settings = uiState_->getDividedMesh4Settings();
-                settings.isVisible = visible_;
-                uiState_->setDividedMesh4Settings(settings);
+                uiState_->setInfillRegionVisibility("mesh4", visible_);
                 break;
         }
     }
