@@ -32,11 +32,19 @@ struct InfillRegionInfo {
 };
 
 // オブジェクトリストデータ（階層構造）
+// オブジェクトリストデータ（階層構造）
 struct ObjectListData {
     ObjectFileInfo step;
     BoundaryCondition boundaryCondition;
     ObjectFileInfo simulationResult;
     std::map<QString, InfillRegionInfo> infillRegions;
+    std::vector<QString> displayOrder; // 表示順序を保持するリスト
+
+    // 表示順序管理用のキー定数
+    static inline const QString KEY_STEP = "step";
+    static inline const QString KEY_SIMULATION = "simulation";
+    static inline const QString KEY_INFILL = "infill";
+    static inline const QString KEY_BC = "bc";
 };
 
 class UIState : public QObject {

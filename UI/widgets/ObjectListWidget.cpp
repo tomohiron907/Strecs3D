@@ -90,72 +90,99 @@ void ObjectListWidget::clearAndRebuild()
     
     ObjectListData data = m_uiState->getObjectList();
     
-    // 1. STP Model
-    m_stepRoot = new ObjectTreeItem(this);
-    m_stepRoot->setText(0, "Model (STEP)");
-    m_stepRoot->type = ObjectType::ROOT_STEP;
-    m_stepRoot->setExpanded(true);
-    
-    if (!data.step.filePath.isEmpty()) {
-        ObjectTreeItem* item = new ObjectTreeItem(m_stepRoot);
-        item->setText(0, data.step.filename.isEmpty() ? "Unknown" : data.step.filename);
-        item->type = ObjectType::ITEM_STEP;
-    }
-    
-    // 2. Simulation Result
-    m_simRoot = new ObjectTreeItem(this);
-    m_simRoot->setText(0, "Simulation Result");
-    m_simRoot->type = ObjectType::ROOT_SIMULATION;
-    
-    if (!data.simulationResult.filePath.isEmpty()) {
-        ObjectTreeItem* item = new ObjectTreeItem(m_simRoot);
-        item->setText(0, data.simulationResult.filename.isEmpty() ? "Unknown" : data.simulationResult.filename);
-        item->type = ObjectType::ITEM_SIMULATION;
-        m_simRoot->setExpanded(true);
-    }
-    
-    // 3. Infill Regions
-    m_infillRoot = new ObjectTreeItem(this);
-    m_infillRoot->setText(0, QString("Infill Regions (%1)").arg(data.infillRegions.size()));
-    m_infillRoot->type = ObjectType::ROOT_INFILL;
-    
-    for (const auto& [key, info] : data.infillRegions) {
-        ObjectTreeItem* item = new ObjectTreeItem(m_infillRoot);
-        item->setText(0, info.name);
-        item->type = ObjectType::ITEM_INFILL_REGION;
-        item->id = key;
-    }
-    
-    // 4. Boundary Conditions
-    m_bcRoot = new ObjectTreeItem(this);
-    m_bcRoot->setText(0, "Boundary Conditions");
-    m_bcRoot->type = ObjectType::ROOT_BC;
-    m_bcRoot->setExpanded(true);
-    
-    // Constraints
-    m_bcConstraintsRoot = new ObjectTreeItem(m_bcRoot);
-    m_bcConstraintsRoot->setText(0, QString("Constraints (%1)").arg(data.boundaryCondition.constraints.size()));
-    m_bcConstraintsRoot->setExpanded(true);
-    
-    for (size_t i = 0; i < data.boundaryCondition.constraints.size(); ++i) {
-        const auto& c = data.boundaryCondition.constraints[i];
-        ObjectTreeItem* item = new ObjectTreeItem(m_bcConstraintsRoot);
-        item->setText(0, QString::fromStdString(c.name));
-        item->type = ObjectType::ITEM_BC_CONSTRAINT;
-        item->index = static_cast<int>(i);
-    }
-    
-    // Loads
-    m_bcLoadsRoot = new ObjectTreeItem(m_bcRoot);
-    m_bcLoadsRoot->setText(0, QString("Loads (%1)").arg(data.boundaryCondition.loads.size()));
-    m_bcLoadsRoot->setExpanded(true);
-    
-    for (size_t i = 0; i < data.boundaryCondition.loads.size(); ++i) {
-        const auto& l = data.boundaryCondition.loads[i];
-        ObjectTreeItem* item = new ObjectTreeItem(m_bcLoadsRoot);
-        item->setText(0, QString::fromStdString(l.name));
-        item->type = ObjectType::ITEM_BC_LOAD;
-        item->index = static_cast<int>(i);
+    // Reset root pointers
+    m_stepRoot = nullptr;
+    m_simRoot = nullptr;
+    m_infillRoot = nullptr;
+    m_bcRoot = nullptr;
+    m_bcConstraintsRoot = nullptr;
+    m_bcLoadsRoot = nullptr;
+
+    // Display items in order
+    for (const QString& key : data.displayOrder) {
+        if (key == ObjectListData::KEY_STEP) {
+             // 1. STP Model
+            if (!data.step.filePath.isEmpty()) {
+                m_stepRoot = new ObjectTreeItem(this);
+                m_stepRoot->setText(0, "Model (STEP)");
+                m_stepRoot->type = ObjectType::ROOT_STEP;
+                m_stepRoot->setExpanded(true);
+                
+                ObjectTreeItem* item = new ObjectTreeItem(m_stepRoot);
+                item->setText(0, data.step.filename.isEmpty() ? "Unknown" : data.step.filename);
+                item->type = ObjectType::ITEM_STEP;
+            }
+        } 
+        else if (key == ObjectListData::KEY_SIMULATION) {
+            // 2. Simulation Result
+            if (!data.simulationResult.filePath.isEmpty()) {
+                m_simRoot = new ObjectTreeItem(this);
+                m_simRoot->setText(0, "Simulation Result");
+                m_simRoot->type = ObjectType::ROOT_SIMULATION;
+                m_simRoot->setExpanded(true);
+                
+                ObjectTreeItem* item = new ObjectTreeItem(m_simRoot);
+                item->setText(0, data.simulationResult.filename.isEmpty() ? "Unknown" : data.simulationResult.filename);
+                item->type = ObjectType::ITEM_SIMULATION;
+            }
+        }
+        else if (key == ObjectListData::KEY_INFILL) {
+            // 3. Infill Regions
+            if (!data.infillRegions.empty()) {
+                m_infillRoot = new ObjectTreeItem(this);
+                m_infillRoot->setText(0, QString("Infill Regions (%1)").arg(data.infillRegions.size()));
+                m_infillRoot->type = ObjectType::ROOT_INFILL;
+                
+                for (const auto& [key, info] : data.infillRegions) {
+                    ObjectTreeItem* item = new ObjectTreeItem(m_infillRoot);
+                    item->setText(0, info.name);
+                    item->type = ObjectType::ITEM_INFILL_REGION;
+                    item->id = key;
+                }
+            }
+        }
+        else if (key == ObjectListData::KEY_BC) {
+            // 4. Boundary Conditions
+            bool hasConstraints = !data.boundaryCondition.constraints.empty();
+            bool hasLoads = !data.boundaryCondition.loads.empty();
+            
+            if (hasConstraints || hasLoads) {
+                m_bcRoot = new ObjectTreeItem(this);
+                m_bcRoot->setText(0, "Boundary Conditions");
+                m_bcRoot->type = ObjectType::ROOT_BC;
+                m_bcRoot->setExpanded(true);
+                
+                // Constraints
+                if (hasConstraints) {
+                    m_bcConstraintsRoot = new ObjectTreeItem(m_bcRoot);
+                    m_bcConstraintsRoot->setText(0, QString("Constraints (%1)").arg(data.boundaryCondition.constraints.size()));
+                    m_bcConstraintsRoot->setExpanded(true);
+                    
+                    for (size_t i = 0; i < data.boundaryCondition.constraints.size(); ++i) {
+                        const auto& c = data.boundaryCondition.constraints[i];
+                        ObjectTreeItem* item = new ObjectTreeItem(m_bcConstraintsRoot);
+                        item->setText(0, QString::fromStdString(c.name));
+                        item->type = ObjectType::ITEM_BC_CONSTRAINT;
+                        item->index = static_cast<int>(i);
+                    }
+                }
+                
+                // Loads
+                if (hasLoads) {
+                    m_bcLoadsRoot = new ObjectTreeItem(m_bcRoot);
+                    m_bcLoadsRoot->setText(0, QString("Loads (%1)").arg(data.boundaryCondition.loads.size()));
+                    m_bcLoadsRoot->setExpanded(true);
+                    
+                    for (size_t i = 0; i < data.boundaryCondition.loads.size(); ++i) {
+                        const auto& l = data.boundaryCondition.loads[i];
+                        ObjectTreeItem* item = new ObjectTreeItem(m_bcLoadsRoot);
+                        item->setText(0, QString::fromStdString(l.name));
+                        item->type = ObjectType::ITEM_BC_LOAD;
+                        item->index = static_cast<int>(i);
+                    }
+                }
+            }
+        }
     }
 }
 

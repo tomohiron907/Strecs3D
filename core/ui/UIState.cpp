@@ -44,6 +44,17 @@ void UIState::setStepFilePath(const QString& path)
         m_objectList.step.filePath = path;
         QFileInfo fileInfo(path);
         m_objectList.step.filename = fileInfo.fileName();
+        
+        // Update display order
+        if (!path.isEmpty()) {
+            if (std::find(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_STEP) == m_objectList.displayOrder.end()) {
+                m_objectList.displayOrder.push_back(ObjectListData::KEY_STEP);
+            }
+        } else {
+            auto it = std::remove(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_STEP);
+            m_objectList.displayOrder.erase(it, m_objectList.displayOrder.end());
+        }
+
         emit stepFilePathChanged(path);
         
         // ObjectListWidgetの更新などのために、FileInfo変更シグナルも発行する
@@ -83,6 +94,12 @@ void UIState::setBoundaryCondition(const BoundaryCondition& bc)
 void UIState::addConstraintCondition(const ConstraintCondition& constraint)
 {
     m_objectList.boundaryCondition.constraints.push_back(constraint);
+    
+    // Update display order
+    if (std::find(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_BC) == m_objectList.displayOrder.end()) {
+        m_objectList.displayOrder.push_back(ObjectListData::KEY_BC);
+    }
+    
     emit boundaryConditionChanged(m_objectList.boundaryCondition);
     qDebug() << "UIState: Constraint condition added - Surface ID:" << constraint.surface_id
              << "Name:" << QString::fromStdString(constraint.name)
@@ -92,6 +109,12 @@ void UIState::addConstraintCondition(const ConstraintCondition& constraint)
 void UIState::addLoadCondition(const LoadCondition& load)
 {
     m_objectList.boundaryCondition.loads.push_back(load);
+    
+    // Update display order
+    if (std::find(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_BC) == m_objectList.displayOrder.end()) {
+        m_objectList.displayOrder.push_back(ObjectListData::KEY_BC);
+    }
+
     emit boundaryConditionChanged(m_objectList.boundaryCondition);
     qDebug() << "UIState: Load condition added - Surface ID:" << load.surface_id
              << "Name:" << QString::fromStdString(load.name)
@@ -102,6 +125,13 @@ void UIState::addLoadCondition(const LoadCondition& load)
 void UIState::clearConstraintConditions()
 {
     m_objectList.boundaryCondition.constraints.clear();
+    
+    // Remove from display order if both loads and constraints are empty
+    if (m_objectList.boundaryCondition.constraints.empty() && m_objectList.boundaryCondition.loads.empty()) {
+        auto it = std::remove(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_BC);
+        m_objectList.displayOrder.erase(it, m_objectList.displayOrder.end());
+    }
+
     emit boundaryConditionChanged(m_objectList.boundaryCondition);
     qDebug() << "UIState: All constraint conditions cleared";
 }
@@ -109,6 +139,13 @@ void UIState::clearConstraintConditions()
 void UIState::clearLoadConditions()
 {
     m_objectList.boundaryCondition.loads.clear();
+
+    // Remove from display order if both loads and constraints are empty
+    if (m_objectList.boundaryCondition.constraints.empty() && m_objectList.boundaryCondition.loads.empty()) {
+        auto it = std::remove(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_BC);
+        m_objectList.displayOrder.erase(it, m_objectList.displayOrder.end());
+    }
+    
     emit boundaryConditionChanged(m_objectList.boundaryCondition);
     qDebug() << "UIState: All load conditions cleared";
 }
@@ -127,6 +164,17 @@ void UIState::setSimulationResultFilePath(const QString& path)
         m_objectList.simulationResult.filePath = path;
         QFileInfo fileInfo(path);
         m_objectList.simulationResult.filename = fileInfo.fileName();
+        
+        // Update display order
+        if (!path.isEmpty()) {
+            if (std::find(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_SIMULATION) == m_objectList.displayOrder.end()) {
+                m_objectList.displayOrder.push_back(ObjectListData::KEY_SIMULATION);
+            }
+        } else {
+            auto it = std::remove(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_SIMULATION);
+            m_objectList.displayOrder.erase(it, m_objectList.displayOrder.end());
+        }
+        
         emit simulationResultFilePathChanged(path);
         
         // ObjectListWidgetの更新などのために、FileInfo変更シグナルも発行する
@@ -158,6 +206,12 @@ void UIState::setSimulationResultTransparency(double transparency)
 void UIState::addInfillRegion(const QString& key, const InfillRegionInfo& info)
 {
     m_objectList.infillRegions[key] = info;
+    
+    // Update display order
+    if (std::find(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_INFILL) == m_objectList.displayOrder.end()) {
+        m_objectList.displayOrder.push_back(ObjectListData::KEY_INFILL);
+    }
+    
     emit infillRegionAdded(key, info);
     qDebug() << "UIState: Infill region added - Key:" << key << "Name:" << info.name;
 }
@@ -165,6 +219,12 @@ void UIState::addInfillRegion(const QString& key, const InfillRegionInfo& info)
 void UIState::removeInfillRegion(const QString& key)
 {
     if (m_objectList.infillRegions.erase(key) > 0) {
+        // Update display order if empty
+        if (m_objectList.infillRegions.empty()) {
+            auto it = std::remove(m_objectList.displayOrder.begin(), m_objectList.displayOrder.end(), ObjectListData::KEY_INFILL);
+            m_objectList.displayOrder.erase(it, m_objectList.displayOrder.end());
+        }
+
         emit infillRegionRemoved(key);
         qDebug() << "UIState: Infill region removed - Key:" << key;
     }
