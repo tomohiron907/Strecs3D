@@ -317,6 +317,11 @@ void VisualizationManager::connectSignals() {
             [this](const std::string& filename, double opacity) {
                 setObjectOpacity(filename, opacity);
             });
+
+    connect(sceneRenderer_.get(), &SceneRenderer::faceClicked,
+            [this](int faceId) {
+                emit faceClicked(faceId);
+            });
 }
 
 // --- Boundary Condition Display ---

@@ -9,6 +9,8 @@
 #include <vtkRenderer.h>
 #include <vector>
 
+#include <functional>
+
 class StepFacePickerStyle : public TurntableInteractorStyle
 {
 public:
@@ -16,9 +18,13 @@ public:
     vtkTypeMacro(StepFacePickerStyle, TurntableInteractorStyle);
 
     void OnMouseMove() override;
+    void OnLeftButtonDown() override;
 
     // 面アクターのリストを設定
     void SetFaceActors(const std::vector<vtkSmartPointer<vtkActor>>& actors);
+
+    // クリック時のコールバックを設定
+    void SetOnFaceClicked(std::function<void(int)> callback) { onFaceClicked_ = callback; }
 
     // レンダラーを設定
     void SetRenderer(vtkRenderer* renderer);
@@ -45,4 +51,6 @@ private:
     void HighlightActor(vtkActor* actor);
     void UpdateLabel(int faceNumber, int x, int y);
     void HideLabel();
+
+    std::function<void(int)> onFaceClicked_;
 };

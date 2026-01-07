@@ -59,6 +59,7 @@ public:
 signals:
     void objectVisibilityChanged(const std::string& filename, bool visible);
     void objectOpacityChanged(const std::string& filename, double opacity);
+    void faceClicked(int faceId);
 
 private:
     MainWindowUI* ui_;

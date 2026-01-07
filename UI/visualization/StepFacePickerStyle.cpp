@@ -86,6 +86,40 @@ void StepFacePickerStyle::OnMouseMove()
     this->Interactor->GetRenderWindow()->Render();
 }
 
+void StepFacePickerStyle::OnLeftButtonDown()
+{
+    // マウス位置を取得
+    if (!this->Interactor || !renderer_) {
+        TurntableInteractorStyle::OnLeftButtonDown();
+        return;
+    }
+
+    int* clickPos = this->Interactor->GetEventPosition();
+
+    // ピッキングを実行
+    picker_->Pick(clickPos[0], clickPos[1], 0, renderer_);
+
+    vtkActor* pickedActor = picker_->GetActor();
+
+    if (pickedActor) {
+        // ピックされたアクターが面アクターのリストに含まれているか確認
+        int faceIndex = -1;
+        for (size_t i = 0; i < faceActors_.size(); ++i) {
+            if (faceActors_[i] == pickedActor) {
+                faceIndex = static_cast<int>(i);
+                break;
+            }
+        }
+
+        if (faceIndex >= 0 && onFaceClicked_) {
+            onFaceClicked_(faceIndex + 1); // 1-based index for UI
+        }
+    }
+
+    // デフォルトの動作（回転など）も維持する
+    TurntableInteractorStyle::OnLeftButtonDown();
+}
+
 void StepFacePickerStyle::SetFaceActors(const std::vector<vtkSmartPointer<vtkActor>>& actors)
 {
     faceActors_ = actors;

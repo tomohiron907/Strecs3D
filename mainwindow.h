@@ -45,6 +45,7 @@ public slots:
     void onLoadButtonClicked(); // Loadボタンが押された時の処理
     void onSimulateButtonClicked(); // Simulateボタンが押された時の処理
     void onBoundaryConditionChanged(); // 境界条件が変更された時の処理
+    void onFaceClicked(int faceId);
 
 private:
     // Initialization methods

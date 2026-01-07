@@ -42,6 +42,8 @@ void ConstraintPropertyWidget::setupUI()
     // Surface ID
     m_surfaceIdSpinBox = new QSpinBox();
     m_surfaceIdSpinBox->setRange(0, 99999);
+    // 0 is represented as empty or "-"
+    m_surfaceIdSpinBox->setSpecialValueText("-"); 
     m_surfaceIdSpinBox->setStyleSheet("QSpinBox { color: white; background-color: #333; border: 1px solid #555; padding: 4px; }");
     connect(m_surfaceIdSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int){ pushData(); });
     layout->addRow(new QLabel("Surface ID:"), m_surfaceIdSpinBox);

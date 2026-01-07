@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "core/application/MainWindowUIAdapter.h"
 #include "UI/visualization/VisualizationManager.h"
+#include "UI/widgets/ObjectListWidget.h"
 #include "core/commands/file/OpenVtkFileCommand.h"
 #include "core/commands/file/OpenStepFileCommand.h"
 #include "core/commands/processing/ProcessFilesCommand.h"
@@ -76,6 +77,12 @@ void MainWindow::connectSignals()
     // UIStateのシグナル接続
     connect(ui->getUIState(), &UIState::boundaryConditionChanged,
             this, &MainWindow::onBoundaryConditionChanged);
+
+    // Connect face selection signal from VisualizationManager
+    if (uiAdapter && uiAdapter->getVisualizationManager()) {
+        connect(uiAdapter->getVisualizationManager(), &VisualizationManager::faceClicked,
+                this, &MainWindow::onFaceClicked);
+    }
 
     // 初期状態でUIStateを更新
     updateUIStateFromWidgets();
@@ -418,7 +425,7 @@ void MainWindow::onConstrainButtonClicked()
     // Create a new default constraint
     ConstraintCondition constraint;
     constraint.name = "New Constraint";
-    constraint.surface_id = 1; // Default
+    constraint.surface_id = 0; // Default (empty)
 
     // Add directly to state
     state->addConstraintCondition(constraint);
@@ -512,3 +519,35 @@ void MainWindow::onBoundaryConditionChanged()
         }
     }
 }
+
+void MainWindow::onFaceClicked(int faceId)
+{
+    // Check if an object is selected in the list
+    if (!ui || !ui->getObjectListWidget()) return;
+
+    QList<QTreeWidgetItem*> selectedItems = ui->getObjectListWidget()->selectedItems();
+    if (selectedItems.isEmpty()) return;
+
+    // Use dynamic cast to check if it's our custom item
+    for (auto* widgetItem : selectedItems) {
+        ObjectTreeItem* item = dynamic_cast<ObjectTreeItem*>(widgetItem);
+        if (item && item->type == ObjectType::ITEM_BC_CONSTRAINT) {
+            // Update the constraint at this index
+            UIState* state = getUIState();
+            if (state && item->index >= 0) {
+                // Get current to keep name
+                BoundaryCondition bc = state->getBoundaryCondition();
+                if (item->index < (int)bc.constraints.size()) {
+                    ConstraintCondition c = bc.constraints[item->index];
+                    c.surface_id = faceId;
+                    
+                    // Update state
+                    state->updateConstraintCondition(item->index, c);
+                    logMessage(QString("Updated Constraint '%1' to Surface ID: %2").arg(QString::fromStdString(c.name)).arg(faceId));
+                }
+            }
+            break; // Only handle single selection
+        }
+    }
+}
+

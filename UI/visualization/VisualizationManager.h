@@ -60,6 +60,9 @@ public:
     void displayBoundaryConditions(const BoundaryCondition& condition);
     void clearBoundaryConditions();
 
+signals:
+    void faceClicked(int faceId);
+
 private:
     // Components
     std::unique_ptr<ActorFactory> actorFactory_;
