@@ -1,4 +1,5 @@
 #include "LoadPropertyWidget.h"
+#include "../../../core/commands/state/UpdateLoadConditionCommand.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 
@@ -136,5 +137,11 @@ void LoadPropertyWidget::pushData()
     l.direction.z = m_dirZSpinBox->value();
     
     // Update via UIState
-    m_uiState->updateLoadCondition(m_currentIndex, l);
+    // Command pattern: Update load
+    auto command = std::make_unique<UpdateLoadConditionCommand>(
+        m_uiState,
+        m_currentIndex,
+        l
+    );
+    command->execute();
 }

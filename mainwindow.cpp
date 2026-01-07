@@ -12,6 +12,8 @@
 #include "core/commands/state/SetStressDensityMappingCommand.h"
 #include "core/commands/state/SetConstraintConditionCommand.h"
 #include "core/commands/state/SetLoadConditionCommand.h"
+#include "core/commands/state/UpdateConstraintConditionCommand.h"
+#include "core/commands/state/UpdateLoadConditionCommand.h"
 #include "core/commands/visualization/SetMeshVisibilityCommand.h"
 #include "core/commands/visualization/SetMeshOpacityCommand.h"
 #include "core/commands/visualization/SetMeshOpacityCommand.h"
@@ -427,8 +429,12 @@ void MainWindow::onConstrainButtonClicked()
     constraint.name = "New Constraint";
     constraint.surface_id = 0; // Default (empty)
 
-    // Add directly to state
-    state->addConstraintCondition(constraint);
+    // Command pattern: Add constraint
+    auto command = std::make_unique<SetConstraintConditionCommand>(
+        state,
+        constraint
+    );
+    command->execute();
     
     // Select the new item
     // It's the last one
@@ -452,8 +458,12 @@ void MainWindow::onLoadButtonClicked()
     load.magnitude = 100.0;
     load.direction = {0, 0, -1}; // Default Z down
 
-    // Add directly to state
-    state->addLoadCondition(load);
+    // Command pattern: Add load
+    auto command = std::make_unique<SetLoadConditionCommand>(
+        state,
+        load
+    );
+    command->execute();
     
     // Select the new item
     int index = state->getBoundaryCondition().loads.size() - 1;
@@ -541,8 +551,14 @@ void MainWindow::onFaceClicked(int faceId)
                     ConstraintCondition c = bc.constraints[item->index];
                     c.surface_id = faceId;
                     
-                    // Update state
-                    state->updateConstraintCondition(item->index, c);
+                    // Command pattern: Update constraint
+                    auto command = std::make_unique<UpdateConstraintConditionCommand>(
+                        state,
+                        item->index,
+                        c
+                    );
+                    command->execute();
+
                     logMessage(QString("Updated Constraint '%1' to Surface ID: %2").arg(QString::fromStdString(c.name)).arg(faceId));
                 }
             }
@@ -557,8 +573,14 @@ void MainWindow::onFaceClicked(int faceId)
                     LoadCondition l = bc.loads[item->index];
                     l.surface_id = faceId;
                     
-                    // Update state
-                    state->updateLoadCondition(item->index, l);
+                    // Command pattern: Update load
+                    auto command = std::make_unique<UpdateLoadConditionCommand>(
+                        state,
+                        item->index,
+                        l
+                    );
+                    command->execute();
+
                     logMessage(QString("Updated Load '%1' to Surface ID: %2").arg(QString::fromStdString(l.name)).arg(faceId));
                 }
             }

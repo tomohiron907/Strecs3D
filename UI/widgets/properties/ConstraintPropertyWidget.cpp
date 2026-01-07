@@ -1,4 +1,6 @@
 #include "ConstraintPropertyWidget.h"
+
+#include "../../../core/commands/state/UpdateConstraintConditionCommand.h"
 #include <QVBoxLayout>
 
 ConstraintPropertyWidget::ConstraintPropertyWidget(QWidget* parent)
@@ -85,5 +87,11 @@ void ConstraintPropertyWidget::pushData()
     c.surface_id = m_surfaceIdSpinBox->value();
     
     // Update via UIState
-    m_uiState->updateConstraintCondition(m_currentIndex, c);
+    // Command pattern: Update constraint
+    auto command = std::make_unique<UpdateConstraintConditionCommand>(
+        m_uiState,
+        m_currentIndex,
+        c
+    );
+    command->execute();
 }
