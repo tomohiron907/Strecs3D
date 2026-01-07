@@ -45,6 +45,10 @@ void UIState::setStepFilePath(const QString& path)
         QFileInfo fileInfo(path);
         m_objectList.step.filename = fileInfo.fileName();
         emit stepFilePathChanged(path);
+        
+        // ObjectListWidgetの更新などのために、FileInfo変更シグナルも発行する
+        emit stepFileInfoChanged(m_objectList.step);
+        
         qDebug() << "UIState: STEP file path changed to:" << path;
     }
 }
@@ -124,6 +128,10 @@ void UIState::setSimulationResultFilePath(const QString& path)
         QFileInfo fileInfo(path);
         m_objectList.simulationResult.filename = fileInfo.fileName();
         emit simulationResultFilePathChanged(path);
+        
+        // ObjectListWidgetの更新などのために、FileInfo変更シグナルも発行する
+        emit simulationResultFileInfoChanged(m_objectList.simulationResult);
+        
         qDebug() << "UIState: Simulation result file path changed to:" << path;
     }
 }
