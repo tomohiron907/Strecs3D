@@ -448,7 +448,7 @@ void MainWindow::onLoadButtonClicked()
     // Create a new default load
     LoadCondition load;
     load.name = "New Load";
-    load.surface_id = 1;
+    load.surface_id = 0; // Default (empty)
     load.magnitude = 100.0;
     load.direction = {0, 0, -1}; // Default Z down
 
@@ -547,6 +547,22 @@ void MainWindow::onFaceClicked(int faceId)
                 }
             }
             break; // Only handle single selection
+        } else if (item && item->type == ObjectType::ITEM_BC_LOAD) {
+             // Update the load at this index
+            UIState* state = getUIState();
+            if (state && item->index >= 0) {
+                // Get current to keep name/values
+                BoundaryCondition bc = state->getBoundaryCondition();
+                if (item->index < (int)bc.loads.size()) {
+                    LoadCondition l = bc.loads[item->index];
+                    l.surface_id = faceId;
+                    
+                    // Update state
+                    state->updateLoadCondition(item->index, l);
+                    logMessage(QString("Updated Load '%1' to Surface ID: %2").arg(QString::fromStdString(l.name)).arg(faceId));
+                }
+            }
+            break;
         }
     }
 }
