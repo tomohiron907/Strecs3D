@@ -26,7 +26,8 @@ private:
 
     vtkSmartPointer<vtkActor> createLoadArrowActor(
         double centerX, double centerY, double centerZ,
-        double dirX, double dirY, double dirZ);
+        double dirX, double dirY, double dirZ,
+        double normalX, double normalY, double normalZ);
 
     static constexpr double CONSTRAINT_CUBE_SIZE = 5.0;
     static constexpr double ARROW_CYLINDER_RADIUS = 1.0;

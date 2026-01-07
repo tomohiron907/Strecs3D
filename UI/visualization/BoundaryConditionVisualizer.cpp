@@ -53,7 +53,8 @@ BoundaryConditionActors BoundaryConditionVisualizer::createBoundaryConditionActo
 
         auto actor = createLoadArrowActor(
             geom.centerX, geom.centerY, geom.centerZ,
-            load.direction.x, load.direction.y, load.direction.z
+            load.direction.x, load.direction.y, load.direction.z,
+            geom.normalX, geom.normalY, geom.normalZ
         );
 
         if (actor) {
@@ -89,7 +90,8 @@ vtkSmartPointer<vtkActor> BoundaryConditionVisualizer::createConstraintActor(
 
 vtkSmartPointer<vtkActor> BoundaryConditionVisualizer::createLoadArrowActor(
     double centerX, double centerY, double centerZ,
-    double dirX, double dirY, double dirZ)
+    double dirX, double dirY, double dirZ,
+    double normalX, double normalY, double normalZ)
 {
     // 方向ベクトルを正規化
     double length = std::sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ);
@@ -101,6 +103,19 @@ vtkSmartPointer<vtkActor> BoundaryConditionVisualizer::createLoadArrowActor(
     dirX /= length;
     dirY /= length;
     dirZ /= length;
+
+    // 法線ベクトルと力のベクトルの内積を計算
+    double dotProduct = normalX * dirX + normalY * dirY + normalZ * dirZ;
+
+    // 内積が正（引張）の場合、矢印の根本を面の中心に合わせる
+    // 現在の仕様では先端（円錐の先）が配置位置に来るため、
+    // 引張の場合は矢印の長さ分だけ力の方向にずらす
+    if (dotProduct > 0) {
+        double arrowLength = ARROW_CONE_HEIGHT + ARROW_CYLINDER_LENGTH;
+        centerX += dirX * arrowLength;
+        centerY += dirY * arrowLength;
+        centerZ += dirZ * arrowLength;
+    }
 
     // 矢印の円柱部分を作成（Y軸方向、中心が原点）
     vtkSmartPointer<vtkCylinderSource> cylinder = vtkSmartPointer<vtkCylinderSource>::New();
