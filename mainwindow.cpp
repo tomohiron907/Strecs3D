@@ -1,14 +1,14 @@
 #include "mainwindow.h"
 #include "core/application/MainWindowUIAdapter.h"
 #include "UI/visualization/VisualizationManager.h"
-#include "UI/widgets/ObjectListWidget.h"
+
 #include "core/commands/file/OpenVtkFileCommand.h"
 #include "core/commands/file/OpenStepFileCommand.h"
 #include "core/commands/processing/ProcessFilesCommand.h"
 #include "core/commands/processing/Export3mfCommand.h"
 #include "core/commands/processing/RunFEMPipelineCommand.h"
 #include "core/commands/state/SetStressRangeCommand.h"
-#include "core/commands/state/SetProcessingModeCommand.h"
+
 #include "core/commands/state/SetStressDensityMappingCommand.h"
 #include "core/commands/state/SetConstraintConditionCommand.h"
 #include "core/commands/state/SetLoadConditionCommand.h"
@@ -69,7 +69,7 @@ void MainWindow::connectSignals()
     connect(ui->getRangeSlider(), &DensitySlider::handlePositionsChanged, this, &MainWindow::onDensitySliderChanged);
     connect(ui->getRangeSlider(), &DensitySlider::regionPercentsChanged, this, &MainWindow::onDensitySliderChanged);
     connect(ui->getStressRangeWidget(), &StressRangeWidget::stressRangeChanged, this, &MainWindow::onStressRangeChanged);
-    connect(ui->getModeComboBox(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onModeComboBoxChanged);
+
 
     // UIStateのシグナル接続
     connect(ui->getUIState(), &UIState::boundaryConditionChanged,
@@ -299,34 +299,7 @@ void MainWindow::onDensitySliderChanged()
     updateProcessButtonState();
 }
 
-void MainWindow::onModeComboBoxChanged()
-{
-    UIState* state = getUIState();
-    if (!state) return;
 
-    // ModeComboBoxからProcessingModeを取得（コマンドパターン使用）
-    auto modeComboBox = ui->getModeComboBox();
-    if (!modeComboBox) return;
-
-    QString currentText = modeComboBox->currentText().toLower();
-    ProcessingMode mode;
-    if (currentText == "bambu") {
-        mode = ProcessingMode::BAMBU;
-    } else if (currentText == "prusa") {
-        mode = ProcessingMode::PRUSA;
-    } else {
-        mode = ProcessingMode::CURA; // デフォルト
-    }
-
-    auto command = std::make_unique<SetProcessingModeCommand>(
-        state,
-        mode
-    );
-    command->execute();
-
-    resetExportButton();
-    updateProcessButtonState();
-}
 
 void MainWindow::onStressRangeChanged(double minStress, double maxStress)
 {
@@ -388,25 +361,7 @@ void MainWindow::updateUIStateFromWidgets()
         mappingCommand->execute();
     }
 
-    // ModeComboBoxからProcessingModeを更新（コマンドパターン使用）
-    auto modeComboBox = ui->getModeComboBox();
-    if (modeComboBox) {
-        QString currentText = modeComboBox->currentText().toLower();
-        ProcessingMode mode;
-        if (currentText == "bambu") {
-            mode = ProcessingMode::BAMBU;
-        } else if (currentText == "prusa") {
-            mode = ProcessingMode::PRUSA;
-        } else {
-            mode = ProcessingMode::CURA; // デフォルト
-        }
 
-        auto modeCommand = std::make_unique<SetProcessingModeCommand>(
-            state,
-            mode
-        );
-        modeCommand->execute();
-    }
 }
 
 void MainWindow::showUIStateDebugInfo()

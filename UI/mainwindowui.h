@@ -18,7 +18,6 @@
 #include <QVTKOpenGLNativeWidget.h>
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkRenderer.h>
-#include "widgets/ModeComboBox.h"
 #include "widgets/ObjectListWidget.h"
 #include "widgets/PropertyWidget.h"
 #include "../core/ui/UIState.h"
@@ -48,7 +47,6 @@ public:
     Button* getProcessButton() const;
     
     Button* getExport3mfButton() const { return export3mfButton; }
-    ModeComboBox* getModeComboBox() const { return modeComboBox; }
     DensitySlider* getRangeSlider() const;
     StressRangeWidget* getStressRangeWidget() const;
     ObjectListWidget* getObjectListWidget() const { return objectListWidget; }
@@ -109,7 +107,6 @@ private:
     // Button* simulateButton; // Replaced
     // Button* processButton; // Replaced
     Button* export3mfButton;
-    ModeComboBox* modeComboBox;
     // DensitySlider* rangeSlider; // Replaced
     // StressRangeWidget* stressRangeWidget; // Replaced
     ObjectListWidget* objectListWidget;

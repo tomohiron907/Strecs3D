@@ -126,12 +126,12 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
     // Pass UIState early if available, or wait for connectUIStateSignals
     
     // ModeComboBox (Keeping it visible for now, maybe move to InfillStep later)
-    modeComboBox = new ModeComboBox(centralWidget);
+    // Removed
     
     leftPaneLayout->addWidget(processManagerWidget, 1); // Expanding
     
     // Global controls below the process flow
-    leftPaneLayout->addWidget(modeComboBox);
+    // leftPaneLayout->addWidget(modeComboBox); // Removed
     // Message Console removed
 
     QWidget* leftPaneWidget = new QWidget(centralWidget);
@@ -298,18 +298,7 @@ void MainWindowUI::connectUIStateSignals()
         processManagerWidget->setUIState(uiState);
     }
     
-    // ModeComboBoxの変更をUIStateに反映
-    connect(modeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, [this](int index) {
-                ProcessingMode mode;
-                switch(index) {
-                    case 0: mode = ProcessingMode::CURA; break;
-                    case 1: mode = ProcessingMode::BAMBU; break;
-                    case 2: mode = ProcessingMode::PRUSA; break;
-                    default: mode = ProcessingMode::CURA; break;
-                }
-                uiState->setProcessingMode(mode);
-            });
+    // ModeComboBoxの変更をUIStateに反映 (Removed)
 }
 
 void MainWindowUI::updateUIFromState()
@@ -319,14 +308,6 @@ void MainWindowUI::updateUIFromState()
         srw->setStressRange(uiState->getMinStress(), uiState->getMaxStress());
     }
 
-    if (modeComboBox) {
-        int index = 0;
-        switch(uiState->getProcessingMode()) {
-            case ProcessingMode::BAMBU: index = 0; break;
-            case ProcessingMode::CURA: index = 1; break;
-            case ProcessingMode::PRUSA: index = 2; break;
-        }
-        modeComboBox->setCurrentIndex(index);
-    }
+
 }
  
