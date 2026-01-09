@@ -30,7 +30,7 @@ private:
     int m_currentIndex = -1;
     
     QLineEdit* m_nameEdit;
-    QSpinBox* m_surfaceIdSpinBox;
+    QLineEdit* m_surfaceIdEdit;
     QPushButton* m_okButton;
 
     void onOkClicked();

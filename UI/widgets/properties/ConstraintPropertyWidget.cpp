@@ -5,6 +5,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSpacerItem>
+#include <QIntValidator>
 
 ConstraintPropertyWidget::ConstraintPropertyWidget(QWidget* parent)
     : QWidget(parent)
@@ -40,18 +41,24 @@ void ConstraintPropertyWidget::setupUI()
     
     // Name
     m_nameEdit = new QLineEdit();
-    m_nameEdit->setStyleSheet("QLineEdit { color: white; background-color: #333; border: 1px solid #555; padding: 4px; }");
+    // Updated input style: unified width, rounded corners, min-height to prevent collapse
+    QString inputStyle = "color: white; background-color: #333; border: 1px solid #555; padding: 4px; border-radius: 4px; min-height: 20px;";
+    
+    // Name
+    m_nameEdit = new QLineEdit();
+    m_nameEdit->setStyleSheet(inputStyle);
+    m_nameEdit->setFixedWidth(100);
     connect(m_nameEdit, &QLineEdit::editingFinished, this, &ConstraintPropertyWidget::pushData);
     layout->addRow(new QLabel("Name:"), m_nameEdit);
     
     // Surface ID
-    m_surfaceIdSpinBox = new QSpinBox();
-    m_surfaceIdSpinBox->setRange(0, 99999);
-    // 0 is represented as empty or "-"
-    m_surfaceIdSpinBox->setSpecialValueText("-"); 
-    m_surfaceIdSpinBox->setStyleSheet("QSpinBox { color: white; background-color: #333; border: 1px solid #555; padding: 4px; }");
-    connect(m_surfaceIdSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int){ pushData(); });
-    layout->addRow(new QLabel("Surface ID:"), m_surfaceIdSpinBox);
+    m_surfaceIdEdit = new QLineEdit();
+    m_surfaceIdEdit->setValidator(new QIntValidator(0, 99999, this));
+    m_surfaceIdEdit->setStyleSheet(inputStyle);
+    m_surfaceIdEdit->setFixedWidth(100);
+    // Connect to editingFinished for data push (consistent with LoadPropertyWidget)
+    connect(m_surfaceIdEdit, &QLineEdit::editingFinished, this, &ConstraintPropertyWidget::pushData);
+    layout->addRow(new QLabel("Surface ID:"), m_surfaceIdEdit);
     
     // Apply label style
     for(int i = 0; i < layout->rowCount(); ++i) {
@@ -78,7 +85,8 @@ void ConstraintPropertyWidget::setupUI()
     layout->addRow("", okButtonContainer);
     
     // surface_idが変更されたらOKボタンの状態も更新
-    connect(m_surfaceIdSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &ConstraintPropertyWidget::updateOkButtonState);
+    // surface_idが変更されたらOKボタンの状態も更新
+    connect(m_surfaceIdEdit, &QLineEdit::textChanged, this, &ConstraintPropertyWidget::updateOkButtonState);
 }
 
 void ConstraintPropertyWidget::updateData()
@@ -94,9 +102,9 @@ void ConstraintPropertyWidget::updateData()
     m_nameEdit->setText(QString::fromStdString(c.name));
     m_nameEdit->blockSignals(oldBlockedName);
     
-    bool oldBlockedId = m_surfaceIdSpinBox->blockSignals(true);
-    m_surfaceIdSpinBox->setValue(c.surface_id);
-    m_surfaceIdSpinBox->blockSignals(oldBlockedId);
+    bool oldBlockedId = m_surfaceIdEdit->blockSignals(true);
+    m_surfaceIdEdit->setText(QString::number(c.surface_id));
+    m_surfaceIdEdit->blockSignals(oldBlockedId);
     
     // OKボタンの状態を更新
     updateOkButtonState();
@@ -111,7 +119,7 @@ void ConstraintPropertyWidget::pushData()
     
     ConstraintCondition c = bc.constraints[m_currentIndex];
     c.name = m_nameEdit->text().toStdString();
-    c.surface_id = m_surfaceIdSpinBox->value();
+    c.surface_id = m_surfaceIdEdit->text().toInt();
     
     // Update via UIState
     // Command pattern: Update constraint
@@ -163,10 +171,10 @@ void ConstraintPropertyWidget::updateOkButtonStyle()
 
 void ConstraintPropertyWidget::updateOkButtonState()
 {
-    if (!m_okButton || !m_surfaceIdSpinBox) return;
+    if (!m_okButton || !m_surfaceIdEdit) return;
     
     // surface_idが0以外の場合にOKボタンを有効化
-    bool hasValidSurface = m_surfaceIdSpinBox->value() > 0;
+    bool hasValidSurface = m_surfaceIdEdit->text().toInt() > 0;
     m_okButton->setEnabled(hasValidSurface);
     updateOkButtonStyle();
 }
