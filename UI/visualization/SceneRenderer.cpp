@@ -170,6 +170,9 @@ void SceneRenderer::setupStepPicker(const std::vector<vtkSmartPointer<vtkActor>>
     stepPickerStyle_->SetOnFaceClicked([this](int faceId, const double* normal) {
         emit faceClicked(faceId, normal[0], normal[1], normal[2]);
     });
+    stepPickerStyle_->SetOnFaceDoubleClicked([this](int faceId, const double* normal) {
+        emit faceDoubleClicked(faceId, normal[0], normal[1], normal[2]);
+    });
     stepPickerStyle_->SetOnEdgeClicked([this](int edgeId) {
         emit edgeClicked(edgeId);
     });

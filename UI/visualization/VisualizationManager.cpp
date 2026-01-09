@@ -361,6 +361,11 @@ void VisualizationManager::connectSignals() {
                 emit faceClicked(faceId, nx, ny, nz);
             });
 
+    connect(sceneRenderer_.get(), &SceneRenderer::faceDoubleClicked,
+            [this](int faceId, double nx, double ny, double nz) {
+                emit faceDoubleClicked(faceId, nx, ny, nz);
+            });
+
     connect(sceneRenderer_.get(), &SceneRenderer::edgeClicked,
             [this](int edgeId) {
                 emit edgeClicked(edgeId);

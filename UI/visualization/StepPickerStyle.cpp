@@ -245,6 +245,58 @@ void StepPickerStyle::OnLeftButtonDown()
     TurntableInteractorStyle::OnLeftButtonDown();
 }
 
+void StepPickerStyle::OnLeftButtonDoubleClick()
+{
+    // マウス位置を取得
+    if (!this->Interactor || !renderer_) {
+        vtkInteractorStyleTrackballCamera::OnLeftButtonDoubleClick();
+        return;
+    }
+
+    int* clickPos = this->Interactor->GetEventPosition();
+
+    // ピッキングを実行
+    vtkSmartPointer<vtkCellPicker> cellPicker = vtkSmartPointer<vtkCellPicker>::New();
+    cellPicker->PickFromListOn();
+    cellPicker->SetTolerance(0.01);
+
+    // エッジ選択モードの場合はダブルクリック処理は不要
+    if (edgeSelectionMode_) {
+         vtkInteractorStyleTrackballCamera::OnLeftButtonDoubleClick();
+         return;
+    }
+
+    // 通常モード: Add faces to pick list
+    for (auto& actor : faceActors_) {
+        cellPicker->AddPickList(actor);
+    }
+
+    // Pick
+    cellPicker->Pick(clickPos[0], clickPos[1], 0, renderer_);
+
+    vtkActor* pickedActor = cellPicker->GetActor();
+
+    if (pickedActor) {
+        // ピックされたアクターが面アクターのリストに含まれているか確認
+        int faceIndex = -1;
+        for (size_t i = 0; i < faceActors_.size(); ++i) {
+            if (faceActors_[i] == pickedActor) {
+                faceIndex = static_cast<int>(i);
+                break;
+            }
+        }
+
+        if (faceIndex >= 0 && onFaceDoubleClicked_) {
+            double normal[3];
+            cellPicker->GetPickNormal(normal);
+            onFaceDoubleClicked_(faceIndex + 1, normal); // 1-based index for UI
+        }
+    }
+
+    // デフォルトの動作
+    vtkInteractorStyleTrackballCamera::OnLeftButtonDoubleClick();
+}
+
 void StepPickerStyle::SetFaceActors(const std::vector<vtkSmartPointer<vtkActor>>& actors)
 {
     faceActors_ = actors;

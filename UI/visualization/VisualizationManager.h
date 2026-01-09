@@ -68,6 +68,7 @@ public:
 
 signals:
     void faceClicked(int faceId, double nx, double ny, double nz);
+    void faceDoubleClicked(int faceId, double nx, double ny, double nz);
     void edgeClicked(int edgeId);
 
 private:

@@ -47,3 +47,5 @@ result/
 vcpkg_installed/
 
 .cache/
+
+.gemini/

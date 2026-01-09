@@ -19,6 +19,7 @@ public:
 
     void OnMouseMove() override;
     void OnLeftButtonDown() override;
+    void OnLeftButtonDoubleClick() override;
 
     // 面アクターのリストを設定
     void SetFaceActors(const std::vector<vtkSmartPointer<vtkActor>>& actors);
@@ -28,6 +29,9 @@ public:
 
     // クリック時のコールバックを設定
     void SetOnFaceClicked(std::function<void(int, const double*)> callback) { onFaceClicked_ = callback; }
+    
+    // ダブルクリック時のコールバックを設定
+    void SetOnFaceDoubleClicked(std::function<void(int, const double*)> callback) { onFaceDoubleClicked_ = callback; }
 
     // エッジ選択モードの制御
     void SetEdgeSelectionMode(bool enabled);
@@ -68,4 +72,5 @@ private:
     void HideLabel();
 
     std::function<void(int, const double*)> onFaceClicked_;
+    std::function<void(int, const double*)> onFaceDoubleClicked_;
 };

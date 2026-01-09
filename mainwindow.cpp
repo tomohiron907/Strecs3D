@@ -84,6 +84,8 @@ void MainWindow::connectSignals()
     if (uiAdapter && uiAdapter->getVisualizationManager()) {
         connect(uiAdapter->getVisualizationManager(), &VisualizationManager::faceClicked,
                 this, &MainWindow::onFaceClicked);
+        connect(uiAdapter->getVisualizationManager(), &VisualizationManager::faceDoubleClicked,
+                this, &MainWindow::onFaceDoubleClicked);
 
         // Connect VisualizationManager to PropertyWidget for edge selection
         if (ui && ui->getPropertyWidget()) {
@@ -563,8 +565,20 @@ void MainWindow::onFaceClicked(int faceId, double nx, double ny, double nz)
                 logMessage(QString("Updated Constraint '%1' to Surface ID: %2").arg(QString::fromStdString(c.name)).arg(faceId));
             }
         }
-    } else if (selection.type == ObjectType::ITEM_BC_LOAD) {
-            // Update the load at this index
+    }
+}
+
+void MainWindow::onFaceDoubleClicked(int faceId, double nx, double ny, double nz)
+{
+    // Check if an object is selected in the list
+    UIState* state = getUIState();
+    if (!state) return;
+
+    // Use selection from UIState
+    SelectedObjectInfo selection = state->getSelectedObject();
+
+    if (selection.type == ObjectType::ITEM_BC_LOAD) {
+        // Update the load at this index
         if (selection.index >= 0) {
             // Get current to keep name/values
             BoundaryCondition bc = state->getBoundaryCondition();
