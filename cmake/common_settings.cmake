@@ -145,7 +145,7 @@ add_executable(Strecs3D
   UI/widgets/CustomCheckBox.cpp
   UI/visualization/SceneRenderer.cpp
   UI/visualization/TurntableInteractorStyle.cpp
-  UI/visualization/StepFacePickerStyle.cpp
+  UI/visualization/StepPickerStyle.cpp
   core/processing/VtkProcessor.cpp
   core/processing/StepReader.cpp
   core/processing/StepToStlConverter.cpp

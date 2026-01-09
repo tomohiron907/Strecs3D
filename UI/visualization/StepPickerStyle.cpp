@@ -1,4 +1,4 @@
-#include "StepFacePickerStyle.h"
+#include "StepPickerStyle.h"
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderWindow.h>
 #include <vtkProperty.h>
@@ -8,9 +8,9 @@
 #include <vtkCellPicker.h>
 #include <iostream>
 
-vtkStandardNewMacro(StepFacePickerStyle);
+vtkStandardNewMacro(StepPickerStyle);
 
-StepFacePickerStyle::StepFacePickerStyle()
+StepPickerStyle::StepPickerStyle()
     : lastPickedActor_(nullptr)
     , renderer_(nullptr)
     , hasOriginalColor_(false)
@@ -30,7 +30,7 @@ StepFacePickerStyle::StepFacePickerStyle()
     label_->SetVisibility(0);
 }
 
-void StepFacePickerStyle::OnMouseMove()
+void StepPickerStyle::OnMouseMove()
 {
     // 親クラスのマウス移動処理を呼び出す（ターンテーブルカメラ操作など）
     TurntableInteractorStyle::OnMouseMove();
@@ -76,6 +76,46 @@ void StepFacePickerStyle::OnMouseMove()
             this->Interactor->GetRenderWindow()->Render();
             return;
         }
+
+        // ピックされたアクターがエッジアクターのリストに含まれているか確認
+        int edgeIndex = -1;
+        for (size_t i = 0; i < edgeActors_.size(); ++i) {
+            if (edgeActors_[i] == pickedActor) {
+                edgeIndex = static_cast<int>(i);
+                break;
+            }
+        }
+
+        if (edgeIndex >= 0) {
+            // 前回ハイライトしたアクターをリセット
+            if (lastPickedActor_ && lastPickedActor_ != pickedActor) {
+                ResetLastPickedActor();
+            }
+
+            // 新しいアクターをハイライト
+            if (lastPickedActor_ != pickedActor) {
+                HighlightActor(pickedActor);
+                lastPickedActor_ = pickedActor;
+            }
+
+            // ラベル更新（エッジ用）実装が必要だが、一旦共通のUpdateLabelを使うか拡張する
+            // ここでは簡易的に負の値などを使って区別するか、別途メソッドを作る
+            // UpdateLabelを拡張して、タイプを指定できるようにする変更は後で行うとして、
+            // 今はとりあえずFaceと同じ仕組みで表示してみる（"Face N"となってしまうが）
+            // 修正案：UpdateLabelの第一引数を変更するか、別メソッドにする。
+            
+            // 下記のUpdateLabelEdgeを使用
+             if (!label_) return;
+             
+             std::string labelText = "Edge " + std::to_string(edgeIndex + 1);
+             label_->SetInput(labelText.c_str());
+             label_->SetPosition(clickPos[0] + 15, clickPos[1] + 15);
+             label_->SetVisibility(1);
+
+            // 再描画
+            this->Interactor->GetRenderWindow()->Render();
+            return;
+        }
     }
 
     // 何もピックされなかった場合、ハイライトとラベルをクリア
@@ -87,7 +127,7 @@ void StepFacePickerStyle::OnMouseMove()
     this->Interactor->GetRenderWindow()->Render();
 }
 
-void StepFacePickerStyle::OnLeftButtonDown()
+void StepPickerStyle::OnLeftButtonDown()
 {
     // マウス位置を取得
     if (!this->Interactor || !renderer_) {
@@ -132,7 +172,7 @@ void StepFacePickerStyle::OnLeftButtonDown()
     TurntableInteractorStyle::OnLeftButtonDown();
 }
 
-void StepFacePickerStyle::SetFaceActors(const std::vector<vtkSmartPointer<vtkActor>>& actors)
+void StepPickerStyle::SetFaceActors(const std::vector<vtkSmartPointer<vtkActor>>& actors)
 {
     faceActors_ = actors;
 
@@ -145,7 +185,26 @@ void StepFacePickerStyle::SetFaceActors(const std::vector<vtkSmartPointer<vtkAct
     }
 }
 
-void StepFacePickerStyle::SetRenderer(vtkRenderer* renderer)
+void StepPickerStyle::SetEdgeActors(const std::vector<vtkSmartPointer<vtkActor>>& actors)
+{
+    edgeActors_ = actors;
+
+    // エッジアクターをピックリストに追加
+    // FaceActorsが既にセットされている前提で、追加する形にする
+    // ただしInitializePickListされると消えるので、管理が必要。
+    // InitializePickListはSetFaceActorsで呼ばれているので、
+    // ここで追加するだけでよいが、SetFaceActorsが後で呼ばれると消える。
+    // 両方をマージしてセットするか、毎回再構築するのが安全。
+    
+    // 既存のPickerの設定を維持しつつ追加
+    for (auto& actor : edgeActors_) {
+        if (actor) {
+            picker_->AddPickList(actor);
+        }
+    }
+}
+
+void StepPickerStyle::SetRenderer(vtkRenderer* renderer)
 {
     renderer_ = renderer;
 
@@ -155,15 +214,30 @@ void StepFacePickerStyle::SetRenderer(vtkRenderer* renderer)
     }
 }
 
-void StepFacePickerStyle::ResetLastPickedActor()
+void StepPickerStyle::ResetLastPickedActor()
 {
     if (lastPickedActor_ && hasOriginalColor_) {
         lastPickedActor_->GetProperty()->SetColor(originalColor_);
+        // 線の太さを戻す（エッジの場合）
+        // 元の太さを保存していないので、デフォルト値(2.0)に戻すか、
+        // hasOriginalColor_に含めるか。
+        // ここでは簡易的に、エッジリストに含まれていれば太さを戻す。
+        bool isEdge = false;
+        for (auto& edgeActor : edgeActors_) {
+            if (edgeActor == lastPickedActor_) {
+                isEdge = true;
+                break;
+            }
+        }
+        if (isEdge) {
+            lastPickedActor_->GetProperty()->SetLineWidth(2.0); // StepReaderで設定したデフォルト値
+        }
+        
         hasOriginalColor_ = false;
     }
 }
 
-void StepFacePickerStyle::HighlightActor(vtkActor* actor)
+void StepPickerStyle::HighlightActor(vtkActor* actor)
 {
     if (!actor) return;
 
@@ -171,10 +245,25 @@ void StepFacePickerStyle::HighlightActor(vtkActor* actor)
     actor->GetProperty()->GetColor(originalColor_);
     hasOriginalColor_ = true;
 
-    actor->GetProperty()->SetColor(0.455, 0.565, 0.69); //116, 144, 176
+    // エッジか面かで色を変える
+    bool isEdge = false;
+    for (auto& edgeActor : edgeActors_) {
+        if (edgeActor == actor) {
+            isEdge = true;
+            break;
+        }
+    }
+
+    if (isEdge) {
+        actor->GetProperty()->SetColor(0.455, 0.565, 0.69); // 面のハイライトと同じ色
+        actor->GetProperty()->SetLineWidth(4.0); // 少し太くする
+
+    } else {
+        actor->GetProperty()->SetColor(0.455, 0.565, 0.69); // 面の色
+    }
 }
 
-void StepFacePickerStyle::UpdateLabel(int faceNumber, int x, int y)
+void StepPickerStyle::UpdateLabel(int faceNumber, int x, int y)
 {
     if (!label_) {
         return;
@@ -192,7 +281,7 @@ void StepFacePickerStyle::UpdateLabel(int faceNumber, int x, int y)
     label_->SetVisibility(1);
 }
 
-void StepFacePickerStyle::HideLabel()
+void StepPickerStyle::HideLabel()
 {
     if (label_) {
         label_->SetVisibility(0);

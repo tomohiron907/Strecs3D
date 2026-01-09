@@ -77,14 +77,52 @@ void VisualizationManager::displayStepFile(const std::string& stepFile) {
         sceneRenderer_->addActorToRenderer(stepActors.faceActors[i]);
     }
 
-    // Register edges actor
+    // Register edges actor - DISABLED in favor of individual edge actors for picking
+    /*
     if (stepActors.edgesActor) {
         registerObject({stepActors.edgesActor, stepFile + "_edges", true, 1.0});
         sceneRenderer_->addActorToRenderer(stepActors.edgesActor);
     }
+    */
 
     // Setup face picker for hover detection
-    sceneRenderer_->setupStepFacePicker(stepActors.faceActors);
+    // Edge actors are retrieved from currentStepReader_ as we need individual actors for picking
+    std::vector<vtkSmartPointer<vtkActor>> edgeActors = currentStepReader_->getEdgeActors();
+    
+    // Register edge actors for rendering and raycasting
+    for (size_t i = 0; i < edgeActors.size(); ++i) {
+        // Skip null actors (degenerated edges)
+        if (!edgeActors[i]) continue;
+        
+        std::string edgeName = stepFile + "_edge_" + std::to_string(i);
+        registerObject({edgeActors[i], edgeName, true, 1.0});
+        sceneRenderer_->addActorToRenderer(edgeActors[i]);
+    }
+
+    sceneRenderer_->setupStepPicker(stepActors.faceActors, edgeActors);
+    
+    // Remove the single combined edge actor if it was added (StepReader::getEdgesActor)
+    // Actually, StepReader::getEdgesActor creates a single actor for all edges. 
+    // If we use individual actors, we might want to suppress the single actor 
+    // OR keep it but disable picking on it. 
+    // StepActors struct from ActorFactory likely uses getEdgesActor. 
+    // To avoid duplication, we should disable the single edge actor if we are using individual ones.
+    // However, for performance, a single actor is better for static view. 
+    // Let's keep individual actors for picking but maybe only enable them for picking?
+    // Actually if we add them to renderer they will be visible. 
+    // The user wants edge highlighting, so individual actors are needed.
+    // The single actor "stepActors.edgesActor" is added in lines 80-84. 
+    // We should probably REMOVE that part or make it invisible if we add individual edges.
+    // Or, keep the single actor for non-hovered state and use individual actors only for hover?
+    // No, individual actors are needed for picking. So we simply render individual actors instead of the single one.
+    
+    // Previously added single edge actor:
+    // if (stepActors.edgesActor) { ... }
+    // We should remove that block or comment it out if we use individual actors.
+    // But modifying that block is separate edit. 
+    // For now, let's just ADD the individual actors. 
+    // Wait, having both will cause Z-fighting or double rendering.
+    // I should remove the single edge actor registration from lines 80-84.
 
     sceneRenderer_->renderObjects(objectList_);
     sceneRenderer_->resetCamera();

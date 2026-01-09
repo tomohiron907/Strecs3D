@@ -1,7 +1,7 @@
 #include "SceneRenderer.h"
 #include "VisualizationManager.h"
 #include "TurntableInteractorStyle.h"
-#include "StepFacePickerStyle.h"
+#include "StepPickerStyle.h"
 #include "../../core/processing/VtkProcessor.h"
 #include "../mainwindowui.h"
 #include "../widgets/ObjectDisplayOptionsWidget.h"
@@ -20,7 +20,7 @@
 
 SceneRenderer::SceneRenderer(MainWindowUI* ui) : QObject(), ui_(ui) {
     turntableStyle_ = vtkSmartPointer<TurntableInteractorStyle>::New();
-    stepFacePickerStyle_ = vtkSmartPointer<StepFacePickerStyle>::New();
+    stepPickerStyle_ = vtkSmartPointer<StepPickerStyle>::New();
     enableTurntableMode(true);
 }
 
@@ -77,8 +77,8 @@ void SceneRenderer::clearRenderer() {
         vtkActor2DCollection* actors2D = renderer->GetActors2D();
         if (actors2D) {
             vtkTextActor* labelToPreserve = nullptr;
-            if (stepFacePickerStyle_) {
-                labelToPreserve = stepFacePickerStyle_->GetLabel();
+            if (stepPickerStyle_) {
+                labelToPreserve = stepPickerStyle_->GetLabel();
             }
 
             actors2D->InitTraversal();
@@ -157,18 +157,20 @@ void SceneRenderer::setTurntableRotationSpeed(double speed) {
     }
 }
 
-void SceneRenderer::setupStepFacePicker(const std::vector<vtkSmartPointer<vtkActor>>& faceActors) {
+void SceneRenderer::setupStepPicker(const std::vector<vtkSmartPointer<vtkActor>>& faceActors,
+                                    const std::vector<vtkSmartPointer<vtkActor>>& edgeActors) {
     if (!ui_ || !ui_->getVtkWidget()) return;
 
     auto interactor = ui_->getVtkWidget()->interactor();
     if (!interactor || !ui_->getRenderer()) return;
 
-    stepFacePickerStyle_->SetFaceActors(faceActors);
-    stepFacePickerStyle_->SetRenderer(ui_->getRenderer());
-    stepFacePickerStyle_->SetOnFaceClicked([this](int faceId, const double* normal) {
+    stepPickerStyle_->SetFaceActors(faceActors);
+    stepPickerStyle_->SetEdgeActors(edgeActors);
+    stepPickerStyle_->SetRenderer(ui_->getRenderer());
+    stepPickerStyle_->SetOnFaceClicked([this](int faceId, const double* normal) {
         emit faceClicked(faceId, normal[0], normal[1], normal[2]);
     });
-    interactor->SetInteractorStyle(stepFacePickerStyle_);
+    interactor->SetInteractorStyle(stepPickerStyle_);
 }
 
 void SceneRenderer::setupScalarBar(VtkProcessor* vtkProcessor) {

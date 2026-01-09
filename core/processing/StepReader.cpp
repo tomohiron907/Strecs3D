@@ -404,3 +404,71 @@ FaceGeometry StepReader::getFaceGeometry(int surfaceId) const {
 
     return result;
 }
+std::vector<vtkSmartPointer<vtkActor>> StepReader::getEdgeActors() const
+{
+    std::vector<vtkSmartPointer<vtkActor>> edgeActors;
+
+    if (!isValid()) {
+        return edgeActors;
+    }
+
+    // 各エッジを個別のアクターとして作成
+    for (TopExp_Explorer edgeExp(*shape_, TopAbs_EDGE); edgeExp.More(); edgeExp.Next()) {
+        TopoDS_Edge edge = TopoDS::Edge(edgeExp.Current());
+
+        if (BRep_Tool::Degenerated(edge)) {
+            // 縮退したエッジでも、インデックスを合わせるためにダミーのアクター（またはnullptr）を入れるべきか？
+            // ここではnullptrを入れて、後でチェックするようにする
+            edgeActors.push_back(nullptr);
+            continue;
+        }
+
+        BRepAdaptor_Curve curve(edge);
+        Standard_Real first = curve.FirstParameter();
+        Standard_Real last = curve.LastParameter();
+
+        // エッジを離散化
+        const int numPoints = 50;
+        Standard_Real step = (last - first) / (numPoints - 1);
+
+        vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+        vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
+
+        for (int i = 0; i < numPoints; i++) {
+            Standard_Real param = first + i * step;
+            gp_Pnt p = curve.Value(param);
+            points->InsertNextPoint(p.X(), p.Y(), p.Z());
+        }
+
+        // ラインセグメントを作成
+        for (int i = 0; i < numPoints - 1; i++) {
+            vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
+            line->GetPointIds()->SetId(0, i);
+            line->GetPointIds()->SetId(1, i + 1);
+            lines->InsertNextCell(line);
+        }
+
+        vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
+        polyData->SetPoints(points);
+        polyData->SetLines(lines);
+
+        vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        mapper->SetInputData(polyData);
+
+         // エッジを面より手前に描画するための設定
+        mapper->SetResolveCoincidentTopologyToPolygonOffset();
+        mapper->SetResolveCoincidentTopologyLineOffsetParameters(-1.0, -1.0); // 面よりもさらに手前
+
+        vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+        actor->SetMapper(mapper);
+
+        // エッジの色と外観を設定（ピック用に見えない太い線にする手もあるが、ここでは表示用と兼用）
+        // ピックしやすくするために太くする
+        actor->GetProperty()->SetColor(0.0, 0.0, 0.0); // 黒
+        actor->GetProperty()->SetLineWidth(2.0); // ピックしやすいように太くする -> 表示用に適度な太さに
+
+        edgeActors.push_back(actor);
+    }
+
+    return edgeActors;
+}

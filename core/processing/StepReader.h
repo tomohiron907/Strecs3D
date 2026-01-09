@@ -35,6 +35,7 @@ public:
 
     // 面ごとのアクターを取得（ホバー検出用）
     std::vector<vtkSmartPointer<vtkActor>> getFaceActors() const;
+    std::vector<vtkSmartPointer<vtkActor>> getEdgeActors() const;
 
     // 面の中心と法線を取得（surface_idは1-based）
     FaceGeometry getFaceGeometry(int surfaceId) const;

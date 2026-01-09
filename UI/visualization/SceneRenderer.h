@@ -13,7 +13,7 @@ class MainWindowUI;
 class VtkProcessor;
 class ObjectDisplayOptionsWidget;
 class TurntableInteractorStyle;
-class StepFacePickerStyle;
+class StepPickerStyle;
 
 class SceneRenderer : public QObject {
     Q_OBJECT
@@ -39,7 +39,8 @@ public:
     // --- Interactor Styles ---
     void enableTurntableMode(bool enable = true);
     void setTurntableRotationSpeed(double speed);
-    void setupStepFacePicker(const std::vector<vtkSmartPointer<vtkActor>>& faceActors);
+    void setupStepPicker(const std::vector<vtkSmartPointer<vtkActor>>& faceActors,
+                         const std::vector<vtkSmartPointer<vtkActor>>& edgeActors);
 
     // --- Scalar Bar ---
     void setupScalarBar(VtkProcessor* vtkProcessor);
@@ -69,7 +70,7 @@ private:
 
     // Interactor styles (kept for lifecycle management)
     vtkSmartPointer<TurntableInteractorStyle> turntableStyle_;
-    vtkSmartPointer<StepFacePickerStyle> stepFacePickerStyle_;
+    vtkSmartPointer<StepPickerStyle> stepPickerStyle_;
 
     // Helper methods
     void connectWidgetSignals(ObjectDisplayOptionsWidget* widget, const std::string& filePath);

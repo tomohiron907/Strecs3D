@@ -11,17 +11,20 @@
 
 #include <functional>
 
-class StepFacePickerStyle : public TurntableInteractorStyle
+class StepPickerStyle : public TurntableInteractorStyle
 {
 public:
-    static StepFacePickerStyle* New();
-    vtkTypeMacro(StepFacePickerStyle, TurntableInteractorStyle);
+    static StepPickerStyle* New();
+    vtkTypeMacro(StepPickerStyle, TurntableInteractorStyle);
 
     void OnMouseMove() override;
     void OnLeftButtonDown() override;
 
     // 面アクターのリストを設定
     void SetFaceActors(const std::vector<vtkSmartPointer<vtkActor>>& actors);
+
+    // エッジアクターのリストを設定
+    void SetEdgeActors(const std::vector<vtkSmartPointer<vtkActor>>& actors);
 
     // クリック時のコールバックを設定
     void SetOnFaceClicked(std::function<void(int, const double*)> callback) { onFaceClicked_ = callback; }
@@ -33,13 +36,14 @@ public:
     vtkTextActor* GetLabel() const { return label_; }
 
 protected:
-    StepFacePickerStyle();
-    ~StepFacePickerStyle() override = default;
+    StepPickerStyle();
+    ~StepPickerStyle() override = default;
 
 private:
     vtkSmartPointer<vtkPropPicker> picker_;
     vtkSmartPointer<vtkTextActor> label_;
     std::vector<vtkSmartPointer<vtkActor>> faceActors_;
+    std::vector<vtkSmartPointer<vtkActor>> edgeActors_;
     vtkActor* lastPickedActor_;
     vtkRenderer* renderer_;
 
