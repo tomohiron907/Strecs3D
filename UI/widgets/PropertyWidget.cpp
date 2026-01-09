@@ -86,13 +86,20 @@ void PropertyWidget::setUIState(UIState* uiState)
     if (m_stepWidget) m_stepWidget->setUIState(uiState);
     if (m_constraintWidget) m_constraintWidget->setUIState(uiState);
     if (m_loadWidget) m_loadWidget->setUIState(uiState);
-    
+
     // UIStateの選択状態変更を監視
     if (m_uiState) {
         connect(m_uiState, &UIState::selectedObjectChanged,
                 this, [this](const SelectedObjectInfo& selection) {
             onObjectSelected(selection.type, selection.id, selection.index);
         });
+    }
+}
+
+void PropertyWidget::setVisualizationManager(VisualizationManager* vizManager)
+{
+    if (m_loadWidget) {
+        m_loadWidget->setVisualizationManager(vizManager);
     }
 }
 

@@ -360,6 +360,17 @@ void VisualizationManager::connectSignals() {
             [this](int faceId, double nx, double ny, double nz) {
                 emit faceClicked(faceId, nx, ny, nz);
             });
+
+    connect(sceneRenderer_.get(), &SceneRenderer::edgeClicked,
+            [this](int edgeId) {
+                emit edgeClicked(edgeId);
+            });
+}
+
+void VisualizationManager::setEdgeSelectionMode(bool enabled) {
+    if (sceneRenderer_) {
+        sceneRenderer_->setEdgeSelectionMode(enabled);
+    }
 }
 
 // --- Boundary Condition Display ---

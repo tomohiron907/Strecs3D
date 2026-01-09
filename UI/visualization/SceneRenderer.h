@@ -42,6 +42,9 @@ public:
     void setupStepPicker(const std::vector<vtkSmartPointer<vtkActor>>& faceActors,
                          const std::vector<vtkSmartPointer<vtkActor>>& edgeActors);
 
+    // --- Edge Selection Mode ---
+    void setEdgeSelectionMode(bool enabled);
+
     // --- Scalar Bar ---
     void setupScalarBar(VtkProcessor* vtkProcessor);
     void removeScalarBar();
@@ -61,6 +64,7 @@ signals:
     void objectVisibilityChanged(const std::string& filename, bool visible);
     void objectOpacityChanged(const std::string& filename, double opacity);
     void faceClicked(int faceId, double nx, double ny, double nz);
+    void edgeClicked(int edgeId);
 
 private:
     MainWindowUI* ui_;

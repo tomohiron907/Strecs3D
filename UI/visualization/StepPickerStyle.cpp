@@ -14,6 +14,7 @@ StepPickerStyle::StepPickerStyle()
     : lastPickedActor_(nullptr)
     , renderer_(nullptr)
     , hasOriginalColor_(false)
+    , edgeSelectionMode_(false)
 {
     picker_ = vtkSmartPointer<vtkCellPicker>::New();
     picker_->PickFromListOn();
@@ -49,7 +50,52 @@ void StepPickerStyle::OnMouseMove()
     vtkActor* pickedActor = picker_->GetActor();
 
     if (pickedActor) {
-        // ピックされたアクターが面アクターのリストに含まれているか確認
+        // エッジ選択モードの場合はエッジのみをハイライト
+        if (edgeSelectionMode_) {
+            int edgeIndex = -1;
+            for (size_t i = 0; i < edgeActors_.size(); ++i) {
+                if (edgeActors_[i] == pickedActor) {
+                    edgeIndex = static_cast<int>(i);
+                    break;
+                }
+            }
+
+            if (edgeIndex >= 0) {
+                // 前回ハイライトしたアクターをリセット
+                if (lastPickedActor_ && lastPickedActor_ != pickedActor) {
+                    ResetLastPickedActor();
+                }
+
+                // 新しいアクターをハイライト
+                if (lastPickedActor_ != pickedActor) {
+                    HighlightActor(pickedActor);
+                    lastPickedActor_ = pickedActor;
+                }
+
+                // エッジ選択モード用のラベル表示
+                if (label_) {
+                    std::string labelText = "Edge " + std::to_string(edgeIndex + 1) + " (Click to select)";
+                    label_->SetInput(labelText.c_str());
+                    label_->SetPosition(clickPos[0] + 15, clickPos[1] + 15);
+                    label_->SetVisibility(1);
+                }
+
+                // 再描画
+                this->Interactor->GetRenderWindow()->Render();
+                return;
+            }
+
+            // エッジ選択モードでエッジ以外がホバーされた場合
+            if (lastPickedActor_) {
+                ResetLastPickedActor();
+                lastPickedActor_ = nullptr;
+            }
+            HideLabel();
+            this->Interactor->GetRenderWindow()->Render();
+            return;
+        }
+
+        // 通常モード：ピックされたアクターが面アクターのリストに含まれているか確認
         int faceIndex = -1;
         for (size_t i = 0; i < faceActors_.size(); ++i) {
             if (faceActors_[i] == pickedActor) {
@@ -99,19 +145,13 @@ void StepPickerStyle::OnMouseMove()
                 lastPickedActor_ = pickedActor;
             }
 
-            // ラベル更新（エッジ用）実装が必要だが、一旦共通のUpdateLabelを使うか拡張する
-            // ここでは簡易的に負の値などを使って区別するか、別途メソッドを作る
-            // UpdateLabelを拡張して、タイプを指定できるようにする変更は後で行うとして、
-            // 今はとりあえずFaceと同じ仕組みで表示してみる（"Face N"となってしまうが）
-            // 修正案：UpdateLabelの第一引数を変更するか、別メソッドにする。
-            
-            // 下記のUpdateLabelEdgeを使用
-             if (!label_) return;
-             
-             std::string labelText = "Edge " + std::to_string(edgeIndex + 1);
-             label_->SetInput(labelText.c_str());
-             label_->SetPosition(clickPos[0] + 15, clickPos[1] + 15);
-             label_->SetVisibility(1);
+            // 通常モードのエッジラベル表示
+            if (label_) {
+                std::string labelText = "Edge " + std::to_string(edgeIndex + 1);
+                label_->SetInput(labelText.c_str());
+                label_->SetPosition(clickPos[0] + 15, clickPos[1] + 15);
+                label_->SetVisibility(1);
+            }
 
             // 再描画
             this->Interactor->GetRenderWindow()->Render();
@@ -141,12 +181,44 @@ void StepPickerStyle::OnLeftButtonDown()
     // ピッキングを実行
     vtkSmartPointer<vtkCellPicker> cellPicker = vtkSmartPointer<vtkCellPicker>::New();
     cellPicker->PickFromListOn();
-    
-    // Add faces to pick list
+    cellPicker->SetTolerance(0.01);
+
+    // エッジ選択モードの場合はエッジのみをピック
+    if (edgeSelectionMode_) {
+        // Add only edges to pick list
+        for (auto& actor : edgeActors_) {
+            if (actor) {
+                cellPicker->AddPickList(actor);
+            }
+        }
+
+        // Pick
+        cellPicker->Pick(clickPos[0], clickPos[1], 0, renderer_);
+        vtkActor* pickedActor = cellPicker->GetActor();
+
+        if (pickedActor) {
+            // Find edge index
+            int edgeIndex = -1;
+            for (size_t i = 0; i < edgeActors_.size(); ++i) {
+                if (edgeActors_[i] == pickedActor) {
+                    edgeIndex = static_cast<int>(i);
+                    break;
+                }
+            }
+
+            if (edgeIndex >= 0 && onEdgeClicked_) {
+                onEdgeClicked_(edgeIndex + 1);  // 1-based index
+                return;  // エッジ選択モードでは回転を無効化
+            }
+        }
+        return;  // エッジ選択モードでは回転を無効化
+    }
+
+    // 通常モード: Add faces to pick list
     for (auto& actor : faceActors_) {
         cellPicker->AddPickList(actor);
     }
-    
+
     // Pick
     cellPicker->Pick(clickPos[0], clickPos[1], 0, renderer_);
 
@@ -213,6 +285,11 @@ void StepPickerStyle::SetRenderer(vtkRenderer* renderer)
     if (renderer_ && label_) {
         renderer_->AddActor2D(label_);
     }
+}
+
+void StepPickerStyle::SetEdgeSelectionMode(bool enabled)
+{
+    edgeSelectionMode_ = enabled;
 }
 
 void StepPickerStyle::ResetLastPickedActor()

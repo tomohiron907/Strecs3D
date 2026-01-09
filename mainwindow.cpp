@@ -84,6 +84,12 @@ void MainWindow::connectSignals()
     if (uiAdapter && uiAdapter->getVisualizationManager()) {
         connect(uiAdapter->getVisualizationManager(), &VisualizationManager::faceClicked,
                 this, &MainWindow::onFaceClicked);
+
+        // Connect VisualizationManager to PropertyWidget for edge selection
+        if (ui && ui->getPropertyWidget()) {
+            ui->getPropertyWidget()->setVisualizationManager(
+                uiAdapter->getVisualizationManager());
+        }
     }
 
     // 初期状態でUIStateを更新
@@ -566,7 +572,8 @@ void MainWindow::onFaceClicked(int faceId, double nx, double ny, double nz)
                 LoadCondition l = bc.loads[selection.index];
                 l.surface_id = faceId;
                 l.direction = {-nx, -ny, -nz}; // Automatically input inverse normal vector
-                
+                l.reference_edge_id = 0;  // Clear edge reference when face is clicked
+
                 // Command pattern: Update load
                 auto command = std::make_unique<UpdateLoadConditionCommand>(
                     state,

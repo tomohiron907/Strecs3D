@@ -60,8 +60,15 @@ public:
     void displayBoundaryConditions(const BoundaryCondition& condition);
     void clearBoundaryConditions();
 
+    // Edge Selection Mode
+    void setEdgeSelectionMode(bool enabled);
+
+    // StepReader Access (for edge geometry calculation)
+    std::shared_ptr<StepReader> getCurrentStepReader() const { return currentStepReader_; }
+
 signals:
     void faceClicked(int faceId, double nx, double ny, double nz);
+    void edgeClicked(int edgeId);
 
 private:
     // Components

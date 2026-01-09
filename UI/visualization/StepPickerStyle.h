@@ -29,6 +29,13 @@ public:
     // クリック時のコールバックを設定
     void SetOnFaceClicked(std::function<void(int, const double*)> callback) { onFaceClicked_ = callback; }
 
+    // エッジ選択モードの制御
+    void SetEdgeSelectionMode(bool enabled);
+    bool IsEdgeSelectionMode() const { return edgeSelectionMode_; }
+
+    // エッジクリック時のコールバックを設定
+    void SetOnEdgeClicked(std::function<void(int)> callback) { onEdgeClicked_ = callback; }
+
     // レンダラーを設定
     void SetRenderer(vtkRenderer* renderer);
 
@@ -50,6 +57,10 @@ private:
     // 元の色を保存
     double originalColor_[3];
     bool hasOriginalColor_;
+
+    // エッジ選択モード
+    bool edgeSelectionMode_;
+    std::function<void(int)> onEdgeClicked_;
 
     void ResetLastPickedActor();
     void HighlightActor(vtkActor* actor);

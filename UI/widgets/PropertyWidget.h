@@ -11,6 +11,8 @@
 #include "properties/ConstraintPropertyWidget.h"
 #include "properties/LoadPropertyWidget.h"
 
+class VisualizationManager;
+
 class PropertyWidget : public QWidget {
     Q_OBJECT
 
@@ -19,6 +21,9 @@ public:
     ~PropertyWidget() = default;
 
     void setUIState(UIState* uiState);
+
+    // Set VisualizationManager for LoadPropertyWidget
+    void setVisualizationManager(VisualizationManager* vizManager);
 
 public slots:
     void onObjectSelected(ObjectType type, const QString& id, int index);

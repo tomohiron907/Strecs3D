@@ -15,6 +15,14 @@ struct FaceGeometry {
     bool isValid;                       // 取得成功フラグ
 };
 
+// エッジのジオメトリ情報を保持する構造体
+struct EdgeGeometry {
+    double startX, startY, startZ;  // エッジの開始点座標
+    double endX, endY, endZ;        // エッジの終了点座標
+    double dirX, dirY, dirZ;        // 正規化された方向ベクトル
+    bool isValid;                    // 取得成功フラグ
+};
+
 class StepReader {
 public:
     StepReader();
@@ -39,6 +47,9 @@ public:
 
     // 面の中心と法線を取得（surface_idは1-based）
     FaceGeometry getFaceGeometry(int surfaceId) const;
+
+    // エッジのジオメトリを取得（edgeIdは1-based）
+    EdgeGeometry getEdgeGeometry(int edgeId) const;
 
 private:
     TopoDS_Shape* shape_;

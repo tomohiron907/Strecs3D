@@ -1,9 +1,12 @@
 #include "LoadPropertyWidget.h"
 #include "../../../core/commands/state/UpdateLoadConditionCommand.h"
 #include "../../ColorManager.h"
+#include "../../visualization/VisualizationManager.h"
+#include "../../../core/processing/StepReader.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSpacerItem>
+#include <QDebug>
 
 LoadPropertyWidget::LoadPropertyWidget(QWidget* parent)
     : QWidget(parent)
@@ -57,27 +60,34 @@ void LoadPropertyWidget::setupUI()
     connect(m_magnitudeSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double){ pushData(); });
     layout->addRow(new QLabel("Magnitude:"), m_magnitudeSpinBox);
 
-    // Direction
-    QWidget* vectorWidget = new QWidget();
-    QHBoxLayout* vectorLayout = new QHBoxLayout(vectorWidget);
-    vectorLayout->setContentsMargins(0, 0, 0, 0);
-    vectorLayout->setSpacing(5);
-    
-    auto createSpinBox = [&](QDoubleSpinBox*& sb) {
-        sb = new QDoubleSpinBox();
-        sb->setRange(-1.0, 1.0);
-        sb->setSingleStep(0.1);
-        sb->setDecimals(3);
-        sb->setStyleSheet(inputStyle);
-        connect(sb, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double){ pushData(); });
-        vectorLayout->addWidget(sb);
-    };
+    // Reference Edge Selection
+    QString buttonStyle = "color: white; background-color: #444; border: 1px solid #666; padding: 6px; border-radius: 3px;";
 
-    createSpinBox(m_dirXSpinBox);
-    createSpinBox(m_dirYSpinBox);
-    createSpinBox(m_dirZSpinBox);
-    
-    layout->addRow(new QLabel("Direction (x,y,z):"), vectorWidget);
+    QWidget* edgeWidget = new QWidget();
+    QHBoxLayout* edgeLayout = new QHBoxLayout(edgeWidget);
+    edgeLayout->setContentsMargins(0, 0, 0, 0);
+    edgeLayout->setSpacing(5);
+
+    m_referenceEdgeButton = new QPushButton("Select Edge");
+    m_referenceEdgeButton->setStyleSheet(buttonStyle);
+    m_referenceEdgeButton->setFixedWidth(100);
+    connect(m_referenceEdgeButton, &QPushButton::clicked,
+            this, &LoadPropertyWidget::onReferenceEdgeButtonClicked);
+    edgeLayout->addWidget(m_referenceEdgeButton);
+
+    m_selectedEdgeLabel = new QLabel("-");
+    m_selectedEdgeLabel->setStyleSheet(labelStyle);  // Green
+    edgeLayout->addWidget(m_selectedEdgeLabel);
+    edgeLayout->addStretch();
+
+    layout->addRow(new QLabel("Reference Edge:"), edgeWidget);
+
+    // Direction Display (read-only)
+    m_directionDisplay = new QLineEdit();
+    m_directionDisplay->setReadOnly(true);
+    m_directionDisplay->setStyleSheet(inputStyle + " color: #aaaaaa;");
+    m_directionDisplay->setText("(0.000, 0.000, 0.000)");
+    layout->addRow(new QLabel("Direction:"), m_directionDisplay);
     
     // Apply label style
     for(int i = 0; i < layout->rowCount(); ++i) {
@@ -129,20 +139,22 @@ void LoadPropertyWidget::updateData()
     m_magnitudeSpinBox->blockSignals(true);
     m_magnitudeSpinBox->setValue(l.magnitude);
     m_magnitudeSpinBox->blockSignals(false);
-    
-    // Helper to block and set
-    auto setVal = [](QDoubleSpinBox* sb, double val) {
-        sb->blockSignals(true);
-        sb->setValue(val);
-        sb->blockSignals(false);
-    };
-    
-    setVal(m_dirXSpinBox, l.direction.x);
-    setVal(m_dirYSpinBox, l.direction.y);
-    setVal(m_dirZSpinBox, l.direction.z);
-    
+
+    // Update edge selection display
+    if (l.reference_edge_id > 0) {
+        m_selectedEdgeLabel->setText(QString("Edge %1").arg(l.reference_edge_id));
+    } else {
+        m_selectedEdgeLabel->setText("-");
+    }
+
+    // Update direction display
+    m_directionDisplay->setText(QString("(%1, %2, %3)")
+        .arg(l.direction.x, 0, 'f', 3)
+        .arg(l.direction.y, 0, 'f', 3)
+        .arg(l.direction.z, 0, 'f', 3));
+
     blockSignals(oldBlock);
-    
+
     // OKボタンの状態を更新
     updateOkButtonState();
 }
@@ -158,10 +170,11 @@ void LoadPropertyWidget::pushData()
     l.name = m_nameEdit->text().toStdString();
     l.surface_id = m_surfaceIdSpinBox->value();
     l.magnitude = m_magnitudeSpinBox->value();
-    l.direction.x = m_dirXSpinBox->value();
-    l.direction.y = m_dirYSpinBox->value();
-    l.direction.z = m_dirZSpinBox->value();
-    
+
+    // Note: direction and reference_edge_id are set by updateDirectionFromEdge()
+    // or by face click in MainWindow::onFaceClicked()
+    // We don't modify them here
+
     // Update via UIState
     // Command pattern: Update load
     auto command = std::make_unique<UpdateLoadConditionCommand>(
@@ -174,6 +187,11 @@ void LoadPropertyWidget::pushData()
 
 void LoadPropertyWidget::onOkClicked()
 {
+    // Cancel edge selection if active
+    if (m_isSelectingEdge) {
+        cancelEdgeSelection();
+    }
+
     if (m_uiState) {
         // 選択状態をクリアして何も選択されていない状態に戻す
         m_uiState->setSelectedObject(ObjectType::NONE);
@@ -213,9 +231,102 @@ void LoadPropertyWidget::updateOkButtonStyle()
 void LoadPropertyWidget::updateOkButtonState()
 {
     if (!m_okButton || !m_surfaceIdSpinBox) return;
-    
+
     // surface_idが0以外の場合にOKボタンを有効化
     bool hasValidSurface = m_surfaceIdSpinBox->value() > 0;
     m_okButton->setEnabled(hasValidSurface);
     updateOkButtonStyle();
+}
+
+void LoadPropertyWidget::setVisualizationManager(VisualizationManager* vizManager)
+{
+    // Disconnect previous connections if any
+    if (m_vizManager) {
+        disconnect(m_vizManager, &VisualizationManager::edgeClicked, this, nullptr);
+    }
+
+    m_vizManager = vizManager;
+
+    // Connect edge selection signal
+    if (m_vizManager) {
+        connect(m_vizManager, &VisualizationManager::edgeClicked,
+                this, &LoadPropertyWidget::onEdgeSelected);
+    }
+}
+
+void LoadPropertyWidget::onReferenceEdgeButtonClicked()
+{
+    if (m_isSelectingEdge) {
+        // Cancel edge selection
+        cancelEdgeSelection();
+    } else {
+        // Start edge selection
+        m_isSelectingEdge = true;
+        m_referenceEdgeButton->setText("Cancel");
+
+        if (m_vizManager) {
+            m_vizManager->setEdgeSelectionMode(true);
+        }
+    }
+}
+
+void LoadPropertyWidget::onEdgeSelected(int edgeId)
+{
+    if (!m_isSelectingEdge) return;
+
+    updateDirectionFromEdge(edgeId);
+    cancelEdgeSelection();
+}
+
+void LoadPropertyWidget::updateDirectionFromEdge(int edgeId)
+{
+    if (!m_vizManager || !m_uiState) return;
+
+    auto stepReader = m_vizManager->getCurrentStepReader();
+    if (!stepReader) {
+        m_selectedEdgeLabel->setText("Error: No model");
+        return;
+    }
+
+    EdgeGeometry edgeGeom = stepReader->getEdgeGeometry(edgeId);
+    if (!edgeGeom.isValid) {
+        m_selectedEdgeLabel->setText("Error: Invalid edge");
+        return;
+    }
+
+    // Update UI
+    m_selectedEdgeLabel->setText(QString("Edge %1").arg(edgeId));
+    m_directionDisplay->setText(QString("(%1, %2, %3)")
+        .arg(edgeGeom.dirX, 0, 'f', 3)
+        .arg(edgeGeom.dirY, 0, 'f', 3)
+        .arg(edgeGeom.dirZ, 0, 'f', 3));
+
+    // Update data model
+    if (m_currentIndex < 0) return;
+
+    auto bc = m_uiState->getBoundaryCondition();
+    if (m_currentIndex >= (int)bc.loads.size()) return;
+
+    LoadCondition l = bc.loads[m_currentIndex];
+    l.reference_edge_id = edgeId;
+    l.direction.x = edgeGeom.dirX;
+    l.direction.y = edgeGeom.dirY;
+    l.direction.z = edgeGeom.dirZ;
+
+    auto command = std::make_unique<UpdateLoadConditionCommand>(
+        m_uiState, m_currentIndex, l);
+    command->execute();
+}
+
+void LoadPropertyWidget::cancelEdgeSelection()
+{
+    m_isSelectingEdge = false;
+    m_referenceEdgeButton->setText("Select Edge");
+    m_referenceEdgeButton->setStyleSheet(
+        "color: white; background-color: #444; border: 1px solid #666; "
+        "padding: 6px; border-radius: 3px;");
+
+    if (m_vizManager) {
+        m_vizManager->setEdgeSelectionMode(false);
+    }
 }

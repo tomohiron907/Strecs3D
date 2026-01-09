@@ -9,6 +9,8 @@
 #include <QPushButton>
 #include "../../../core/ui/UIState.h"
 
+class VisualizationManager;
+
 class LoadPropertyWidget : public QWidget {
     Q_OBJECT
 
@@ -16,6 +18,9 @@ public:
     explicit LoadPropertyWidget(QWidget* parent = nullptr);
     void setUIState(UIState* uiState);
     void setTarget(int index); // Set which load to edit
+
+    // Set VisualizationManager reference for edge selection
+    void setVisualizationManager(VisualizationManager* vizManager);
 
 signals:
     void okClicked();
@@ -26,16 +31,27 @@ private:
     void pushData();
     void updateOkButtonStyle();
     void updateOkButtonState();
-    
+
+    // Edge selection handlers
+    void onReferenceEdgeButtonClicked();
+    void onEdgeSelected(int edgeId);
+    void updateDirectionFromEdge(int edgeId);
+    void cancelEdgeSelection();
+
     UIState* m_uiState = nullptr;
+    VisualizationManager* m_vizManager = nullptr;
     int m_currentIndex = -1;
-    
+    bool m_isSelectingEdge = false;
+
     QLineEdit* m_nameEdit;
     QSpinBox* m_surfaceIdSpinBox;
     QDoubleSpinBox* m_magnitudeSpinBox;
-    QDoubleSpinBox* m_dirXSpinBox;
-    QDoubleSpinBox* m_dirYSpinBox;
-    QDoubleSpinBox* m_dirZSpinBox;
+
+    // Edge selection UI
+    QPushButton* m_referenceEdgeButton;
+    QLabel* m_selectedEdgeLabel;
+    QLineEdit* m_directionDisplay;  // Read-only direction display
+
     QPushButton* m_okButton;
 
     void onOkClicked();

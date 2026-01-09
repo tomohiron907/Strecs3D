@@ -170,7 +170,16 @@ void SceneRenderer::setupStepPicker(const std::vector<vtkSmartPointer<vtkActor>>
     stepPickerStyle_->SetOnFaceClicked([this](int faceId, const double* normal) {
         emit faceClicked(faceId, normal[0], normal[1], normal[2]);
     });
+    stepPickerStyle_->SetOnEdgeClicked([this](int edgeId) {
+        emit edgeClicked(edgeId);
+    });
     interactor->SetInteractorStyle(stepPickerStyle_);
+}
+
+void SceneRenderer::setEdgeSelectionMode(bool enabled) {
+    if (stepPickerStyle_) {
+        stepPickerStyle_->SetEdgeSelectionMode(enabled);
+    }
 }
 
 void SceneRenderer::setupScalarBar(VtkProcessor* vtkProcessor) {

@@ -22,6 +22,7 @@ struct LoadCondition {
     std::string name;
     double magnitude;
     Vector3D direction;
+    int reference_edge_id = 0;  // 0 = no edge reference, 1-based edge index
 };
 
 // 境界条件構造体

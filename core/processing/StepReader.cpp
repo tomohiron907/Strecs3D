@@ -477,3 +477,61 @@ std::vector<vtkSmartPointer<vtkActor>> StepReader::getEdgeActors() const
 
     return edgeActors;
 }
+
+EdgeGeometry StepReader::getEdgeGeometry(int edgeId) const {
+    EdgeGeometry result;
+    result.isValid = false;
+
+    // edgeIdは1-based、配列インデックスは0-based
+    int targetIndex = edgeId - 1;
+    if (!isValid_ || targetIndex < 0) {
+        return result;
+    }
+
+    // IndexedMapOfShapeを使用してエッジを取得
+    TopTools_IndexedMapOfShape edgeMap;
+    TopExp::MapShapes(*shape_, TopAbs_EDGE, edgeMap);
+
+    if (targetIndex >= edgeMap.Extent()) {
+        return result;
+    }
+
+    TopoDS_Edge edge = TopoDS::Edge(edgeMap(targetIndex + 1));  // Mapは1-based
+
+    // 縮退したエッジは無効
+    if (BRep_Tool::Degenerated(edge)) {
+        return result;
+    }
+
+    // エッジのエンドポイントを取得
+    BRepAdaptor_Curve curve(edge);
+    Standard_Real first = curve.FirstParameter();
+    Standard_Real last = curve.LastParameter();
+
+    gp_Pnt startPnt = curve.Value(first);
+    gp_Pnt endPnt = curve.Value(last);
+
+    result.startX = startPnt.X();
+    result.startY = startPnt.Y();
+    result.startZ = startPnt.Z();
+
+    result.endX = endPnt.X();
+    result.endY = endPnt.Y();
+    result.endZ = endPnt.Z();
+
+    // 方向ベクトルを計算
+    double dx = result.endX - result.startX;
+    double dy = result.endY - result.startY;
+    double dz = result.endZ - result.startZ;
+
+    // 正規化
+    double length = std::sqrt(dx*dx + dy*dy + dz*dz);
+    if (length > 1e-10) {  // ゼロ除算を避ける
+        result.dirX = dx / length;
+        result.dirY = dy / length;
+        result.dirZ = dz / length;
+        result.isValid = true;
+    }
+
+    return result;
+}
