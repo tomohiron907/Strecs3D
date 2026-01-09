@@ -545,6 +545,22 @@ void MainWindow::onFaceClicked(int faceId, double nx, double ny, double nz)
     // Use selection from UIState
     SelectedObjectInfo selection = state->getSelectedObject();
 
+    // Constraint update moved to double-click handler
+    Q_UNUSED(faceId);
+    Q_UNUSED(nx);
+    Q_UNUSED(ny);
+    Q_UNUSED(nz);
+}
+
+void MainWindow::onFaceDoubleClicked(int faceId, double nx, double ny, double nz)
+{
+    // Check if an object is selected in the list
+    UIState* state = getUIState();
+    if (!state) return;
+
+    // Use selection from UIState
+    SelectedObjectInfo selection = state->getSelectedObject();
+
     if (selection.type == ObjectType::ITEM_BC_CONSTRAINT) {
         // Update the constraint at this index
         if (selection.index >= 0) {
@@ -565,19 +581,7 @@ void MainWindow::onFaceClicked(int faceId, double nx, double ny, double nz)
                 logMessage(QString("Updated Constraint '%1' to Surface ID: %2").arg(QString::fromStdString(c.name)).arg(faceId));
             }
         }
-    }
-}
-
-void MainWindow::onFaceDoubleClicked(int faceId, double nx, double ny, double nz)
-{
-    // Check if an object is selected in the list
-    UIState* state = getUIState();
-    if (!state) return;
-
-    // Use selection from UIState
-    SelectedObjectInfo selection = state->getSelectedObject();
-
-    if (selection.type == ObjectType::ITEM_BC_LOAD) {
+    } else if (selection.type == ObjectType::ITEM_BC_LOAD) {
         // Update the load at this index
         if (selection.index >= 0) {
             // Get current to keep name/values
