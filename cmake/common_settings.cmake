@@ -142,6 +142,12 @@ add_executable(Strecs3D
   UI/widgets/properties/StepPropertyWidget.cpp
   UI/widgets/properties/ConstraintPropertyWidget.cpp
   UI/widgets/properties/LoadPropertyWidget.cpp
+  UI/widgets/process/ProcessFlowWidget.cpp
+  UI/widgets/process/ProcessManagerWidget.cpp
+  UI/widgets/process/steps/ImportStepWidget.cpp
+  UI/widgets/process/steps/BoundaryConditionStepWidget.cpp
+  UI/widgets/process/steps/SimulationStepWidget.cpp
+  UI/widgets/process/steps/InfillStepWidget.cpp
   UI/widgets/CustomCheckBox.cpp
   UI/visualization/SceneRenderer.cpp
   UI/visualization/TurntableInteractorStyle.cpp

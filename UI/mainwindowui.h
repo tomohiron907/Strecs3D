@@ -6,6 +6,11 @@
 #include <QComboBox>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include "widgets/process/ProcessManagerWidget.h"
+#include "widgets/process/steps/ImportStepWidget.h"
+#include "widgets/process/steps/BoundaryConditionStepWidget.h"
+#include "widgets/process/steps/SimulationStepWidget.h"
+#include "widgets/process/steps/InfillStepWidget.h"
 #include "widgets/DensitySlider.h"
 #include "widgets/StressRangeWidget.h"
 #include "widgets/MessageConsole.h"
@@ -34,15 +39,18 @@ public:
     vtkSmartPointer<vtkRenderer> getRenderer() const { return renderer; }
     Button* getOpenStlButton() const { return openStlButton; }
     Button* getOpenVtkButton() const { return openVtkButton; }
-    Button* getOpenStepButton() const { return openStepButton; }
-    Button* getConstrainButton() const { return constrainButton; }
-    Button* getLoadButton() const { return loadButton; }
-    Button* getSimulateButton() const { return simulateButton; }
-    Button* getProcessButton() const { return processButton; }
+    
+    // Legacy getters mapped to new ProcessManager structure
+    Button* getOpenStepButton() const;
+    Button* getConstrainButton() const;
+    Button* getLoadButton() const;
+    Button* getSimulateButton() const;
+    Button* getProcessButton() const;
+    
     Button* getExport3mfButton() const { return export3mfButton; }
     ModeComboBox* getModeComboBox() const { return modeComboBox; }
-    DensitySlider* getRangeSlider() const { return rangeSlider; }
-    StressRangeWidget* getStressRangeWidget() const { return stressRangeWidget; }
+    DensitySlider* getRangeSlider() const;
+    StressRangeWidget* getStressRangeWidget() const;
     MessageConsole* getMessageConsole() const { return messageConsole; }
     ObjectListWidget* getObjectListWidget() const { return objectListWidget; }
     PropertyWidget* getPropertyWidget() const { return propertyWidget; }
@@ -52,6 +60,7 @@ public:
     void setButtonIconSize(const QSize& size);
     
     // UIState連携メソッド
+    ProcessManagerWidget* getProcessManagerWidget() const { return processManagerWidget; }
     void connectUIStateSignals();
     void updateUIFromState();
     
@@ -92,17 +101,19 @@ private:
     QVTKOpenGLNativeWidget* vtkWidget;
     vtkSmartPointer<vtkGenericOpenGLRenderWindow> renderWindow;
     vtkSmartPointer<vtkRenderer> renderer;
+    ProcessManagerWidget* processManagerWidget = nullptr;
+    
     Button* openStlButton;
     Button* openVtkButton;
-    Button* openStepButton;
-    Button* constrainButton;
-    Button* loadButton;
-    Button* simulateButton;
-    Button* processButton;
+    // Button* openStepButton; // Replaced
+    // Button* constrainButton; // Replaced
+    // Button* loadButton; // Replaced
+    // Button* simulateButton; // Replaced
+    // Button* processButton; // Replaced
     Button* export3mfButton;
     ModeComboBox* modeComboBox;
-    DensitySlider* rangeSlider;
-    StressRangeWidget* stressRangeWidget;
+    // DensitySlider* rangeSlider; // Replaced
+    // StressRangeWidget* stressRangeWidget; // Replaced
     MessageConsole* messageConsole;
     ObjectListWidget* objectListWidget;
     PropertyWidget* propertyWidget;

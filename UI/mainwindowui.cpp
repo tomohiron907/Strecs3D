@@ -108,20 +108,8 @@ void MainWindowUI::createButtons()
     openVtkButton->setIcon(":/resources/icons/vtk.png");
     openVtkButton->setVisible(false);
 
-    openStepButton = new Button("Open STEP File", centralWidget);
-    openStepButton->setIcon(":/resources/icons/step.png");
-
-    constrainButton = new Button("Constraint", centralWidget);
-    loadButton = new Button("Load", centralWidget);
-
-    simulateButton = new Button("Simulate", centralWidget);
-
-    processButton = new Button("Process", centralWidget);
-    processButton->setIcon(":/resources/icons/process.png");
-    processButton->setIconDark(":/resources/icons/process_dark.png");
-    processButton->setEnabled(false);
-    processButton->setEmphasized(false);
-
+    // openStepButton, constrainButton, etc. are now managed by ProcessManagerWidget
+    
     export3mfButton = new Button("Export 3MF", centralWidget);
     export3mfButton->setIcon(":/resources/icons/export.png");
     export3mfButton->setIconDark(":/resources/icons/export_dark.png");
@@ -131,30 +119,24 @@ void MainWindowUI::createButtons()
 void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
 {
     QVBoxLayout* leftPaneLayout = new QVBoxLayout();
+    leftPaneLayout->setContentsMargins(0, 0, 0, 0); // Tight fit
     
-    rangeSlider = new DensitySlider(centralWidget);
-    stressRangeWidget = new StressRangeWidget(centralWidget);
+    // Process Manager Widget (The main content)
+    processManagerWidget = new ProcessManagerWidget(centralWidget);
+    // Pass UIState early if available, or wait for connectUIStateSignals
+    
+    // ModeComboBox (Keeping it visible for now, maybe move to InfillStep later)
     modeComboBox = new ModeComboBox(centralWidget);
+    
+    // Message Console
     messageConsole = new MessageConsole(centralWidget);
     messageConsole->setMinimumHeight(CONSOLE_MIN_HEIGHT);
 
-    leftPaneLayout->addWidget(openStepButton);
-
-    // Constraint と Load ボタンを横並びに配置
-    QHBoxLayout* buttonRowLayout = new QHBoxLayout();
-    buttonRowLayout->addWidget(constrainButton);
-    buttonRowLayout->addWidget(loadButton);
-    buttonRowLayout->setSpacing(LAYOUT_SPACING);
-    leftPaneLayout->addLayout(buttonRowLayout);
-
-    leftPaneLayout->addWidget(simulateButton);
-
-    leftPaneLayout->addWidget(rangeSlider);
-    leftPaneLayout->addWidget(stressRangeWidget);
+    leftPaneLayout->addWidget(processManagerWidget, 1); // Expanding
+    
+    // Global controls below the process flow
     leftPaneLayout->addWidget(modeComboBox);
-    leftPaneLayout->addWidget(processButton);
     leftPaneLayout->addWidget(messageConsole);
-    leftPaneLayout->addStretch();
 
     QWidget* leftPaneWidget = new QWidget(centralWidget);
     leftPaneWidget->setLayout(leftPaneLayout);
@@ -162,6 +144,49 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
     leftPaneWidget->setMaximumWidth(LEFT_PANE_MAX_WIDTH);
     leftPaneWidget->setParent(vtkParent);
     leftPaneWidget->setStyleSheet("QWidget { background-color:rgba(45, 45, 45, 0); border-radius: 10px; }");
+}
+
+// Implement Legacy Getters
+Button* MainWindowUI::getOpenStepButton() const {
+    if (processManagerWidget && processManagerWidget->getImportStep()) 
+        return processManagerWidget->getImportStep()->getImportButton();
+    return nullptr;
+}
+
+Button* MainWindowUI::getConstrainButton() const {
+    if (processManagerWidget && processManagerWidget->getBoundaryConditionStep())
+        return processManagerWidget->getBoundaryConditionStep()->getAddConstraintButton();
+    return nullptr;
+}
+
+Button* MainWindowUI::getLoadButton() const {
+    if (processManagerWidget && processManagerWidget->getBoundaryConditionStep())
+        return processManagerWidget->getBoundaryConditionStep()->getAddLoadButton();
+    return nullptr;
+}
+
+Button* MainWindowUI::getSimulateButton() const {
+    if (processManagerWidget && processManagerWidget->getSimulationStep())
+        return processManagerWidget->getSimulationStep()->getSimulateButton();
+    return nullptr;
+}
+
+Button* MainWindowUI::getProcessButton() const {
+    if (processManagerWidget && processManagerWidget->getInfillStep())
+        return processManagerWidget->getInfillStep()->getProcessButton();
+    return nullptr;
+}
+
+DensitySlider* MainWindowUI::getRangeSlider() const {
+    if (processManagerWidget && processManagerWidget->getInfillStep())
+        return processManagerWidget->getInfillStep()->getDensitySlider();
+    return nullptr;
+}
+
+StressRangeWidget* MainWindowUI::getStressRangeWidget() const {
+    if (processManagerWidget && processManagerWidget->getInfillStep())
+        return processManagerWidget->getInfillStep()->getStressRangeWidget();
+    return nullptr;
 }
 
 void MainWindowUI::createRightPaneWidget(QWidget* vtkParent)
@@ -257,66 +282,26 @@ void MainWindowUI::setButtonIconSize(const QSize& size)
     Button::setGlobalIconSize(size);
 
     // 既存のボタンのアイコンサイズを更新
-    if (openStlButton) {
-        openStlButton->setIconSize(size);
-    }
-    if (openVtkButton) {
-        openVtkButton->setIconSize(size);
-    }
-    if (openStepButton) {
-        openStepButton->setIconSize(size);
-    }
-    if (constrainButton) {
-        constrainButton->setIconSize(size);
-    }
-    if (loadButton) {
-        loadButton->setIconSize(size);
-    }
-    if (simulateButton) {
-        simulateButton->setIconSize(size);
-    }
-    if (processButton) {
-        processButton->setIconSize(size);
-    }
-    if (export3mfButton) {
-        export3mfButton->setIconSize(size);
-    }
+    if (openStlButton) openStlButton->setIconSize(size);
+    if (openVtkButton) openVtkButton->setIconSize(size);
+    
+    // Process widgets buttons
+    if (Button* btn = getOpenStepButton()) btn->setIconSize(size);
+    if (Button* btn = getConstrainButton()) btn->setIconSize(size);
+    if (Button* btn = getLoadButton()) btn->setIconSize(size);
+    if (Button* btn = getSimulateButton()) btn->setIconSize(size);
+    if (Button* btn = getProcessButton()) btn->setIconSize(size);
+
+    if (export3mfButton) export3mfButton->setIconSize(size);
 }
 
 void MainWindowUI::connectUIStateSignals()
 {
-    // StressRangeWidgetの変更をUIStateに反映
-    connect(stressRangeWidget, &StressRangeWidget::stressRangeChanged,
-            this, [this](double minStress, double maxStress) {
-                uiState->setStressRange(minStress, maxStress);
-            });
-
-    // DensitySliderの変更をUIStateに反映
-    connect(rangeSlider, &DensitySlider::regionPercentsChanged,
-            this, [this](const std::vector<double>& percents) {
-                // スライダーの色をUIStateに登録
-                auto colors = rangeSlider->getRegionColors();
-                uiState->setDensitySliderColors(colors);
-            });
-
-    // DensitySliderのハンドル位置変更時も色を更新
-    connect(rangeSlider, &DensitySlider::handlePositionsChanged,
-            this, [this](const std::vector<int>& positions) {
-                // スライダーの色をUIStateに登録
-                auto colors = rangeSlider->getRegionColors();
-                uiState->setDensitySliderColors(colors);
-            });
+    // ProcessManager handles its own connections
+    if (processManagerWidget) {
+        processManagerWidget->setUIState(uiState);
+    }
     
-    // 初期色をUIStateに設定
-    QTimer::singleShot(0, this, [this]() {
-        auto colors = rangeSlider->getRegionColors();
-        std::cout << "Debug: Setting initial " << colors.size() << " colors to UIState" << std::endl;
-        for (size_t i = 0; i < colors.size(); ++i) {
-            std::cout << "  Color " << i << ": RGB(" << colors[i].red() << "," << colors[i].green() << "," << colors[i].blue() << ")" << std::endl;
-        }
-        uiState->setDensitySliderColors(colors);
-    });
-
     // ModeComboBoxの変更をUIStateに反映
     connect(modeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, [this](int index) {
@@ -334,8 +319,8 @@ void MainWindowUI::connectUIStateSignals()
 void MainWindowUI::updateUIFromState()
 {
     // UIStateの値をUIコンポーネントに反映
-    if (stressRangeWidget) {
-        stressRangeWidget->setStressRange(uiState->getMinStress(), uiState->getMaxStress());
+    if (StressRangeWidget* srw = getStressRangeWidget()) {
+        srw->setStressRange(uiState->getMinStress(), uiState->getMaxStress());
     }
 
     if (modeComboBox) {
@@ -347,4 +332,5 @@ void MainWindowUI::updateUIFromState()
         }
         modeComboBox->setCurrentIndex(index);
     }
-} 
+}
+ 

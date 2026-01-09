@@ -158,6 +158,11 @@ void MainWindow::openSTEPFile()
             logMessage(QString("Converted STL file generated: %1").arg(convertedStlPath));
         }
     }
+    
+    // Notify ProcessManager to advance step
+    if (ui->getProcessManagerWidget()) {
+        ui->getProcessManagerWidget()->onImportCompleted();
+    }
 
     updateProcessButtonState();
 }
@@ -549,6 +554,11 @@ void MainWindow::onSimulateButtonClicked()
     command->execute();
 
     logMessage("FEM analysis pipeline completed.");
+
+    // Notify ProcessManager to advance step
+    if (ui->getProcessManagerWidget()) {
+        ui->getProcessManagerWidget()->onSimulationCompleted();
+    }
 
     updateProcessButtonState();
 }
