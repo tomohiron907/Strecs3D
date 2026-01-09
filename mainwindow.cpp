@@ -24,8 +24,7 @@
 #include <QMessageBox>
 #include <QDir>
 #include <QFileInfo>
-#include <iostream>
-#include <functional>
+
 #include <memory>
 
 MainWindow::MainWindow(QWidget* parent)
@@ -38,11 +37,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 void MainWindow::logMessage(const QString& message)
 {
-    if (ui && ui->getMessageConsole()) {
-        ui->getMessageConsole()->appendMessage(message);
-    } else {
-        qWarning() << "Unable to log message - UI console not available:" << message;
-    }
+    qDebug() << message;
 }
 
 void MainWindow::initializeComponents()

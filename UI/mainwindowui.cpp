@@ -8,7 +8,7 @@
 #include <QPixmap>
 #include <QFrame>
 #include <QTimer>
-#include <iostream>
+
 #include "widgets/Button.h"
 #include "ColorManager.h"
 
@@ -128,15 +128,11 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
     // ModeComboBox (Keeping it visible for now, maybe move to InfillStep later)
     modeComboBox = new ModeComboBox(centralWidget);
     
-    // Message Console
-    messageConsole = new MessageConsole(centralWidget);
-    messageConsole->setMinimumHeight(CONSOLE_MIN_HEIGHT);
-
     leftPaneLayout->addWidget(processManagerWidget, 1); // Expanding
     
     // Global controls below the process flow
     leftPaneLayout->addWidget(modeComboBox);
-    leftPaneLayout->addWidget(messageConsole);
+    // Message Console removed
 
     QWidget* leftPaneWidget = new QWidget(centralWidget);
     leftPaneWidget->setLayout(leftPaneLayout);

@@ -13,7 +13,7 @@
 #include "widgets/process/steps/InfillStepWidget.h"
 #include "widgets/DensitySlider.h"
 #include "widgets/StressRangeWidget.h"
-#include "widgets/MessageConsole.h"
+#include "widgets/StressRangeWidget.h"
 #include "widgets/Button.h"
 #include <QVTKOpenGLNativeWidget.h>
 #include <vtkGenericOpenGLRenderWindow.h>
@@ -51,7 +51,6 @@ public:
     ModeComboBox* getModeComboBox() const { return modeComboBox; }
     DensitySlider* getRangeSlider() const;
     StressRangeWidget* getStressRangeWidget() const;
-    MessageConsole* getMessageConsole() const { return messageConsole; }
     ObjectListWidget* getObjectListWidget() const { return objectListWidget; }
     PropertyWidget* getPropertyWidget() const { return propertyWidget; }
     UIState* getUIState() const { return uiState; }
@@ -82,7 +81,6 @@ private:
     static constexpr int RIGHT_PANE_WIDTH = 320;
     static constexpr int DISPLAY_OPTIONS_WIDTH = 300;
     static constexpr int WIDGET_MARGIN = 20;
-    static constexpr int CONSOLE_MIN_HEIGHT = 200;
     static constexpr int ICON_SIZE = 25;
     static constexpr int LAYOUT_SPACING = 10;
     static constexpr int EXPORT_BUTTON_TOP_SPACING = 50;
@@ -114,7 +112,6 @@ private:
     ModeComboBox* modeComboBox;
     // DensitySlider* rangeSlider; // Replaced
     // StressRangeWidget* stressRangeWidget; // Replaced
-    MessageConsole* messageConsole;
     ObjectListWidget* objectListWidget;
     PropertyWidget* propertyWidget;
     QWidget* rightPaneWidget;
