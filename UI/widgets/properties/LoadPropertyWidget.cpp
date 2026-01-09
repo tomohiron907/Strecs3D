@@ -227,13 +227,14 @@ void LoadPropertyWidget::updateOkButtonStyle()
         m_okButton->setStyleSheet(
             QString("QPushButton { background-color: %1; color: %2; border: 1px solid %3; "
                     "padding: 8px 16px; border-radius: 4px; font-weight: bold; }"
-                    "QPushButton:hover { background-color: %4; }"
+                    "QPushButton:hover { background-color: %4; color: %6; }"
                     "QPushButton:pressed { background-color: %5; }")
             .arg(ColorManager::BUTTON_EMPHASIZED_COLOR.name())
             .arg(ColorManager::BUTTON_COLOR.name())
             .arg(ColorManager::BUTTON_EDGE_COLOR.name())
             .arg(ColorManager::BUTTON_HOVER_COLOR.name())
             .arg(ColorManager::BUTTON_PRESSED_COLOR.name())
+            .arg(ColorManager::BUTTON_TEXT_COLOR.name())
         );
     } else {
         // 無効時: グレーアウト
