@@ -432,9 +432,26 @@ void MainWindow::onConstrainButtonClicked()
     UIState* state = getUIState();
     if (!state) return;
 
+    // Generate a unique name for the new constraint
+    BoundaryCondition bc = state->getBoundaryCondition();
+    int nextId = 1;
+    std::string newName;
+    while (true) {
+        newName = "Constraint" + std::to_string(nextId);
+        bool exists = false;
+        for (const auto& c : bc.constraints) {
+            if (c.name == newName) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) break;
+        nextId++;
+    }
+
     // Create a new default constraint
     ConstraintCondition constraint;
-    constraint.name = "New Constraint";
+    constraint.name = newName;
     constraint.surface_id = 0; // Default (empty)
 
     // Command pattern: Add constraint
@@ -450,7 +467,7 @@ void MainWindow::onConstrainButtonClicked()
     int index = state->getBoundaryCondition().constraints.size() - 1;
     state->setSelectedObject(ObjectType::ITEM_BC_CONSTRAINT, "", index);
     
-    logMessage("Added new Constraint Condition.");
+    logMessage("Added new Constraint Condition: " + QString::fromStdString(newName));
 }
 
 void MainWindow::onLoadButtonClicked()
@@ -458,9 +475,26 @@ void MainWindow::onLoadButtonClicked()
     UIState* state = getUIState();
     if (!state) return;
 
+    // Generate a unique name for the new load
+    BoundaryCondition bc = state->getBoundaryCondition();
+    int nextId = 1;
+    std::string newName;
+    while (true) {
+        newName = "Load" + std::to_string(nextId);
+        bool exists = false;
+        for (const auto& l : bc.loads) {
+            if (l.name == newName) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) break;
+        nextId++;
+    }
+
     // Create a new default load
     LoadCondition load;
-    load.name = "New Load";
+    load.name = newName;
     load.surface_id = 0; // Default (empty)
     load.magnitude = 10.0;
     load.direction = {0, 0, -1}; // Default Z down
@@ -477,7 +511,7 @@ void MainWindow::onLoadButtonClicked()
     int index = state->getBoundaryCondition().loads.size() - 1;
     state->setSelectedObject(ObjectType::ITEM_BC_LOAD, "", index);
     
-    logMessage("Added new Load Condition.");
+    logMessage("Added new Load Condition: " + QString::fromStdString(newName));
 }
 
 void MainWindow::onSimulateButtonClicked()
