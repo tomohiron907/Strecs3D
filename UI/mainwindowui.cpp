@@ -247,7 +247,13 @@ void MainWindowUI::setupWidgetPositioning()
     }
 
     if (leftPaneWidget) {
+        // adjustSize() ensures the width fits the content (up to max width)
         leftPaneWidget->adjustSize();
+        
+        // Force height to match window height (minus margins)
+        int h = vtkWidget->height() - (WIDGET_MARGIN * 2);
+        leftPaneWidget->resize(leftPaneWidget->width(), h);
+        
         leftPaneWidget->move(WIDGET_MARGIN, WIDGET_MARGIN);
         leftPaneWidget->raise();
         leftPaneWidget->show();
