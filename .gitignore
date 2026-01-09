@@ -49,3 +49,4 @@ vcpkg_installed/
 .cache/
 
 .gemini/
+.agent/

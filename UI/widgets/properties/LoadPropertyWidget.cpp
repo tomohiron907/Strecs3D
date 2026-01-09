@@ -6,6 +6,8 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSpacerItem>
+#include <QIntValidator>
+#include <QDoubleValidator>
 #include <QDebug>
 
 LoadPropertyWidget::LoadPropertyWidget(QWidget* parent)
@@ -35,30 +37,46 @@ void LoadPropertyWidget::setupUI()
     
     // Labels style
     QString labelStyle = "color: #aaaaaa;";
-    QString inputStyle = "color: white; background-color: #333; border: 1px solid #555; padding: 4px;";
+    // Updated input style: unified width, rounded corners, min-height to prevent collapse
+    QString inputStyle = "color: white; background-color: #333; border: 1px solid #555; padding: 4px; border-radius: 4px; min-height: 20px;";
     
     // Name
     m_nameEdit = new QLineEdit();
     m_nameEdit->setStyleSheet(inputStyle);
+    m_nameEdit->setFixedWidth(100);
     connect(m_nameEdit, &QLineEdit::editingFinished, this, &LoadPropertyWidget::pushData);
     layout->addRow(new QLabel("Name:"), m_nameEdit);
     
     // Surface ID
-    m_surfaceIdSpinBox = new QSpinBox();
-    m_surfaceIdSpinBox->setRange(0, 99999);
-    // 0 is represented as empty or "-"
-    m_surfaceIdSpinBox->setSpecialValueText("-");
-    m_surfaceIdSpinBox->setStyleSheet(inputStyle);
-    connect(m_surfaceIdSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int){ pushData(); });
-    layout->addRow(new QLabel("Surface ID:"), m_surfaceIdSpinBox);
+    m_surfaceIdEdit = new QLineEdit();
+    m_surfaceIdEdit->setValidator(new QIntValidator(0, 99999, this));
+    m_surfaceIdEdit->setStyleSheet(inputStyle);
+    m_surfaceIdEdit->setFixedWidth(100);
+    connect(m_surfaceIdEdit, &QLineEdit::editingFinished, this, &LoadPropertyWidget::pushData);
+    connect(m_surfaceIdEdit, &QLineEdit::textChanged, this, &LoadPropertyWidget::updateOkButtonState); // Update OK button immediately on type
+    layout->addRow(new QLabel("Surface ID:"), m_surfaceIdEdit);
     
-    // Magnitude
-    m_magnitudeSpinBox = new QDoubleSpinBox();
-    m_magnitudeSpinBox->setRange(-1e9, 1e9);
-    m_magnitudeSpinBox->setSingleStep(1.0);
-    m_magnitudeSpinBox->setStyleSheet(inputStyle);
-    connect(m_magnitudeSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double){ pushData(); });
-    layout->addRow(new QLabel("Magnitude:"), m_magnitudeSpinBox);
+    // Magnitude (Value) with Unit "N"
+    QWidget* valueContainer = new QWidget();
+    valueContainer->setStyleSheet(".QWidget { " + inputStyle + " }"); // Apply input style to container
+    valueContainer->setFixedWidth(100);
+    QHBoxLayout* valueLayout = new QHBoxLayout(valueContainer);
+    valueLayout->setContentsMargins(0, 0, 10, 0); // Right margin for 'N'
+    valueLayout->setSpacing(2);
+
+    m_magnitudeEdit = new QLineEdit();
+    m_magnitudeEdit->setValidator(new QDoubleValidator(-1e9, 1e9, 3, this));
+    // Transparent background/border for inner edit, text color white
+    m_magnitudeEdit->setStyleSheet("QLineEdit { background: transparent; border: none; color: white; padding: 0px; }");
+    connect(m_magnitudeEdit, &QLineEdit::editingFinished, this, &LoadPropertyWidget::pushData);
+    
+    QLabel* unitLabel = new QLabel("N");
+    unitLabel->setStyleSheet("color: #aaaaaa; border: none; background: transparent; font-size: 12px;");
+    
+    valueLayout->addWidget(m_magnitudeEdit);
+    valueLayout->addWidget(unitLabel);
+
+    layout->addRow(new QLabel("Value:"), valueContainer);
 
     // Reference Edge Selection
     QString buttonStyle = "color: white; background-color: #444; border: 1px solid #666; padding: 6px; border-radius: 3px;";
@@ -83,10 +101,9 @@ void LoadPropertyWidget::setupUI()
     layout->addRow(new QLabel("Reference Edge:"), edgeWidget);
 
     // Direction Display (read-only)
-    m_directionDisplay = new QLineEdit();
-    m_directionDisplay->setReadOnly(true);
-    m_directionDisplay->setStyleSheet(inputStyle + " color: #aaaaaa;");
-    m_directionDisplay->setText("(0.000, 0.000, 0.000)");
+    // Direction Display (simple numeric display)
+    m_directionDisplay = new QLabel("(0.000, 0.000, 0.000)");
+    m_directionDisplay->setStyleSheet(labelStyle); // Just text style, no border
     layout->addRow(new QLabel("Direction:"), m_directionDisplay);
     
     // Apply label style
@@ -114,7 +131,9 @@ void LoadPropertyWidget::setupUI()
     layout->addRow("", okButtonContainer);
     
     // surface_idが変更されたらOKボタンの状態も更新
-    connect(m_surfaceIdSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &LoadPropertyWidget::updateOkButtonState);
+    // surface_idが変更されたらOKボタンの状態も更新
+    // connected in m_surfaceIdEdit connection above
+    // connect(m_surfaceIdSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &LoadPropertyWidget::updateOkButtonState);
 }
 
 void LoadPropertyWidget::updateData()
@@ -132,13 +151,13 @@ void LoadPropertyWidget::updateData()
     m_nameEdit->setText(QString::fromStdString(l.name));
     m_nameEdit->blockSignals(false);
     
-    m_surfaceIdSpinBox->blockSignals(true);
-    m_surfaceIdSpinBox->setValue(l.surface_id);
-    m_surfaceIdSpinBox->blockSignals(false);
+    m_surfaceIdEdit->blockSignals(true);
+    m_surfaceIdEdit->setText(QString::number(l.surface_id));
+    m_surfaceIdEdit->blockSignals(false);
     
-    m_magnitudeSpinBox->blockSignals(true);
-    m_magnitudeSpinBox->setValue(l.magnitude);
-    m_magnitudeSpinBox->blockSignals(false);
+    m_magnitudeEdit->blockSignals(true);
+    m_magnitudeEdit->setText(QString::number(l.magnitude));
+    m_magnitudeEdit->blockSignals(false);
 
     // Update edge selection display
     if (l.reference_edge_id > 0) {
@@ -168,8 +187,8 @@ void LoadPropertyWidget::pushData()
     
     LoadCondition l = bc.loads[m_currentIndex];
     l.name = m_nameEdit->text().toStdString();
-    l.surface_id = m_surfaceIdSpinBox->value();
-    l.magnitude = m_magnitudeSpinBox->value();
+    l.surface_id = m_surfaceIdEdit->text().toInt();
+    l.magnitude = m_magnitudeEdit->text().toDouble();
 
     // Note: direction and reference_edge_id are set by updateDirectionFromEdge()
     // or by face click in MainWindow::onFaceClicked()
@@ -230,10 +249,10 @@ void LoadPropertyWidget::updateOkButtonStyle()
 
 void LoadPropertyWidget::updateOkButtonState()
 {
-    if (!m_okButton || !m_surfaceIdSpinBox) return;
+    if (!m_okButton || !m_surfaceIdEdit) return;
 
     // surface_idが0以外の場合にOKボタンを有効化
-    bool hasValidSurface = m_surfaceIdSpinBox->value() > 0;
+    bool hasValidSurface = m_surfaceIdEdit->text().toInt() > 0;
     m_okButton->setEnabled(hasValidSurface);
     updateOkButtonStyle();
 }

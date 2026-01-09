@@ -44,13 +44,13 @@ private:
     bool m_isSelectingEdge = false;
 
     QLineEdit* m_nameEdit;
-    QSpinBox* m_surfaceIdSpinBox;
-    QDoubleSpinBox* m_magnitudeSpinBox;
+    QLineEdit* m_surfaceIdEdit;
+    QLineEdit* m_magnitudeEdit;
 
     // Edge selection UI
     QPushButton* m_referenceEdgeButton;
     QLabel* m_selectedEdgeLabel;
-    QLineEdit* m_directionDisplay;  // Read-only direction display
+    QLabel* m_directionDisplay;  // Simple numeric display
 
     QPushButton* m_okButton;
 

@@ -462,7 +462,7 @@ void MainWindow::onLoadButtonClicked()
     LoadCondition load;
     load.name = "New Load";
     load.surface_id = 0; // Default (empty)
-    load.magnitude = 100.0;
+    load.magnitude = 10.0;
     load.direction = {0, 0, -1}; // Default Z down
 
     // Command pattern: Add load
