@@ -15,8 +15,9 @@ StepPickerStyle::StepPickerStyle()
     , renderer_(nullptr)
     , hasOriginalColor_(false)
 {
-    picker_ = vtkSmartPointer<vtkPropPicker>::New();
+    picker_ = vtkSmartPointer<vtkCellPicker>::New();
     picker_->PickFromListOn();
+    picker_->SetTolerance(0.005); // 感度向上: 画面サイズの0.5%の許容誤差
 
     // ラベルの設定 - 2Dテキストアクター
     label_ = vtkSmartPointer<vtkTextActor>::New();

@@ -2,7 +2,7 @@
 
 #include "TurntableInteractorStyle.h"
 #include <vtkSmartPointer.h>
-#include <vtkPropPicker.h>
+#include <vtkCellPicker.h>
 #include <vtkActor.h>
 #include <vtkTextActor.h>
 #include <vtkTextProperty.h>
@@ -40,7 +40,7 @@ protected:
     ~StepPickerStyle() override = default;
 
 private:
-    vtkSmartPointer<vtkPropPicker> picker_;
+    vtkSmartPointer<vtkCellPicker> picker_;
     vtkSmartPointer<vtkTextActor> label_;
     std::vector<vtkSmartPointer<vtkActor>> faceActors_;
     std::vector<vtkSmartPointer<vtkActor>> edgeActors_;

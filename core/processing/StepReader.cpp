@@ -7,6 +7,8 @@
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopExp_Explorer.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
+#include <TopExp.hxx>
 #include <BRep_Tool.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <Poly_Triangulation.hxx>
@@ -412,9 +414,12 @@ std::vector<vtkSmartPointer<vtkActor>> StepReader::getEdgeActors() const
         return edgeActors;
     }
 
-    // 各エッジを個別のアクターとして作成
-    for (TopExp_Explorer edgeExp(*shape_, TopAbs_EDGE); edgeExp.More(); edgeExp.Next()) {
-        TopoDS_Edge edge = TopoDS::Edge(edgeExp.Current());
+    // 各エッジを個別のアクターとして作成（重複を避けるためにMapを使用）
+    TopTools_IndexedMapOfShape map;
+    TopExp::MapShapes(*shape_, TopAbs_EDGE, map);
+
+    for (int i = 1; i <= map.Extent(); ++i) {
+        TopoDS_Edge edge = TopoDS::Edge(map(i));
 
         if (BRep_Tool::Degenerated(edge)) {
             // 縮退したエッジでも、インデックスを合わせるためにダミーのアクター（またはnullptr）を入れるべきか？
