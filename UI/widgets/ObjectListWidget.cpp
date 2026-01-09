@@ -1,6 +1,9 @@
 #include "ObjectListWidget.h"
 #include <QHeaderView>
 #include <QDebug>
+#include <QMenu>
+#include <QAction>
+#include <QCursor>
 
 ObjectListWidget::ObjectListWidget(QWidget* parent)
     : QTreeWidget(parent)
@@ -16,6 +19,9 @@ void ObjectListWidget::setupUI()
     setIndentation(20);
     setSelectionMode(QAbstractItemView::SingleSelection);
     setAnimated(true);
+    
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, &ObjectListWidget::customContextMenuRequested, this, &ObjectListWidget::onCustomContextMenuRequested);
     
     // スタイル設定（オプション）
     // スタイル設定（オプション）
@@ -316,5 +322,37 @@ void ObjectListWidget::selectObject(ObjectType type, const QString& id, int inde
             }
         }
         ++it;
+    }
+}
+
+void ObjectListWidget::onCustomContextMenuRequested(const QPoint& pos)
+{
+    QTreeWidgetItem* item = itemAt(pos);
+    if (!item) return;
+
+    ObjectTreeItem* objItem = dynamic_cast<ObjectTreeItem*>(item);
+    if (!objItem) return;
+
+    // Check if it's a Load or Constraint item
+    if (objItem->type == ObjectType::ITEM_BC_CONSTRAINT || 
+        objItem->type == ObjectType::ITEM_BC_LOAD) {
+        
+        QMenu menu(this);
+        menu.setStyleSheet("QMenu { background-color: #2b2b2b; border: 1px solid #3a3a3a; }"
+                           "QMenu::item { color: #ff5555; padding: 4px 20px; }"
+                           "QMenu::item:selected { background-color: #3a3a3a; }");
+                           
+        QAction* deleteAction = menu.addAction("Delete");
+        
+        // Execute menu at cursor position
+        QAction* selectedAction = menu.exec(QCursor::pos());
+        
+        if (selectedAction == deleteAction && m_uiState) {
+            if (objItem->type == ObjectType::ITEM_BC_CONSTRAINT) {
+                m_uiState->removeConstraintCondition(objItem->index);
+            } else if (objItem->type == ObjectType::ITEM_BC_LOAD) {
+                m_uiState->removeLoadCondition(objItem->index);
+            }
+        }
     }
 }

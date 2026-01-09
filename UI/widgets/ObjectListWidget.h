@@ -42,6 +42,7 @@ private slots:
     void onSimResultInfoChanged(const ObjectFileInfo& info);
     void onInfillRegionAdded(const QString& key, const InfillRegionInfo& info);
     void onBoundaryConditionChanged(const BoundaryCondition& bc);
+    void onCustomContextMenuRequested(const QPoint& pos);
 
 private:
     void setupUI();
