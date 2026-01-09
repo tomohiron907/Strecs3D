@@ -39,10 +39,11 @@ void ConstraintPropertyWidget::setupUI()
     // Labels style
     QString labelStyle = "color: #aaaaaa;";
     
-    // Name
-    m_nameEdit = new QLineEdit();
     // Updated input style: unified width, rounded corners, min-height to prevent collapse
-    QString inputStyle = "color: white; background-color: #333; border: 1px solid #555; padding: 4px; border-radius: 4px; min-height: 20px;";
+    QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: 4px; border-radius: 4px; min-height: 20px; selection-background-color: #555555; }")
+        .arg(ColorManager::INPUT_TEXT_COLOR.name())
+        .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
+        .arg(ColorManager::INPUT_BORDER_COLOR.name());
     
     // Name
     m_nameEdit = new QLineEdit();

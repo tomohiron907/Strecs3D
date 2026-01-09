@@ -27,6 +27,11 @@ public:
     // Density slider handle colors
     static const QColor HANDLE_COLOR;         // ハンドル色（線と三角形）
     
+    // Input field colors
+    static const QColor INPUT_BACKGROUND_COLOR; // #333333
+    static const QColor INPUT_TEXT_COLOR;       // white
+    static const QColor INPUT_BORDER_COLOR;     // #555555
+
     // Coordinate axes colors
     static const QColor X_AXIS_COLOR;         // X軸色（赤）
     static const QColor Y_AXIS_COLOR;         // Y軸色（緑）

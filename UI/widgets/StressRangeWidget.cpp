@@ -1,4 +1,5 @@
 #include "StressRangeWidget.h"
+#include "../ColorManager.h"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QDoubleValidator>
@@ -11,15 +12,22 @@ StressRangeWidget::StressRangeWidget(QWidget* parent)
     layout->setContentsMargins(0, 0, 0, 0);
     
     // ラベル
+    // ラベル
     m_label = new QLabel("Stress Range:", this);
     m_label->setStyleSheet("color: white; font-weight: bold;");
     layout->addWidget(m_label);
+    
+    QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: 4px; border-radius: 4px; selection-background-color: #555555; }")
+        .arg(ColorManager::INPUT_TEXT_COLOR.name())
+        .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
+        .arg(ColorManager::INPUT_BORDER_COLOR.name());
     
     // 最小値入力欄
     m_minStressEdit = new QLineEdit(this);
     m_minStressEdit->setFixedWidth(80);
     m_minStressEdit->setPlaceholderText("Min");
     m_minStressEdit->setValidator(new QDoubleValidator(this));
+    m_minStressEdit->setStyleSheet(inputStyle);
     m_minStressEdit->setText("0");
     layout->addWidget(m_minStressEdit);
     
@@ -33,6 +41,7 @@ StressRangeWidget::StressRangeWidget(QWidget* parent)
     m_maxStressEdit->setFixedWidth(80);
     m_maxStressEdit->setPlaceholderText("Max");
     m_maxStressEdit->setValidator(new QDoubleValidator(this));
+    m_maxStressEdit->setStyleSheet(inputStyle);
     m_maxStressEdit->setText("1");
     layout->addWidget(m_maxStressEdit);
     

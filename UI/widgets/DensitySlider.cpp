@@ -26,6 +26,10 @@ DensitySlider::DensitySlider(QWidget* parent)
         QLineEdit* edit = new QLineEdit(this);
         edit->setFixedWidth(40);
         edit->setAlignment(Qt::AlignCenter);
+        edit->setStyleSheet(QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; border-radius: 3px; selection-background-color: #555555; }")
+            .arg(ColorManager::INPUT_TEXT_COLOR.name())
+            .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
+            .arg(ColorManager::INPUT_BORDER_COLOR.name()));
         edit->setText(QString::number(m_regionPercents[i], 'g', 2));
         edit->setValidator(new QDoubleValidator(0, 100, 2, edit));
         connect(edit, &QLineEdit::editingFinished, this, &DensitySlider::onPercentEditChanged);

@@ -19,6 +19,9 @@ const QColor ColorManager::X_AXIS_COLOR = QColor(255, 77, 0, 255);              
 const QColor ColorManager::Y_AXIS_COLOR = QColor(0, 150, 0, 255);               // Y軸色（緑）
 const QColor ColorManager::Z_AXIS_COLOR = QColor(0, 76, 161, 255);               // Z軸色（青）
 const QColor ColorManager::ORIGIN_COLOR = QColor(255, 255, 255, 255);           // 原点色（白）
+const QColor ColorManager::INPUT_BACKGROUND_COLOR = QColor("#242424");
+const QColor ColorManager::INPUT_TEXT_COLOR = QColor("white");
+const QColor ColorManager::INPUT_BORDER_COLOR = QColor("#4b4b4b");
 
 // Gradient color calculation
 QColor ColorManager::getGradientColor(double t) {

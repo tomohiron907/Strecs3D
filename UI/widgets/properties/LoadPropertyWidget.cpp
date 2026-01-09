@@ -38,7 +38,10 @@ void LoadPropertyWidget::setupUI()
     // Labels style
     QString labelStyle = "color: #aaaaaa;";
     // Updated input style: unified width, rounded corners, min-height to prevent collapse
-    QString inputStyle = "color: white; background-color: #333; border: 1px solid #555; padding: 4px; border-radius: 4px; min-height: 20px;";
+    QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: 4px; border-radius: 4px; min-height: 20px; selection-background-color: #555555; }")
+        .arg(ColorManager::INPUT_TEXT_COLOR.name())
+        .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
+        .arg(ColorManager::INPUT_BORDER_COLOR.name());
     
     // Name
     m_nameEdit = new QLineEdit();
@@ -58,7 +61,12 @@ void LoadPropertyWidget::setupUI()
     
     // Magnitude (Value) with Unit "N"
     QWidget* valueContainer = new QWidget();
-    valueContainer->setStyleSheet(".QWidget { " + inputStyle + " }"); // Apply input style to container
+    // Build style for container using ColorManager constants to match QLineEdit look
+    QString containerStyle = QString(".QWidget { color: %1; background-color: %2; border: 1px solid %3; padding: 4px; border-radius: 3px; min-height: 20px; }")
+        .arg(ColorManager::INPUT_TEXT_COLOR.name())
+        .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
+        .arg(ColorManager::INPUT_BORDER_COLOR.name());
+    valueContainer->setStyleSheet(containerStyle);
     valueContainer->setFixedWidth(100);
     QHBoxLayout* valueLayout = new QHBoxLayout(valueContainer);
     valueLayout->setContentsMargins(0, 0, 10, 0); // Right margin for 'N'
