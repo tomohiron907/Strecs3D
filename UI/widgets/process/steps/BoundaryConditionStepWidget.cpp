@@ -17,7 +17,8 @@ BoundaryConditionStepWidget::BoundaryConditionStepWidget(QWidget* parent) : QWid
 
     layout->addWidget(m_addConstraintButton);
     layout->addWidget(m_addLoadButton);
-    layout->addStretch();
+    
+    layout->addSpacing(20); // Small gap
     
     // Done Button
     m_doneButton = new Button("Apply Simulation Settings", this);
@@ -26,6 +27,7 @@ BoundaryConditionStepWidget::BoundaryConditionStepWidget(QWidget* parent) : QWid
     connect(m_doneButton, &Button::clicked, this, &BoundaryConditionStepWidget::doneClicked);
     
     layout->addWidget(m_doneButton);
+    layout->addStretch();
 }
 
 void BoundaryConditionStepWidget::setUIState(UIState* uiState)
