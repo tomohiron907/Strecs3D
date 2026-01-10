@@ -63,9 +63,10 @@ void ProcessCard::updateStyle() {
     QString textColor;
     
     if (m_isActive) {
-        // Active: Distinct Blue Background
-        bgColor = "rgba(0, 120, 215, 0.4)"; // More opaque blue (40%)
-        borderColor = "rgba(0, 120, 215, 0.4)";  // Bright blue border
+        // Active: Distinct Blue Background from ColorManager
+        QColor accent = ColorManager::ACCENT_COLOR;
+        bgColor = QString("rgba(%1, %2, %3, 102)").arg(accent.red()).arg(accent.green()).arg(accent.blue()); // ~40% opacity
+        borderColor = QString("rgba(%1, %2, %3, 102)").arg(accent.red()).arg(accent.green()).arg(accent.blue());
         textColor = "#FFFFFF";
     } else if (m_isCompleted) {
         // Completed: Standard border

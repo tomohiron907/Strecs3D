@@ -22,6 +22,7 @@ const QColor ColorManager::ORIGIN_COLOR = QColor(255, 255, 255, 255);           
 const QColor ColorManager::INPUT_BACKGROUND_COLOR = QColor("#242424");
 const QColor ColorManager::INPUT_TEXT_COLOR = QColor("white");
 const QColor ColorManager::INPUT_BORDER_COLOR = QColor("#4b4b4b");
+const QColor ColorManager::ACCENT_COLOR = QColor("#0078D7");
 
 // Gradient color calculation
 QColor ColorManager::getGradientColor(double t) {

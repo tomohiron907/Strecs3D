@@ -1,5 +1,6 @@
 #include "ImportStepWidget.h"
 #include "../../Button.h"
+#include "../../../ColorManager.h"
 #include <QVBoxLayout>
 #include <QDragEnterEvent>
 #include <QDropEvent>
@@ -38,15 +39,17 @@ void DropAreaWidget::dragEnterEvent(QDragEnterEvent* event) {
             
             if (ext == "step" || ext == "stp") {
                 event->acceptProposedAction();
-                setStyleSheet(R"(
-                    QLabel {
-                        border: 2px dashed #0078D7;
-                        border-radius: 8px;
-                        color: #0078D7;
-                        background-color: rgba(0, 120, 215, 40);
-                        font-size: 14px;
-                    }
-                )");
+                QColor accent = ColorManager::ACCENT_COLOR;
+                setStyleSheet(QString(
+                    "QLabel {"
+                    "    border: 2px dashed %1;"
+                    "    border-radius: 8px;"
+                    "    color: %1;"
+                    "    background-color: rgba(%2, %3, %4, 40);"
+                    "    font-size: 14px;"
+                    "}"
+                ).arg(accent.name())
+                 .arg(accent.red()).arg(accent.green()).arg(accent.blue()));
                 return;
             }
         }
