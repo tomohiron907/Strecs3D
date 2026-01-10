@@ -75,6 +75,12 @@ void MainWindow::connectSignals()
     connect(ui->getUIState(), &UIState::boundaryConditionChanged,
             this, &MainWindow::onBoundaryConditionChanged);
 
+    // ProcessManagerWidget signals
+    if (ui->getProcessManagerWidget()) {
+        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::importFile,
+                this, &MainWindow::loadSTEPFile);
+    }
+
     // Connect face selection signal from VisualizationManager
     if (uiAdapter && uiAdapter->getVisualizationManager()) {
         connect(uiAdapter->getVisualizationManager(), &VisualizationManager::faceClicked,
@@ -129,6 +135,11 @@ void MainWindow::openSTEPFile()
                                                      "Open STEP File",
                                                      QDir::homePath(),
                                                      "STEP Files (*.step *.stp)");
+    loadSTEPFile(fileName);
+}
+
+void MainWindow::loadSTEPFile(const QString& fileName)
+{
     if (fileName.isEmpty()) {
         return;
     }

@@ -31,6 +31,7 @@ public:
     // (We will connect these to MainWindow slots)
 signals:
     void importStepClicked();
+    void importFile(const QString& filePath);
     void addLoadClicked();
     void addConstraintClicked();
     void simulateClicked();

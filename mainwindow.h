@@ -29,6 +29,7 @@ public:
 public slots:
     void openVTKFile();
     void openSTEPFile();
+    void loadSTEPFile(const QString& fileName);
     void processFiles();
     void export3mfFile();
     void onStepObjectVisibilityChanged(bool visible);

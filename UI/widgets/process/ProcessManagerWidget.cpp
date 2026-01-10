@@ -86,6 +86,7 @@ void ProcessManagerWidget::connectSignals()
     
     // Import Step
     connect(m_importWidget, &ImportStepWidget::importClicked, this, &ProcessManagerWidget::importStepClicked);
+    connect(m_importWidget, &ImportStepWidget::fileDropped, this, &ProcessManagerWidget::importFile);
     
     // BC Step
     connect(m_bcWidget, &BoundaryConditionStepWidget::addLoadClicked, this, &ProcessManagerWidget::addLoadClicked);
