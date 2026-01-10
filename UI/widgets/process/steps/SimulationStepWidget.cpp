@@ -6,7 +6,6 @@
 
 SimulationStepWidget::SimulationStepWidget(QWidget* parent) : QWidget(parent) {
     QVBoxLayout* layout = new QVBoxLayout(this);
-    layout->addStretch();
 
     m_simulateButton = new Button("Simulate", this);
     m_simulateButton->setMinimumHeight(50);
@@ -21,8 +20,8 @@ SimulationStepWidget::SimulationStepWidget(QWidget* parent) : QWidget(parent) {
     m_progressBar->setValue(0);
     m_progressBar->setTextVisible(true);
     m_progressBar->setFormat("%p%");
-    m_progressBar->setMinimumHeight(8);
-    m_progressBar->setMaximumHeight(8);
+    m_progressBar->setMinimumHeight(16);
+    m_progressBar->setMaximumHeight(16);
     m_progressBar->setVisible(false);  // Hidden initially
 
     // Style the progress bar to match app theme

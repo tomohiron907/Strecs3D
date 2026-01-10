@@ -89,23 +89,34 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
     if (checkCancellation()) return "";
 
     // Step 1: Convert STEP to INP (5% -> 45%)
-    reportProgress(5, "Converting STEP to INP...");
+    reportProgress(5, "Loading STEP file...");
     std::cout << "Step 1: Converting STEP to INP..." << std::endl;
+
+    reportProgress(10, "Generating mesh...");
+    reportProgress(20, "Processing geometry...");
+    reportProgress(25, "Creating mesh elements...");
+
     int result = convertStepToInp(step_file, constraints, loads, inp_file);
+
     if (result != 0) {
         std::cerr << "エラー: STEP to INP conversion failed" << std::endl;
         return "";
     }
+
+    reportProgress(35, "Writing boundary conditions...");
+    reportProgress(40, "Finalizing INP file...");
     reportProgress(45, "STEP to INP conversion completed");
 
     if (checkCancellation()) return "";
 
     // Step 2: Run CalculiX analysis (45% -> 90%)
-    reportProgress(45, "Running CalculiX analysis...");
+    reportProgress(47, "Preparing CalculiX environment...");
     // CalculiX needs to run in the temp/FEM directory to output files there
     std::cout << "Step 2: Running CalculiX analysis..." << std::endl;
     std::string original_dir = std::filesystem::current_path().string();
     std::filesystem::current_path(fem_temp_dir);
+
+    reportProgress(50, "Starting CalculiX solver...");
 
     // Get path to bundled ccx executable (bin/ccx in same directory as executable)
     std::filesystem::path ccx_path;
@@ -157,7 +168,10 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
 #endif
     
     std::cout << "Executing command: " << ccx_command << std::endl; // デバッグ用に出力追加
+
+    reportProgress(55, "CalculiX: Running FEM analysis...");
     result = std::system(ccx_command.c_str());
+    reportProgress(85, "CalculiX: Processing results...");
 
     // Return to original directory
     std::filesystem::current_path(original_dir);
@@ -166,6 +180,8 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
         std::cerr << "エラー: CalculiX analysis failed" << std::endl;
         return "";
     }
+
+    reportProgress(88, "Verifying analysis results...");
     reportProgress(90, "CalculiX analysis completed");
 
     if (checkCancellation()) return "";
@@ -177,10 +193,14 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
     }
 
     // Step 3: Convert FRD to VTU (90% -> 99%)
-    reportProgress(92, "Converting FRD to VTU...");
+    reportProgress(91, "Reading FRD result file...");
     std::cout << "Step 3: Converting FRD to VTU..." << std::endl;
+
+    reportProgress(93, "Converting to VTU format...");
     result = convertFrdToVtu(frd_file, vtu_file);
+
     if (result == EXIT_SUCCESS) {
+        reportProgress(97, "Writing VTU file...");
         reportProgress(99, "FRD to VTU conversion completed");
         std::cout << "Analysis pipeline completed successfully!" << std::endl;
         std::cout << "Generated files:" << std::endl;
