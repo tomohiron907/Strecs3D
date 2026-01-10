@@ -13,11 +13,7 @@ ProcessCard::ProcessCard(int stepNumber, const QString& title, QWidget* parent)
     layout->setContentsMargins(15, 12, 15, 12);
     layout->setSpacing(10);
     
-    // Status Icon (Number or Checkmark)
-    m_iconLabel = new QLabel(QString::number(stepNumber), this);
-    m_iconLabel->setFixedSize(24, 24);
-    m_iconLabel->setAlignment(Qt::AlignCenter);
-    m_iconLabel->setStyleSheet("border-radius: 12px; font-weight: bold;");
+    setAttribute(Qt::WA_StyledBackground, true);
     
     // Title
     m_textLabel = new QLabel(title, this);
@@ -25,7 +21,9 @@ ProcessCard::ProcessCard(int stepNumber, const QString& title, QWidget* parent)
     font.setPointSize(12);
     m_textLabel->setFont(font);
     
-    layout->addWidget(m_iconLabel);
+    // Centered text
+    m_textLabel->setAlignment(Qt::AlignCenter);
+    
     layout->addWidget(m_textLabel);
     layout->addStretch();
     
@@ -44,10 +42,7 @@ void ProcessCard::setCompleted(bool completed) {
     m_isCompleted = completed;
     
     if (m_isCompleted) {
-        // TODO: Replace with checkmark icon if available, or just keep number but green
-        m_iconLabel->setText("✓"); 
-    } else {
-        m_iconLabel->setText(QString::number(m_stepNumber));
+        // Completed state logic if needed (e.g. green border)
     }
     updateStyle();
 }
@@ -60,66 +55,46 @@ void ProcessCard::setLocked(bool locked) {
 
 void ProcessCard::updateStyle() {
     QString style;
-    QString iconStyle;
     QString textStyle;
     
-    // Colors (Should ideally come from ColorManager, using hardcoded for now to match request quickly)
-    // Dark theme assumption based on mockups
+    // Colors
     QString bgColor;
     QString borderColor;
     QString textColor;
-    QString iconBgColor;
-    QString iconTextColor;
     
     if (m_isActive) {
-        // Active: Blue accent
-        bgColor = "rgba(0, 120, 215, 0.2)"; // Stronger blue tint
-        borderColor = "#3399FF"; // Bright blue border
+        // Active: Distinct Blue Background
+        bgColor = "rgba(0, 120, 215, 0.4)"; // More opaque blue (40%)
+        borderColor = "rgba(0, 120, 215, 0.4)";  // Bright blue border
         textColor = "#FFFFFF";
-        iconBgColor = "#3399FF";
-        iconTextColor = "#FFFFFF";
     } else if (m_isCompleted) {
-        // Completed: Subtle green or just standard interaction
+        // Completed: Standard border
         bgColor = "rgba(255, 255, 255, 0.05)";
-        borderColor = "rgba(255, 255, 255, 0.1)";
+        borderColor = "rgba(255, 255, 255, 0.3)"; // Visible border
         textColor = "#CCCCCC";
-        iconBgColor = "#4CAF50"; // Green
-        iconTextColor = "#FFFFFF";
     } else if (m_isLocked) {
-        // Locked/Future: Dimmed
+        // Locked/Future: Dimmed but with border
         bgColor = "transparent";
-        borderColor = "transparent";
+        borderColor = "rgba(255, 255, 255, 0.1)"; // Visible border (fainter)
         textColor = "#666666";
-        iconBgColor = "transparent";
-        iconTextColor = "#666666";
-        iconStyle += "border: 1px solid #444444;"; // Hollow circle
     } else {
         // Pending/Accessible but not active: Normal
         bgColor = "rgba(255, 255, 255, 0.05)";
-        borderColor = "rgba(255, 255, 255, 0.1)";
+        borderColor = "rgba(255, 255, 255, 0.2)"; // Slightly clearer border
         textColor = "#AAAAAA";
-        iconBgColor = "#444444";
-        iconTextColor = "#AAAAAA";
     }
     
     style = QString(
         "ProcessCard {"
         "  background-color: %1;"
         "  border: 1px solid %2;"
-        "  border-radius: 8px;"
+        "  border-radius: 3px;"
         "}"
     ).arg(bgColor, borderColor);
-    
-    iconStyle += QString(
-        "background-color: %1;"
-        "color: %2;"
-        "border-radius: 12px;"
-    ).arg(iconBgColor, iconTextColor);
     
     textStyle = QString("color: %1;").arg(textColor);
     
     this->setStyleSheet(style);
-    m_iconLabel->setStyleSheet(iconStyle);
     m_textLabel->setStyleSheet(textStyle);
 }
 
@@ -138,10 +113,10 @@ void ProcessFlowWidget::setupUI()
     mainLayout->setSpacing(8);
     
     // Create Steps
-    m_cards.push_back(new ProcessCard(1, "Import STEP File", this));
-    m_cards.push_back(new ProcessCard(2, "Set Boundary Conditions", this));
-    m_cards.push_back(new ProcessCard(3, "Simulate", this));
-    m_cards.push_back(new ProcessCard(4, "Build Infill Map", this));
+    m_cards.push_back(new ProcessCard(1, "1.Import STEP File", this));
+    m_cards.push_back(new ProcessCard(2, "2.Set Boundary Conditions", this));
+    m_cards.push_back(new ProcessCard(3, "3.Simulate", this));
+    m_cards.push_back(new ProcessCard(4, "4.Build Infill Map", this));
     
     for (auto* card : m_cards) {
         mainLayout->addWidget(card);

@@ -31,7 +31,6 @@ private:
     bool m_isCompleted = false;
     bool m_isLocked = true;
     
-    QLabel* m_iconLabel = nullptr;
     QLabel* m_textLabel = nullptr;
     
     void updateStyle();
