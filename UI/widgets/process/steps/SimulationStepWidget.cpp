@@ -30,6 +30,7 @@ SimulationStepWidget::SimulationStepWidget(QWidget* parent) : QWidget(parent) {
             border: 1px solid #444;
             border-radius: 4px;
             background-color: #333;
+            text-align: center;
         }
         QProgressBar::chunk {
             background-color: #0078D7;
@@ -89,10 +90,11 @@ void SimulationStepWidget::setSimulationRunning(bool running) {
 
     if (running) {
         m_simulateButton->setText("Simulating...");
+        m_progressBar->setValue(0);
     } else {
         m_simulateButton->setText("Simulate");
-        // Reset progress bar to 0% when simulation completes
-        m_progressBar->setValue(0);
+        // Set progress bar to 100% when simulation completes
+        m_progressBar->setValue(100);
     }
 }
 
