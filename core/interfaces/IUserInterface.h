@@ -43,6 +43,7 @@ public:
     // シミュレーション進捗レポート
     virtual void setSimulationProgress(int progress, const QString& message = "") = 0;
     virtual void setSimulationRunning(bool running) = 0;
+    virtual void appendSimulationLog(const QString& message) = 0;
     
     // ファイル選択・保存ダイアログ
     virtual bool showFileValidationError() = 0;

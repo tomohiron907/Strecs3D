@@ -36,6 +36,7 @@ public:
     // シミュレーション進捗レポート
     void setSimulationProgress(int progress, const QString& message = "") override;
     void setSimulationRunning(bool running) override;
+    void appendSimulationLog(const QString& message) override;
     
     // ファイル選択・保存ダイアログ
     bool showFileValidationError() override;

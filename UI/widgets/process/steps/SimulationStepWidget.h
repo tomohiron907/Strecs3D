@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QProgressBar>
 #include <QLabel>
+#include <QTextEdit>
 
 class Button;
 
@@ -19,6 +20,9 @@ public slots:
     void resetProgress();
     void setSimulationRunning(bool running);
 
+    void appendLog(const QString& message);
+    void clearLog();
+
 signals:
     void simulateClicked();
 
@@ -26,6 +30,7 @@ private:
     Button* m_simulateButton;
     QProgressBar* m_progressBar;
     QLabel* m_statusLabel;
+    QTextEdit* m_logTextEdit;
 };
 
 #endif // SIMULATIONSTEPWIDGET_H

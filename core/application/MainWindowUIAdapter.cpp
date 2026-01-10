@@ -289,15 +289,17 @@ void MainWindowUIAdapter::setSimulationProgress(int progress, const QString& mes
     }
 }
 
-void MainWindowUIAdapter::setSimulationRunning(bool running)
-{
-    if (!ui) return;
+void MainWindowUIAdapter::setSimulationRunning(bool running) {
+    if (ui && ui->getProcessManagerWidget() && ui->getProcessManagerWidget()->getSimulationStep()) {
+        ui->getProcessManagerWidget()->getSimulationStep()->setSimulationRunning(running);
+        if (running) {
+             ui->getProcessManagerWidget()->getSimulationStep()->clearLog();
+        }
+    }
+}
 
-    auto* processManager = ui->getProcessManagerWidget();
-    if (!processManager) return;
-
-    auto* simWidget = processManager->getSimulationStep();
-    if (simWidget) {
-        simWidget->setSimulationRunning(running);
+void MainWindowUIAdapter::appendSimulationLog(const QString& message) {
+    if (ui && ui->getProcessManagerWidget() && ui->getProcessManagerWidget()->getSimulationStep()) {
+        ui->getProcessManagerWidget()->getSimulationStep()->appendLog(message);
     }
 }

@@ -20,6 +20,12 @@ public:
     virtual void reportProgress(int progress, const std::string& message = "") = 0;
 
     /**
+     * Report log message
+     * @param message Log message content
+     */
+    virtual void log(const std::string& message) = 0;
+
+    /**
      * Check if cancellation was requested
      * @return true if user requested cancellation
      */
@@ -28,6 +34,7 @@ public:
 
 // Convenience typedef for lambda-based callbacks
 using ProgressCallbackFn = std::function<void(int, const std::string&)>;
+using LogCallbackFn = std::function<void(const std::string&)>;
 using CancelCheckFn = std::function<bool()>;
 
 /**
@@ -35,11 +42,17 @@ using CancelCheckFn = std::function<bool()>;
  */
 class SimpleFEMProgressCallback : public FEMProgressCallback {
 public:
-    SimpleFEMProgressCallback(ProgressCallbackFn progressFn, CancelCheckFn cancelFn = nullptr)
-        : m_progressFn(progressFn), m_cancelFn(cancelFn) {}
+    SimpleFEMProgressCallback(ProgressCallbackFn progressFn, 
+                             LogCallbackFn logFn = nullptr,
+                             CancelCheckFn cancelFn = nullptr)
+        : m_progressFn(progressFn), m_logFn(logFn), m_cancelFn(cancelFn) {}
 
     void reportProgress(int progress, const std::string& message = "") override {
         if (m_progressFn) m_progressFn(progress, message);
+    }
+
+    void log(const std::string& message) override {
+        if (m_logFn) m_logFn(message);
     }
 
     bool isCancelled() const override {
@@ -48,6 +61,7 @@ public:
 
 private:
     ProgressCallbackFn m_progressFn;
+    LogCallbackFn m_logFn;
     CancelCheckFn m_cancelFn;
 };
 

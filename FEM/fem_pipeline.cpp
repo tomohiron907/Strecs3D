@@ -5,6 +5,7 @@
 #include "../utils/tempPathUtility.h"
 #include <iostream>
 #include <cstdlib>
+#include <cstdio>
 #include <filesystem>
 #include <limits.h>
 
@@ -20,11 +21,46 @@
 #endif
 // ----------------------------------------------------
 
+// Helper to run command and capture output
+int runCommand(const std::string& cmd, FEMProgressCallback* callback) {
+    std::string full_cmd = cmd + " 2>&1"; // Capture stderr too
+    FILE* pipe = popen(full_cmd.c_str(), "r");
+    if (!pipe) {
+        return -1;
+    }
+    
+    char buffer[128];
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        std::string line(buffer);
+        // Remove trailing newline
+        if (!line.empty() && line.back() == '\n') {
+            line.pop_back();
+        }
+        if (callback) {
+            callback->log(line);
+        } else {
+            std::cout << line << std::endl;
+        }
+    }
+    
+    return pclose(pipe);
+}
+
 std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* progressCallback) {
     // Helper lambda to report progress safely
     auto reportProgress = [&](int progress, const std::string& msg) {
         if (progressCallback) {
             progressCallback->reportProgress(progress, msg);
+            progressCallback->log(">>> " + msg); // Also log progress messages
+        }
+    };
+
+    // Helper lambda to log
+    auto log = [&](const std::string& msg) {
+        if (progressCallback) {
+            progressCallback->log(msg);
+        } else {
+            std::cout << msg << std::endl;
         }
     };
 
@@ -39,9 +75,11 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
     SimulationConfig config;
     try {
         config = SimulationConfig::fromJsonFile(config_file);
-        std::cout << "Loaded configuration from: " << config_file << std::endl;
+        log("Loaded configuration from: " + config_file);
     } catch (const std::exception& e) {
-        std::cerr << "エラー: 設定ファイルの読み込みに失敗しました: " << e.what() << std::endl;
+        std::string err = "Error: Failed to load config: " + std::string(e.what());
+        std::cerr << err << std::endl;
+        log(err);
         return "";
     }
 
@@ -61,7 +99,9 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
     }
 
     if (constraints.empty() && loads.empty()) {
-        std::cerr << "エラー: 設定ファイルに境界条件が指定されていません。" << std::endl;
+        std::string err = "Error: No boundary conditions specified.";
+        std::cerr << err << std::endl;
+        log(err);
         return "";
     }
 
@@ -90,7 +130,7 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
 
     // Step 1: Convert STEP to INP (5% -> 45%)
     reportProgress(5, "Loading STEP file...");
-    std::cout << "Step 1: Converting STEP to INP..." << std::endl;
+    log("Step 1: Converting STEP to INP...");
 
     reportProgress(10, "Generating mesh...");
     reportProgress(20, "Processing geometry...");
@@ -99,7 +139,9 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
     int result = convertStepToInp(step_file, constraints, loads, inp_file);
 
     if (result != 0) {
-        std::cerr << "エラー: STEP to INP conversion failed" << std::endl;
+        std::string err = "Error: STEP to INP conversion failed";
+        std::cerr << err << std::endl;
+        log(err);
         return "";
     }
 
@@ -112,7 +154,7 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
     // Step 2: Run CalculiX analysis (45% -> 90%)
     reportProgress(47, "Preparing CalculiX environment...");
     // CalculiX needs to run in the temp/FEM directory to output files there
-    std::cout << "Step 2: Running CalculiX analysis..." << std::endl;
+    log("Step 2: Running CalculiX analysis...");
     std::string original_dir = std::filesystem::current_path().string();
     std::filesystem::current_path(fem_temp_dir);
 
@@ -148,9 +190,9 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
 #endif
 
     if (pathFound) {
-        std::cout << "Looking for CCX at: " << ccx_path << std::endl;
+        log("Looking for CCX at: " + ccx_path.string());
     } else {
-        std::cerr << "警告: 実行ファイルのパスを取得できませんでした。デフォルトパスを使用します。" << std::endl;
+        log("Warning: Could not determine executable path. Using default path.");
         #if defined(_WIN32)
             ccx_path = "ccx.exe";
         #else
@@ -167,17 +209,22 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
     ccx_command = ccx_path.string() + " " + base_name;
 #endif
     
-    std::cout << "Executing command: " << ccx_command << std::endl; // デバッグ用に出力追加
+    log("Executing command: " + ccx_command);
 
     reportProgress(55, "CalculiX: Running FEM analysis...");
-    result = std::system(ccx_command.c_str());
+    
+    // Execute command and capture output
+    result = runCommand(ccx_command, progressCallback);
+    
     reportProgress(85, "CalculiX: Processing results...");
 
     // Return to original directory
     std::filesystem::current_path(original_dir);
 
     if (result != 0) {
-        std::cerr << "エラー: CalculiX analysis failed" << std::endl;
+        std::string err = "Error: CalculiX analysis failed with code " + std::to_string(result);
+        std::cerr << err << std::endl;
+        log(err);
         return "";
     }
 
@@ -188,13 +235,15 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
 
     // Check if FRD file was generated
     if (!std::filesystem::exists(frd_file)) {
-        std::cerr << "エラー: FRD file was not generated: " << frd_file << std::endl;
+        std::string err = "Error: FRD file was not generated: " + frd_file;
+        std::cerr << err << std::endl;
+        log(err);
         return "";
     }
 
     // Step 3: Convert FRD to VTU (90% -> 99%)
     reportProgress(91, "Reading FRD result file...");
-    std::cout << "Step 3: Converting FRD to VTU..." << std::endl;
+    log("Step 3: Converting FRD to VTU...");
 
     reportProgress(93, "Converting to VTU format...");
     result = convertFrdToVtu(frd_file, vtu_file);
@@ -202,22 +251,26 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
     if (result == EXIT_SUCCESS) {
         reportProgress(97, "Writing VTU file...");
         reportProgress(99, "FRD to VTU conversion completed");
-        std::cout << "Analysis pipeline completed successfully!" << std::endl;
-        std::cout << "Generated files:" << std::endl;
-        std::cout << "  - INP file: " << inp_file << std::endl;
-        std::cout << "  - FRD file: " << frd_file << std::endl;
-        std::cout << "  - VTU file: " << vtu_file << std::endl;
+        log("Analysis pipeline completed successfully!");
+        log("Generated files:");
+        log("  - INP file: " + inp_file);
+        log("  - FRD file: " + frd_file);
+        log("  - VTU file: " + vtu_file);
 
         // Verify VTU file exists and return its path
         if (std::filesystem::exists(vtu_file)) {
             reportProgress(100, "Analysis completed successfully");
             return vtu_file;
         } else {
-            std::cerr << "エラー: VTU file was not generated: " << vtu_file << std::endl;
+            std::string err = "Error: VTU file was not generated: " + vtu_file;
+            std::cerr << err << std::endl;
+            log(err);
             return "";
         }
     } else {
-        std::cerr << "エラー: FRD to VTU conversion failed" << std::endl;
+        std::string err = "Error: FRD to VTU conversion failed";
+        std::cerr << err << std::endl;
+        log(err);
         return "";
     }
 }

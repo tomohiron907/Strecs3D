@@ -426,6 +426,10 @@ QString ApplicationController::runSimulation(IUserInterface* ui, const QString& 
             [ui](int progress, const std::string& message) {
                 ui->setSimulationProgress(progress, QString::fromStdString(message));
                 QApplication::processEvents();  // UI応答性維持
+            },
+            [ui](const std::string& message) {
+                ui->appendSimulationLog(QString::fromStdString(message));
+                QApplication::processEvents();
             }
         );
 

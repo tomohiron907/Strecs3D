@@ -46,6 +46,22 @@ SimulationStepWidget::SimulationStepWidget(QWidget* parent) : QWidget(parent) {
     m_statusLabel->setVisible(false);
     layout->addWidget(m_statusLabel);
 
+    // Log Text Edit
+    m_logTextEdit = new QTextEdit(this);
+    m_logTextEdit->setReadOnly(true);
+    m_logTextEdit->setStyleSheet(R"(
+        QTextEdit {
+            background-color: #222;
+            color: #ddd;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 11px;
+        }
+    )");
+    m_logTextEdit->setMinimumHeight(120);
+    layout->addWidget(m_logTextEdit);
+
     layout->addStretch();
 }
 
@@ -77,5 +93,21 @@ void SimulationStepWidget::setSimulationRunning(bool running) {
         m_simulateButton->setText("Simulate");
         // Reset progress bar to 0% when simulation completes
         m_progressBar->setValue(0);
+    }
+}
+
+void SimulationStepWidget::appendLog(const QString& message) {
+    if (m_logTextEdit) {
+        m_logTextEdit->append(message);
+        // Ensure the cursor is at the end to auto-scroll
+        QTextCursor cursor = m_logTextEdit->textCursor();
+        cursor.movePosition(QTextCursor::End);
+        m_logTextEdit->setTextCursor(cursor);
+    }
+}
+
+void SimulationStepWidget::clearLog() {
+    if (m_logTextEdit) {
+        m_logTextEdit->clear();
     }
 }
