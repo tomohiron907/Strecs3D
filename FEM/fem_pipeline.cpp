@@ -8,6 +8,9 @@
 #include <cstdio>
 #include <filesystem>
 #include <limits.h>
+#include <thread>
+#include <atomic>
+#include <chrono>
 
 // --- 【修正1】 プラットフォームごとのヘッダー切り替え ---
 #if defined(__APPLE__)
@@ -136,7 +139,44 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
     reportProgress(20, "Processing geometry...");
     reportProgress(25, "Creating mesh elements...");
 
-    int result = convertStepToInp(step_file, constraints, loads, inp_file);
+    // Run convertStepToInp in a separate thread with progress simulation
+    std::atomic<bool> conversionDone(false);
+    std::atomic<int> conversionResult(-1);
+
+    std::thread conversionThread([&]() {
+        int res = convertStepToInp(step_file, constraints, loads, inp_file);
+        conversionResult.store(res);
+        conversionDone.store(true);
+    });
+
+    // Simulate progress while conversion is running
+    int currentProgress = 25;
+    while (!conversionDone.load()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        if (!conversionDone.load()) {
+            if (currentProgress < 34) {
+                currentProgress++;
+                std::string progressMsg = "Creating mesh elements... (" + std::to_string(currentProgress - 24) + "/10)";
+                reportProgress(currentProgress, progressMsg);
+            } else if (currentProgress < 44) {
+                currentProgress++;
+                if (currentProgress == 35) {
+                    reportProgress(currentProgress, "Writing boundary conditions...");
+                } else if (currentProgress == 40) {
+                    reportProgress(currentProgress, "Finalizing INP file...");
+                } else {
+                    reportProgress(currentProgress, "Finalizing mesh conversion...");
+                }
+            }
+        }
+        if (checkCancellation()) {
+            conversionThread.detach();
+            return "";
+        }
+    }
+
+    conversionThread.join();
+    int result = conversionResult.load();
 
     if (result != 0) {
         std::string err = "Error: STEP to INP conversion failed";
@@ -145,20 +185,31 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
         return "";
     }
 
-    reportProgress(35, "Writing boundary conditions...");
-    reportProgress(40, "Finalizing INP file...");
     reportProgress(45, "STEP to INP conversion completed");
 
     if (checkCancellation()) return "";
 
     // Step 2: Run CalculiX analysis (45% -> 90%)
-    reportProgress(47, "Preparing CalculiX environment...");
-    // CalculiX needs to run in the temp/FEM directory to output files there
     log("Step 2: Running CalculiX analysis...");
+
+    // Gradual progress from 45% to 54% while preparing
+    for (int i = 46; i <= 54; i++) {
+        if (checkCancellation()) return "";
+        if (i == 46) {
+            reportProgress(i, "Preparing CalculiX environment...");
+        } else if (i == 50) {
+            reportProgress(i, "Configuring solver settings...");
+        } else if (i == 54) {
+            reportProgress(i, "Initializing CalculiX...");
+        } else {
+            reportProgress(i, "Preparing CalculiX environment...");
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    }
+
+    // CalculiX needs to run in the temp/FEM directory to output files there
     std::string original_dir = std::filesystem::current_path().string();
     std::filesystem::current_path(fem_temp_dir);
-
-    reportProgress(50, "Starting CalculiX solver...");
 
     // Get path to bundled ccx executable (bin/ccx in same directory as executable)
     std::filesystem::path ccx_path;
@@ -208,14 +259,37 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
 #else
     ccx_command = ccx_path.string() + " " + base_name;
 #endif
-    
+
     log("Executing command: " + ccx_command);
 
-    reportProgress(55, "CalculiX: Running FEM analysis...");
-    
-    // Execute command and capture output
-    result = runCommand(ccx_command, progressCallback);
-    
+    // Execute command in a separate thread with progress simulation
+    std::atomic<bool> calculixDone(false);
+    std::atomic<int> calculixResult(-1);
+
+    std::thread calculixThread([&]() {
+        int res = runCommand(ccx_command, progressCallback);
+        calculixResult.store(res);
+        calculixDone.store(true);
+    });
+
+    // Simulate progress while CalculiX is running
+    int calculixProgress = 55;
+    while (!calculixDone.load()) {
+        if (calculixProgress < 85 && !calculixDone.load()) {
+            std::string progressMsg = "CalculiX: Running FEM analysis... (" + std::to_string(calculixProgress - 54) + "/30)";
+            reportProgress(calculixProgress, progressMsg);
+            calculixProgress++;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        if (checkCancellation()) {
+            calculixThread.detach();
+            return "";
+        }
+    }
+
+    calculixThread.join();
+    result = calculixResult.load();
+
     reportProgress(85, "CalculiX: Processing results...");
 
     // Return to original directory
