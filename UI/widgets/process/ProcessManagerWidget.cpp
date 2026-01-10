@@ -19,6 +19,9 @@ void ProcessManagerWidget::setUIState(UIState* uiState)
     if (m_infillWidget) {
         m_infillWidget->setUIState(uiState);
     }
+    if (m_bcWidget) {
+        m_bcWidget->setUIState(uiState);
+    }
 }
 
 void ProcessManagerWidget::setupUI()
