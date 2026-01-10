@@ -8,6 +8,8 @@
 #include "../ui/UIState.h"
 #include "../../FEM/SimulationConditionExporter.h"
 #include "../../FEM/fem_pipeline.h"
+#include "../../FEM/FEMProgressCallback.h"
+#include <QApplication>
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
@@ -415,9 +417,24 @@ QString ApplicationController::runSimulation(IUserInterface* ui, const QString& 
     }
 
     try {
+        // シミュレーション開始
+        ui->setSimulationRunning(true);
+        ui->setSimulationProgress(0, "Starting simulation...");
+
+        // 進捗コールバック作成
+        SimpleFEMProgressCallback progressCallback(
+            [ui](int progress, const std::string& message) {
+                ui->setSimulationProgress(progress, QString::fromStdString(message));
+                QApplication::processEvents();  // UI応答性維持
+            }
+        );
+
         // FEM解析パイプラインを実行
         std::string configFilePathStd = configFilePath.toStdString();
-        std::string vtuFilePath = runFEMAnalysis(configFilePathStd);
+        std::string vtuFilePath = runFEMAnalysis(configFilePathStd, &progressCallback);
+
+        // UI状態リセット
+        ui->setSimulationRunning(false);
 
         if (!vtuFilePath.empty()) {
             ui->showInfoMessage("成功", "FEMシミュレーションが正常に完了しました");
@@ -428,6 +445,8 @@ QString ApplicationController::runSimulation(IUserInterface* ui, const QString& 
             return QString();
         }
     } catch (const std::exception& e) {
+        // エラー時もUI状態をリセット
+        ui->setSimulationRunning(false);
         std::cerr << "Error running FEM simulation: " << e.what() << std::endl;
         ui->showCriticalMessage("エラー", QString("FEMシミュレーションの実行中にエラーが発生しました: ") + e.what());
         return QString();

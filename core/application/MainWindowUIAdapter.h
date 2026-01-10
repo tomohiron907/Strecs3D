@@ -32,6 +32,10 @@ public:
     void showWarningMessage(const QString& title, const QString& message) override;
     void showCriticalMessage(const QString& title, const QString& message) override;
     void showInfoMessage(const QString& title, const QString& message) override;
+
+    // シミュレーション進捗レポート
+    void setSimulationProgress(int progress, const QString& message = "") override;
+    void setSimulationRunning(bool running) override;
     
     // ファイル選択・保存ダイアログ
     bool showFileValidationError() override;

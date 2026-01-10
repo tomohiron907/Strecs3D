@@ -275,3 +275,29 @@ void MainWindowUIAdapter::registerDividedMeshes(const std::vector<MeshInfo>& mes
                  << "Path:" << regionInfo.filePath;
     }
 }
+
+void MainWindowUIAdapter::setSimulationProgress(int progress, const QString& message)
+{
+    if (!ui) return;
+
+    auto* processManager = ui->getProcessManagerWidget();
+    if (!processManager) return;
+
+    auto* simWidget = processManager->getSimulationStep();
+    if (simWidget) {
+        simWidget->setProgress(progress, message);
+    }
+}
+
+void MainWindowUIAdapter::setSimulationRunning(bool running)
+{
+    if (!ui) return;
+
+    auto* processManager = ui->getProcessManagerWidget();
+    if (!processManager) return;
+
+    auto* simWidget = processManager->getSimulationStep();
+    if (simWidget) {
+        simWidget->setSimulationRunning(running);
+    }
+}

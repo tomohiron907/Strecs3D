@@ -20,7 +20,21 @@
 #endif
 // ----------------------------------------------------
 
-std::string runFEMAnalysis(const std::string& config_file) {
+std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* progressCallback) {
+    // Helper lambda to report progress safely
+    auto reportProgress = [&](int progress, const std::string& msg) {
+        if (progressCallback) {
+            progressCallback->reportProgress(progress, msg);
+        }
+    };
+
+    // Helper lambda to check cancellation
+    auto checkCancellation = [&]() -> bool {
+        return progressCallback && progressCallback->isCancelled();
+    };
+
+    reportProgress(0, "Loading configuration...");
+
     // Load simulation configuration from JSON
     SimulationConfig config;
     try {
@@ -72,15 +86,22 @@ std::string runFEMAnalysis(const std::string& config_file) {
     std::string frd_file = frd_file_path.string();
     std::string vtu_file = vtu_file_path.string();
 
-    // Step 1: Convert STEP to INP
+    if (checkCancellation()) return "";
+
+    // Step 1: Convert STEP to INP (5% -> 45%)
+    reportProgress(5, "Converting STEP to INP...");
     std::cout << "Step 1: Converting STEP to INP..." << std::endl;
     int result = convertStepToInp(step_file, constraints, loads, inp_file);
     if (result != 0) {
         std::cerr << "エラー: STEP to INP conversion failed" << std::endl;
         return "";
     }
+    reportProgress(45, "STEP to INP conversion completed");
 
-    // Step 2: Run CalculiX analysis
+    if (checkCancellation()) return "";
+
+    // Step 2: Run CalculiX analysis (45% -> 90%)
+    reportProgress(45, "Running CalculiX analysis...");
     // CalculiX needs to run in the temp/FEM directory to output files there
     std::cout << "Step 2: Running CalculiX analysis..." << std::endl;
     std::string original_dir = std::filesystem::current_path().string();
@@ -145,6 +166,9 @@ std::string runFEMAnalysis(const std::string& config_file) {
         std::cerr << "エラー: CalculiX analysis failed" << std::endl;
         return "";
     }
+    reportProgress(90, "CalculiX analysis completed");
+
+    if (checkCancellation()) return "";
 
     // Check if FRD file was generated
     if (!std::filesystem::exists(frd_file)) {
@@ -152,10 +176,12 @@ std::string runFEMAnalysis(const std::string& config_file) {
         return "";
     }
 
-    // Step 3: Convert FRD to VTU
+    // Step 3: Convert FRD to VTU (90% -> 99%)
+    reportProgress(92, "Converting FRD to VTU...");
     std::cout << "Step 3: Converting FRD to VTU..." << std::endl;
     result = convertFrdToVtu(frd_file, vtu_file);
     if (result == EXIT_SUCCESS) {
+        reportProgress(99, "FRD to VTU conversion completed");
         std::cout << "Analysis pipeline completed successfully!" << std::endl;
         std::cout << "Generated files:" << std::endl;
         std::cout << "  - INP file: " << inp_file << std::endl;
@@ -164,6 +190,7 @@ std::string runFEMAnalysis(const std::string& config_file) {
 
         // Verify VTU file exists and return its path
         if (std::filesystem::exists(vtu_file)) {
+            reportProgress(100, "Analysis completed successfully");
             return vtu_file;
         } else {
             std::cerr << "エラー: VTU file was not generated: " << vtu_file << std::endl;
