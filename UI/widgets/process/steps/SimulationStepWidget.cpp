@@ -22,7 +22,7 @@ SimulationStepWidget::SimulationStepWidget(QWidget* parent) : QWidget(parent) {
     m_progressBar->setFormat("%p%");
     m_progressBar->setMinimumHeight(16);
     m_progressBar->setMaximumHeight(16);
-    m_progressBar->setVisible(false);  // Hidden initially
+    m_progressBar->setVisible(true);  // Always visible
 
     // Style the progress bar to match app theme
     m_progressBar->setStyleSheet(R"(
@@ -67,7 +67,6 @@ void SimulationStepWidget::resetProgress() {
 
 void SimulationStepWidget::setSimulationRunning(bool running) {
     m_simulateButton->setEnabled(!running);
-    m_progressBar->setVisible(running);
     if (m_statusLabel) {
         m_statusLabel->setVisible(running);
     }
@@ -76,5 +75,7 @@ void SimulationStepWidget::setSimulationRunning(bool running) {
         m_simulateButton->setText("Simulating...");
     } else {
         m_simulateButton->setText("Simulate");
+        // Reset progress bar to 0% when simulation completes
+        m_progressBar->setValue(0);
     }
 }
