@@ -148,13 +148,12 @@ void ConstraintPropertyWidget::updateOkButtonStyle()
     if (m_okButton->isEnabled()) {
         // 有効時: 強調表示色
         m_okButton->setStyleSheet(
-            QString("QPushButton { background-color: %1; color: %2; border: 1px solid %3; "
+            QString("QPushButton { background-color: %1; color: %2; border: none; "
                     "padding: 8px 16px; border-radius: 4px; font-weight: bold; }"
-                    "QPushButton:hover { background-color: %4; color: %6; }"
-                    "QPushButton:pressed { background-color: %5; }")
-            .arg(ColorManager::BUTTON_EMPHASIZED_COLOR.name())
-            .arg(ColorManager::BUTTON_COLOR.name())
-            .arg(ColorManager::BUTTON_EDGE_COLOR.name())
+                    "QPushButton:hover { background-color: %3; color: %5; }"
+                    "QPushButton:pressed { background-color: %4; }")
+            .arg(ColorManager::ACCENT_COLOR.name())
+            .arg(ColorManager::BUTTON_TEXT_COLOR.name())
             .arg(ColorManager::BUTTON_HOVER_COLOR.name())
             .arg(ColorManager::BUTTON_PRESSED_COLOR.name())
             .arg(ColorManager::BUTTON_TEXT_COLOR.name())
