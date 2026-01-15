@@ -68,6 +68,8 @@ void ProcessCard::setClickable(bool clickable) {
 void ProcessCard::mousePressEvent(QMouseEvent* event) {
     if (m_isClickable && event->button() == Qt::LeftButton) {
         emit clicked();
+        event->accept(); // イベントを受け入れて伝播を防ぐ
+        return;
     }
     QWidget::mousePressEvent(event);
 }

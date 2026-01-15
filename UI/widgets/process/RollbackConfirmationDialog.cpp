@@ -11,6 +11,9 @@ RollbackConfirmationDialog::RollbackConfirmationDialog(
 ) : QDialog(parent), m_targetStep(targetStep), m_currentStep(currentStep)
 {
     setWindowTitle("Confirm");
+    setModal(false); // モーダルレスに設定
+    // ダイアログを常に最前面に表示することで、マウスイベントが3Dビューに渡されるのを防ぐ
+    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint);
     setupUI();
 }
 
