@@ -205,7 +205,7 @@ void MainWindowUI::createRightPaneWidget(QWidget* vtkParent)
 
     // Exportボタンをここに移動
     export3mfButton->setParent(rightPaneWidget);
-    export3mfButton->setFixedWidth(DISPLAY_OPTIONS_WIDTH - 20); // マージン考慮
+    export3mfButton->setFixedWidth(RIGHT_PANE_WIDTH - 20); // マージン考慮
     rightLayout->addWidget(export3mfButton);
 
     // コンテナの設定
