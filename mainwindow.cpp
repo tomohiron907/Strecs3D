@@ -74,6 +74,8 @@ void MainWindow::connectSignals()
     // UIStateのシグナル接続
     connect(ui->getUIState(), &UIState::boundaryConditionChanged,
             this, &MainWindow::onBoundaryConditionChanged);
+    connect(ui->getUIState(), &UIState::selectedObjectChanged,
+            this, &MainWindow::onSelectedObjectChanged);
 
     // ProcessManagerWidget signals
     if (ui->getProcessManagerWidget()) {
@@ -614,5 +616,23 @@ void MainWindow::onFaceDoubleClicked(int faceId, double nx, double ny, double nz
             }
         }
     }
+}
+
+void MainWindow::onSelectedObjectChanged(const SelectedObjectInfo& selection)
+{
+    if (!uiAdapter) return;
+    auto vizManager = uiAdapter->getVisualizationManager();
+    if (!vizManager) return;
+
+    // Check if the selected object is a Load or Constraint condition
+    bool isConditionSelected = (selection.type == ObjectType::ITEM_BC_CONSTRAINT || 
+                                selection.type == ObjectType::ITEM_BC_LOAD);
+    
+    // Enable face selection mode only when a condition is selected
+    vizManager->setFaceSelectionMode(isConditionSelected);
+    
+    // Ensure edge selection is off when switching selections (safety)
+    // ただし、LoadPropertyWidgetでのエッジ選択中に別のオブジェクトを選んだ場合などを想定
+    vizManager->setEdgeSelectionMode(false);
 }
 

@@ -37,6 +37,10 @@ public:
     void SetEdgeSelectionMode(bool enabled);
     bool IsEdgeSelectionMode() const { return edgeSelectionMode_; }
 
+    // 面選択モードの制御
+    void SetFaceSelectionMode(bool enabled);
+    bool IsFaceSelectionMode() const { return faceSelectionMode_; }
+
     // エッジクリック時のコールバックを設定
     void SetOnEdgeClicked(std::function<void(int)> callback) { onEdgeClicked_ = callback; }
 
@@ -64,6 +68,9 @@ private:
 
     // エッジ選択モード
     bool edgeSelectionMode_;
+    
+    // 面選択モード
+    bool faceSelectionMode_;
     std::function<void(int)> onEdgeClicked_;
 
     void ResetLastPickedActor();

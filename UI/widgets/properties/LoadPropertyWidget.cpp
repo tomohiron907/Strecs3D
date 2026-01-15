@@ -355,5 +355,7 @@ void LoadPropertyWidget::cancelEdgeSelection()
 
     if (m_vizManager) {
         m_vizManager->setEdgeSelectionMode(false);
+        // Load編集中なので、面選択モードに戻す
+        m_vizManager->setFaceSelectionMode(true);
     }
 }

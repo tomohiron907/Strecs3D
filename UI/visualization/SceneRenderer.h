@@ -44,6 +44,7 @@ public:
 
     // --- Edge Selection Mode ---
     void setEdgeSelectionMode(bool enabled);
+    void setFaceSelectionMode(bool enabled);
 
     // --- Scalar Bar ---
     void setupScalarBar(VtkProcessor* vtkProcessor);

@@ -378,6 +378,12 @@ void VisualizationManager::setEdgeSelectionMode(bool enabled) {
     }
 }
 
+void VisualizationManager::setFaceSelectionMode(bool enabled) {
+    if (sceneRenderer_) {
+        sceneRenderer_->setFaceSelectionMode(enabled);
+    }
+}
+
 // --- Boundary Condition Display ---
 
 void VisualizationManager::displayBoundaryConditions(const BoundaryCondition& condition) {

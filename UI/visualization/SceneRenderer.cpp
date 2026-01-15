@@ -185,6 +185,12 @@ void SceneRenderer::setEdgeSelectionMode(bool enabled) {
     }
 }
 
+void SceneRenderer::setFaceSelectionMode(bool enabled) {
+    if (stepPickerStyle_) {
+        stepPickerStyle_->SetFaceSelectionMode(enabled);
+    }
+}
+
 void SceneRenderer::setupScalarBar(VtkProcessor* vtkProcessor) {
     if (!ui_ || !vtkProcessor) return;
 

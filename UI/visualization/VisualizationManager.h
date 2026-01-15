@@ -63,6 +63,9 @@ public:
     // Edge Selection Mode
     void setEdgeSelectionMode(bool enabled);
 
+    // Face Selection Mode
+    void setFaceSelectionMode(bool enabled);
+
     // StepReader Access (for edge geometry calculation)
     std::shared_ptr<StepReader> getCurrentStepReader() const { return currentStepReader_; }
 
