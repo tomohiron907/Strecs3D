@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <fstream>
 #include <vector>
+#include <chrono>
+#include "tempPathUtility.h"
 
 namespace fs = std::filesystem;
 
@@ -199,4 +201,42 @@ bool FileUtility::clearDirectoryContents(const std::filesystem::path& dir) {
         }
     }
     return true;
+    return true;
+}
+
+std::string FileUtility::createSafeTempCopy(const std::string& originalPath) {
+    if (!fs::exists(originalPath)) {
+        return "";
+    }
+
+    try {
+        // 一時ディレクトリ "step_import" を使用
+        fs::path tempSubDir = TempPathUtility::getTempSubDirPath("step_import");
+        if (!fs::exists(tempSubDir)) {
+            fs::create_directories(tempSubDir);
+        }
+
+        // ユニークなファイル名を生成 (タイムスタンプを使用)
+        auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        ).count();
+        
+        // 拡張子を取得
+        fs::path originalFsPath(originalPath);
+        std::string extension = originalFsPath.extension().string();
+        if (extension.empty()) {
+            extension = ".step";
+        }
+
+        std::string safeName = "import_" + std::to_string(timestamp) + extension;
+        fs::path targetPath = tempSubDir / safeName;
+
+        // コピーを実行
+        fs::copy_file(originalPath, targetPath, fs::copy_options::overwrite_existing);
+
+        return targetPath.string();
+    } catch (const std::exception& e) {
+        std::cerr << "Safe temp copy failed: " << e.what() << std::endl;
+        return "";
+    }
 }

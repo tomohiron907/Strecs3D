@@ -1,5 +1,7 @@
 #include "StepToStlConverter.h"
 #include "../../utils/tempPathUtility.h"
+#include "../../utils/fileUtility.h"
+#include <filesystem>
 
 // OpenCASCADE includes
 #include <STEPControl_Reader.hxx>
@@ -41,13 +43,24 @@ StepToStlConverter::~StepToStlConverter()
 bool StepToStlConverter::convertStepToStl(const std::string& stepFilePath,
                                           const std::string& outputStlPath)
 {
+    std::string safePath;
+    bool usedTempFile = false;
+
     try {
+         // マルチバイト文字対応のため、一時ファイルにコピーして読み込む
+        safePath = FileUtility::createSafeTempCopy(stepFilePath);
+        usedTempFile = !safePath.empty();
+        std::string pathLoading = usedTempFile ? safePath : stepFilePath;
+
         // 1. STEPファイルを読み込む
         STEPControl_Reader reader;
-        IFSelect_ReturnStatus status = reader.ReadFile(stepFilePath.c_str());
+        IFSelect_ReturnStatus status = reader.ReadFile(pathLoading.c_str());
 
         if (status != IFSelect_RetDone) {
             std::cerr << "Error reading STEP file: " << stepFilePath << std::endl;
+            if (usedTempFile && std::filesystem::exists(safePath)) {
+                std::filesystem::remove(safePath);
+            }
             return false;
         }
 
@@ -59,6 +72,9 @@ bool StepToStlConverter::convertStepToStl(const std::string& stepFilePath,
 
         if (shape.IsNull()) {
             std::cerr << "Failed to get shape from STEP file" << std::endl;
+            if (usedTempFile && std::filesystem::exists(safePath)) {
+                std::filesystem::remove(safePath);
+            }
             return false;
         }
 
@@ -70,6 +86,9 @@ bool StepToStlConverter::convertStepToStl(const std::string& stepFilePath,
 
         if (!mesh.IsDone()) {
             std::cerr << "Failed to mesh the STEP shape" << std::endl;
+            if (usedTempFile && std::filesystem::exists(safePath)) {
+                std::filesystem::remove(safePath);
+            }
             return false;
         }
 
@@ -80,6 +99,9 @@ bool StepToStlConverter::convertStepToStl(const std::string& stepFilePath,
 
         if (!polyData || polyData->GetNumberOfPoints() == 0) {
             std::cerr << "Failed to convert STEP shape to VTK PolyData" << std::endl;
+            if (usedTempFile && std::filesystem::exists(safePath)) {
+                std::filesystem::remove(safePath);
+            }
             return false;
         }
 
@@ -90,14 +112,24 @@ bool StepToStlConverter::convertStepToStl(const std::string& stepFilePath,
         // 4. バイナリSTLファイルとして保存
         if (!saveAsBinaryStl(polyData, outputStlPath)) {
             std::cerr << "Failed to save STL file: " << outputStlPath << std::endl;
+            if (usedTempFile && std::filesystem::exists(safePath)) {
+                std::filesystem::remove(safePath);
+            }
             return false;
         }
 
         std::cout << "Successfully saved binary STL file: " << outputStlPath << std::endl;
+        
+        if (usedTempFile && std::filesystem::exists(safePath)) {
+            std::filesystem::remove(safePath);
+        }
         return true;
     }
     catch (const std::exception& e) {
         std::cerr << "Exception in convertStepToStl: " << e.what() << std::endl;
+        if (usedTempFile && std::filesystem::exists(safePath)) {
+            std::filesystem::remove(safePath);
+        }
         return false;
     }
 }

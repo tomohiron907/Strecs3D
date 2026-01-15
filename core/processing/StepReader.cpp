@@ -1,4 +1,6 @@
 #include "StepReader.h"
+#include "../../utils/fileUtility.h"
+#include <filesystem>
 
 // OpenCASCADE includes
 #include <STEPControl_Reader.hxx>
@@ -51,12 +53,23 @@ StepReader::~StepReader()
 
 bool StepReader::readStepFile(const std::string& filename)
 {
+    std::string safePath;
+    bool usedTempFile = false;
+
     try {
+        // マルチバイト文字対応のため、一時ファイルにコピーして読み込む
+        safePath = FileUtility::createSafeTempCopy(filename);
+        usedTempFile = !safePath.empty();
+        std::string pathLoading = usedTempFile ? safePath : filename;
+
         STEPControl_Reader reader;
-        IFSelect_ReturnStatus status = reader.ReadFile(filename.c_str());
+        IFSelect_ReturnStatus status = reader.ReadFile(pathLoading.c_str());
 
         if (status != IFSelect_RetDone) {
             std::cerr << "Error reading STEP file: " << filename << std::endl;
+            if (usedTempFile && std::filesystem::exists(safePath)) {
+                std::filesystem::remove(safePath);
+            }
             return false;
         }
 
@@ -68,6 +81,9 @@ bool StepReader::readStepFile(const std::string& filename)
 
         if (shape.IsNull()) {
             std::cerr << "Failed to get shape from STEP file" << std::endl;
+            if (usedTempFile && std::filesystem::exists(safePath)) {
+                std::filesystem::remove(safePath);
+            }
             return false;
         }
 
@@ -89,10 +105,17 @@ bool StepReader::readStepFile(const std::string& filename)
         }
 
         std::cout << "Successfully loaded STEP file: " << filename << " (Faces: " << faceCount_ << ")" << std::endl;
+        
+        if (usedTempFile && std::filesystem::exists(safePath)) {
+            std::filesystem::remove(safePath);
+        }
         return true;
 
     } catch (const std::exception& e) {
         std::cerr << "Exception while reading STEP file: " << e.what() << std::endl;
+        if (usedTempFile && std::filesystem::exists(safePath)) {
+            std::filesystem::remove(safePath);
+        }
         isValid_ = false;
         return false;
     }
