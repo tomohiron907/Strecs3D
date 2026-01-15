@@ -176,7 +176,7 @@ private:
     double m_maxStress = 1.0;
     std::vector<StressDensityMapping> m_stressDensityMappings;
     std::vector<QColor> m_densitySliderColors;
-    ProcessingMode m_processingMode = ProcessingMode::CURA;
+    ProcessingMode m_processingMode = ProcessingMode::BAMBU;
     
     // 選択状態
     SelectedObjectInfo m_selectedObject;
