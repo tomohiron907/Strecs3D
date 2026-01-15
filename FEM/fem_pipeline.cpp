@@ -3,6 +3,7 @@
 #include "step2inp.h"
 #include "simulation_config.h"
 #include "../utils/tempPathUtility.h"
+#include "../utils/fileUtility.h"
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
@@ -120,7 +121,23 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
     std::filesystem::path path(step_file);
     std::string base_name = path.stem().string();
 
+    // Use safe temp copy to avoid issues with spaces/multibyte chars
+    std::string safe_step_path = FileUtility::createSafeTempCopy(step_file);
+    bool usedSafeCopy = !safe_step_path.empty();
+    
+    if (usedSafeCopy) {
+        // Update base_name to the safe file's stem
+        std::filesystem::path safePath(safe_step_path);
+        base_name = safePath.stem().string();
+        log("Using safe temp file: " + safe_step_path);
+        
+        // Update step_file to point to the safe copy for step2inp conversion
+        step_file = safe_step_path;
+    }
+
     // All intermediate files will be created in temp/FEM directory
+    // Note: We use the safe base_name (e.g. "import_12345") to ensure
+    // all intermediate files (inp, frd, vtu) have safe names for external tools
     std::filesystem::path inp_file_path = fem_temp_dir / (base_name + ".inp");
     std::filesystem::path frd_file_path = fem_temp_dir / (base_name + ".frd");
     std::filesystem::path vtu_file_path = fem_temp_dir / (base_name + ".vtu");
@@ -321,6 +338,14 @@ std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* 
 
     reportProgress(93, "Converting to VTU format...");
     result = convertFrdToVtu(frd_file, vtu_file);
+
+
+    // Cleanup safe temp file if used
+    if (usedSafeCopy && std::filesystem::exists(safe_step_path)) {
+        try {
+            std::filesystem::remove(safe_step_path);
+        } catch (...) {}
+    }
 
     if (result == EXIT_SUCCESS) {
         reportProgress(97, "Writing VTU file...");
