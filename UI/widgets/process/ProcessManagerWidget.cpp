@@ -157,5 +157,11 @@ void ProcessManagerWidget::rollbackToStep(ProcessStep targetStep)
     // Update UI to target step
     m_flowWidget->setCurrentStep(targetStep);
     m_stepContainer->setCurrentIndex(static_cast<int>(targetStep));
+    
+    // Always reset simulation progress when rolling back
+    if (m_simWidget) {
+        m_simWidget->resetProgress();
+    }
+    
     emit stepChanged(targetStep);
 }

@@ -75,7 +75,7 @@ void SimulationStepWidget::setProgress(int value, const QString& message) {
 
 void SimulationStepWidget::resetProgress() {
     m_progressBar->setValue(0);
-    m_progressBar->setVisible(false);
+    // m_progressBar->setVisible(false); // Deleted to keep visible
     if (m_statusLabel) {
         m_statusLabel->setText("");
         m_statusLabel->setVisible(false);
