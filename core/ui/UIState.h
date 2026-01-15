@@ -77,6 +77,7 @@ public:
     bool getStepVisibility() const { return m_objectList.step.isVisible; }
     void setStepTransparency(double transparency);
     double getStepTransparency() const { return m_objectList.step.transparency; }
+    void clearStepFile();  // Clear STEP file data
 
     // Boundary Condition 関連
     BoundaryCondition getBoundaryCondition() const { return m_objectList.boundaryCondition; }
@@ -99,6 +100,7 @@ public:
     bool getSimulationResultVisibility() const { return m_objectList.simulationResult.isVisible; }
     void setSimulationResultTransparency(double transparency);
     double getSimulationResultTransparency() const { return m_objectList.simulationResult.transparency; }
+    void clearSimulationResult();  // Clear simulation result data
 
     // Infill Regions 関連
     void addInfillRegion(const QString& key, const InfillRegionInfo& info);
@@ -107,6 +109,7 @@ public:
     std::map<QString, InfillRegionInfo> getAllInfillRegions() const { return m_objectList.infillRegions; }
     void setInfillRegionVisibility(const QString& key, bool visible);
     void setInfillRegionTransparency(const QString& key, double transparency);
+    void clearAllInfillRegions();  // Clear all infill regions
 
     // Stress Range（階層外のデータ）
     void setStressRange(double minStress, double maxStress);

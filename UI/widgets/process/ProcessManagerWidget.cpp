@@ -5,6 +5,7 @@
 #include "steps/BoundaryConditionStepWidget.h"
 #include "steps/SimulationStepWidget.h"
 #include "steps/InfillStepWidget.h"
+#include "RollbackConfirmationDialog.h"
 
 ProcessManagerWidget::ProcessManagerWidget(QWidget* parent)
     : QWidget(parent)
@@ -85,20 +86,22 @@ void ProcessManagerWidget::setupUI()
 
 void ProcessManagerWidget::connectSignals()
 {
-    // Flow Widget -> Stacked Widget (if we allowed clicking, but for now it's guided)
-    
+    // Flow Widget -> Rollback handler
+    connect(m_flowWidget, &ProcessFlowWidget::stepClicked,
+            this, &ProcessManagerWidget::showRollbackConfirmation);
+
     // Import Step
     connect(m_importWidget, &ImportStepWidget::importClicked, this, &ProcessManagerWidget::importStepClicked);
     connect(m_importWidget, &ImportStepWidget::fileDropped, this, &ProcessManagerWidget::importFile);
-    
+
     // BC Step
     connect(m_bcWidget, &BoundaryConditionStepWidget::addLoadClicked, this, &ProcessManagerWidget::addLoadClicked);
     connect(m_bcWidget, &BoundaryConditionStepWidget::addConstraintClicked, this, &ProcessManagerWidget::addConstraintClicked);
     connect(m_bcWidget, &BoundaryConditionStepWidget::doneClicked, this, &ProcessManagerWidget::nextStep);
-    
+
     // Sim Step
     connect(m_simWidget, &SimulationStepWidget::simulateClicked, this, &ProcessManagerWidget::simulateClicked);
-    
+
     // Infill Step
     connect(m_infillWidget, &InfillStepWidget::processClicked, this, &ProcessManagerWidget::processInfillClicked);
 }
@@ -123,11 +126,36 @@ void ProcessManagerWidget::nextStep()
 {
     ProcessStep current = m_flowWidget->currentStep();
     int nextIdx = static_cast<int>(current) + 1;
-    
+
     if (nextIdx <= static_cast<int>(ProcessStep::InfillMap)) {
         ProcessStep next = static_cast<ProcessStep>(nextIdx);
         m_flowWidget->setCurrentStep(next);
         m_stepContainer->setCurrentIndex(nextIdx);
         emit stepChanged(next);
     }
+}
+
+void ProcessManagerWidget::showRollbackConfirmation(ProcessStep targetStep)
+{
+    ProcessStep currentStep = m_flowWidget->currentStep();
+
+    // Ignore if clicking current step or future steps
+    if (static_cast<int>(targetStep) >= static_cast<int>(currentStep)) {
+        return;
+    }
+
+    // Show confirmation dialog
+    RollbackConfirmationDialog dialog(targetStep, currentStep, this);
+    if (dialog.exec() == QDialog::Accepted) {
+        // User confirmed - emit signal for MainWindow to handle
+        emit rollbackRequested(targetStep);
+    }
+}
+
+void ProcessManagerWidget::rollbackToStep(ProcessStep targetStep)
+{
+    // Update UI to target step
+    m_flowWidget->setCurrentStep(targetStep);
+    m_stepContainer->setCurrentIndex(static_cast<int>(targetStep));
+    emit stepChanged(targetStep);
 }

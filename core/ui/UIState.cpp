@@ -82,6 +82,21 @@ void UIState::setStepTransparency(double transparency)
     }
 }
 
+void UIState::clearStepFile()
+{
+    m_objectList.step = ObjectFileInfo();  // Reset to default
+
+    // Remove from display order
+    auto it = std::remove(m_objectList.displayOrder.begin(),
+                         m_objectList.displayOrder.end(),
+                         ObjectListData::KEY_STEP);
+    m_objectList.displayOrder.erase(it, m_objectList.displayOrder.end());
+
+    emit stepFilePathChanged("");
+    emit stepFileInfoChanged(m_objectList.step);
+    qDebug() << "UIState: STEP file cleared";
+}
+
 // ========== Boundary Condition 関連 ==========
 void UIState::setBoundaryCondition(const BoundaryCondition& bc)
 {
@@ -252,6 +267,21 @@ void UIState::setSimulationResultTransparency(double transparency)
     }
 }
 
+void UIState::clearSimulationResult()
+{
+    m_objectList.simulationResult = ObjectFileInfo();  // Reset to default
+
+    // Remove from display order
+    auto it = std::remove(m_objectList.displayOrder.begin(),
+                         m_objectList.displayOrder.end(),
+                         ObjectListData::KEY_SIMULATION);
+    m_objectList.displayOrder.erase(it, m_objectList.displayOrder.end());
+
+    emit simulationResultFilePathChanged("");
+    emit simulationResultFileInfoChanged(m_objectList.simulationResult);
+    qDebug() << "UIState: Simulation result cleared";
+}
+
 // ========== Infill Regions 関連 ==========
 void UIState::addInfillRegion(const QString& key, const InfillRegionInfo& info)
 {
@@ -308,6 +338,22 @@ void UIState::setInfillRegionTransparency(const QString& key, double transparenc
         emit infillRegionTransparencyChanged(key, transparency);
         qDebug() << "UIState: Infill region transparency changed - Key:" << key << "Transparency:" << transparency;
     }
+}
+
+void UIState::clearAllInfillRegions()
+{
+    // Clear all infill regions
+    m_objectList.infillRegions.clear();
+
+    // Remove from display order
+    auto it = std::remove(m_objectList.displayOrder.begin(),
+                         m_objectList.displayOrder.end(),
+                         ObjectListData::KEY_INFILL);
+    m_objectList.displayOrder.erase(it, m_objectList.displayOrder.end());
+
+    // Note: ObjectListWidget will automatically rebuild based on the cleared data
+    // through its connection to various UIState signals
+    qDebug() << "UIState: All infill regions cleared";
 }
 
 // ========== 階層外のデータ ==========

@@ -7,6 +7,7 @@
 class QVBoxLayout;
 class QLabel;
 class QProgressBar;
+class QEnterEvent;
 
 enum class ProcessStep {
     ImportStep = 0,
@@ -19,20 +20,32 @@ class ProcessCard : public QWidget {
     Q_OBJECT
 public:
     explicit ProcessCard(int stepNumber, const QString& title, QWidget* parent = nullptr);
-    
+
     void setActive(bool active);
     void setCompleted(bool completed);
     void setLocked(bool locked);
-    
+    void setClickable(bool clickable);
+    bool isClickable() const { return m_isClickable; }
+
+signals:
+    void clicked();
+
+protected:
+    void mousePressEvent(QMouseEvent* event) override;
+    void enterEvent(QEnterEvent* event) override;
+    void leaveEvent(QEvent* event) override;
+
 private:
     int m_stepNumber;
     QString m_title;
     bool m_isActive = false;
     bool m_isCompleted = false;
     bool m_isLocked = true;
-    
+    bool m_isClickable = false;
+    bool m_isHovered = false;
+
     QLabel* m_textLabel = nullptr;
-    
+
     void updateStyle();
 };
 

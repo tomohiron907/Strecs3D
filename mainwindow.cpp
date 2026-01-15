@@ -81,6 +81,8 @@ void MainWindow::connectSignals()
     if (ui->getProcessManagerWidget()) {
         connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::importFile,
                 this, &MainWindow::loadSTEPFile);
+        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::rollbackRequested,
+                this, &MainWindow::handleProcessRollback);
     }
 
     // Connect face selection signal from VisualizationManager
@@ -625,14 +627,79 @@ void MainWindow::onSelectedObjectChanged(const SelectedObjectInfo& selection)
     if (!vizManager) return;
 
     // Check if the selected object is a Load or Constraint condition
-    bool isConditionSelected = (selection.type == ObjectType::ITEM_BC_CONSTRAINT || 
+    bool isConditionSelected = (selection.type == ObjectType::ITEM_BC_CONSTRAINT ||
                                 selection.type == ObjectType::ITEM_BC_LOAD);
-    
+
     // Enable face selection mode only when a condition is selected
     vizManager->setFaceSelectionMode(isConditionSelected);
-    
+
     // Ensure edge selection is off when switching selections (safety)
     // ただし、LoadPropertyWidgetでのエッジ選択中に別のオブジェクトを選んだ場合などを想定
     vizManager->setEdgeSelectionMode(false);
+}
+
+void MainWindow::handleProcessRollback(ProcessStep targetStep)
+{
+    logMessage(QString("Rolling back to step %1").arg(static_cast<int>(targetStep)));
+
+    UIState* uiState = ui->getUIState();
+    if (!uiState) {
+        QMessageBox::critical(this, "Error", "UIState not available");
+        return;
+    }
+
+    VisualizationManager* visManager = uiAdapter ? uiAdapter->getVisualizationManager() : nullptr;
+    if (!visManager) {
+        QMessageBox::critical(this, "Error", "VisualizationManager not available");
+        return;
+    }
+
+    ProcessManagerWidget* processManager = ui->getProcessManagerWidget();
+    if (!processManager) {
+        return;
+    }
+
+    ProcessStep currentStep = processManager->getFlowWidget()->currentStep();
+
+    int targetIdx = static_cast<int>(targetStep);
+    int currentIdx = static_cast<int>(currentStep);
+
+    // Reset data for each step that needs to be cleared
+    // Process in reverse order (highest to lowest)
+
+    // Step 4: Infill Map (if current >= 3 && target < 3)
+    if (currentIdx >= 3 && targetIdx < 3) {
+        logMessage("Clearing infill data...");
+        uiState->clearAllInfillRegions();
+        visManager->clearInfillActors();
+    }
+
+    // Step 3: Simulation (if current >= 2 && target < 2)
+    if (currentIdx >= 2 && targetIdx < 2) {
+        logMessage("Clearing simulation data...");
+        uiState->clearSimulationResult();
+        visManager->clearSimulationActors();
+    }
+
+    // Step 2: Boundary Conditions (if current >= 1 && target < 1)
+    if (currentIdx >= 1 && targetIdx < 1) {
+        logMessage("Clearing boundary conditions...");
+        uiState->clearLoadConditions();
+        uiState->clearConstraintConditions();
+        visManager->clearBoundaryConditions();
+    }
+
+    // Step 1: Import STEP (if target == 0)
+    if (targetIdx == 0) {
+        logMessage("Clearing STEP file...");
+        uiState->clearStepFile();
+        visManager->clearStepFileActors();
+        visManager->resetStepReader();
+    }
+
+    // Update ProcessManager UI
+    processManager->rollbackToStep(targetStep);
+
+    logMessage("Rollback completed");
 }
 

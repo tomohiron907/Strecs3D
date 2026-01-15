@@ -446,3 +446,46 @@ void VisualizationManager::clearBoundaryConditions() {
     // Render
     render();
 }
+
+void VisualizationManager::clearStepFileActors() {
+    // Remove all STEP-related actors (faces, edges)
+    auto it = std::remove_if(objectList_.begin(), objectList_.end(),
+                             [](const ObjectInfo& obj) {
+                                 return obj.filename.find("_face_") != std::string::npos ||
+                                        obj.filename.find("_edge_") != std::string::npos;
+                             });
+    objectList_.erase(it, objectList_.end());
+
+    // Reset StepReader
+    currentStepReader_.reset();
+
+    sceneRenderer_->renderObjects(objectList_);
+    qDebug() << "VisualizationManager: STEP file actors cleared";
+}
+
+void VisualizationManager::clearSimulationActors() {
+    // Remove VTK actors (.vtu, .vtk files)
+    auto it = std::remove_if(objectList_.begin(), objectList_.end(),
+                             [](const ObjectInfo& obj) {
+                                 std::string ext;
+                                 if (obj.filename.length() >= 4) {
+                                     ext = obj.filename.substr(obj.filename.length() - 4);
+                                 }
+                                 return ext == ".vtu" || ext == ".vtk";
+                             });
+    objectList_.erase(it, objectList_.end());
+
+    sceneRenderer_->renderObjects(objectList_);
+    qDebug() << "VisualizationManager: Simulation actors cleared";
+}
+
+void VisualizationManager::clearInfillActors() {
+    // Alias for existing method
+    removeDividedStlActors();
+    qDebug() << "VisualizationManager: Infill actors cleared";
+}
+
+void VisualizationManager::resetStepReader() {
+    currentStepReader_.reset();
+    qDebug() << "VisualizationManager: StepReader reset";
+}

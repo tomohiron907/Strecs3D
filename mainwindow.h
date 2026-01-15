@@ -47,6 +47,7 @@ public slots:
     void onFaceClicked(int faceId, double nx, double ny, double nz);
     void onFaceDoubleClicked(int faceId, double nx, double ny, double nz);
     void onSelectedObjectChanged(const SelectedObjectInfo& selection);
+    void handleProcessRollback(ProcessStep targetStep);  // Handle process rollback
 
 private:
     // Initialization methods

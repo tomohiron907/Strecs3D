@@ -40,10 +40,17 @@ signals:
     // Signal when step changes (for any broader UI updates)
     void stepChanged(ProcessStep newStep);
 
+    // Signal when rollback is requested
+    void rollbackRequested(ProcessStep targetStep);
+
 public slots:
     void onImportCompleted(); // Call this when file is loaded
     void onSimulationCompleted(); // Call this when sim is done
     void nextStep(); // Manually advance
+    void rollbackToStep(ProcessStep targetStep); // Rollback to a specific step
+
+private slots:
+    void showRollbackConfirmation(ProcessStep targetStep); // Show confirmation dialog
 
 private:
     ProcessFlowWidget* m_flowWidget;

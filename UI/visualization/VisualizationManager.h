@@ -60,6 +60,12 @@ public:
     void displayBoundaryConditions(const BoundaryCondition& condition);
     void clearBoundaryConditions();
 
+    // Process Rollback Support
+    void clearStepFileActors();      // Remove all STEP-related actors (faces + edges)
+    void clearSimulationActors();    // Remove VTK result actors
+    void clearInfillActors();        // Remove infill mesh actors (alias for removeDividedStlActors)
+    void resetStepReader();          // Reset StepReader
+
     // Edge Selection Mode
     void setEdgeSelectionMode(bool enabled);
 
