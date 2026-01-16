@@ -64,8 +64,8 @@ void AddLoadDialog::setupUI()
     mainLayout->setContentsMargins(15, 15, 15, 15);
     mainLayout->setSpacing(12);
 
-    // Labels style
-    QString labelStyle = "color: #aaaaaa;";
+    // Labels style - transparent background
+    QString labelStyle = "color: #aaaaaa; background-color: transparent;";
     QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: 4px; border-radius: 4px; min-height: 20px; }")
         .arg(ColorManager::INPUT_TEXT_COLOR.name())
         .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
@@ -155,7 +155,7 @@ void AddLoadDialog::setupUI()
     // Hint label
     QLabel* hintLabel = new QLabel("ヒント: 面をダブルクリックするとSurface IDと方向が設定されます。\nエッジを選択すると方向ベクトルを設定できます。", this);
     hintLabel->setWordWrap(true);
-    hintLabel->setStyleSheet("color: #888888; font-size: 11px;");
+    hintLabel->setStyleSheet("color: #888888; font-size: 11px; background-color: transparent;");
     mainLayout->addWidget(hintLabel);
 
     mainLayout->addStretch();
