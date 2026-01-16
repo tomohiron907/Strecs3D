@@ -85,6 +85,20 @@ void MainWindow::connectSignals()
                 this, &MainWindow::loadSTEPFile);
         connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::rollbackRequested,
                 this, &MainWindow::handleProcessRollback);
+
+        // Auto-close property widget (by clearing selection) on left pane interactions
+        auto clearSelection = [this]() {
+            if (UIState* state = getUIState()) {
+                state->setSelectedObject(ObjectType::NONE);
+            }
+        };
+
+        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::stepChanged, this, clearSelection);
+        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::importStepClicked, this, clearSelection);
+        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::addLoadClicked, this, clearSelection);
+        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::addConstraintClicked, this, clearSelection);
+        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::simulateClicked, this, clearSelection);
+        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::processInfillClicked, this, clearSelection);
     }
 
     // Connect face selection signal from VisualizationManager
