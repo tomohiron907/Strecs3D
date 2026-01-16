@@ -427,6 +427,16 @@ void MainWindow::onConstrainButtonClicked()
     AddConstraintDialog* dialog = new AddConstraintDialog(QString::fromStdString(newName), this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
 
+    // Initial position relative to BoundaryConditionStepWidget (Bottom Widget)
+    if (ui && ui->getProcessManagerWidget()) {
+        if (auto* bcWidget = ui->getProcessManagerWidget()->getBoundaryConditionStep()) {
+            QPoint widgetPos = bcWidget->mapToGlobal(QPoint(0, 0));
+            int targetX = widgetPos.x() + bcWidget->width() + 20;
+            int targetY = widgetPos.y();
+            dialog->move(targetX, targetY);
+        }
+    }
+
     // Connect to VisualizationManager for face selection
     if (uiAdapter && uiAdapter->getVisualizationManager()) {
         dialog->setVisualizationManager(uiAdapter->getVisualizationManager());
@@ -474,6 +484,16 @@ void MainWindow::onLoadButtonClicked()
     // Show dialog to configure load
     AddLoadDialog* dialog = new AddLoadDialog(QString::fromStdString(newName), this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
+
+    // Initial position relative to BoundaryConditionStepWidget (Bottom Widget)
+    if (ui && ui->getProcessManagerWidget()) {
+        if (auto* bcWidget = ui->getProcessManagerWidget()->getBoundaryConditionStep()) {
+            QPoint widgetPos = bcWidget->mapToGlobal(QPoint(0, 0));
+            int targetX = widgetPos.x() + bcWidget->width() + 20;
+            int targetY = widgetPos.y();
+            dialog->move(targetX, targetY);
+        }
+    }
 
     // Connect to VisualizationManager for face/edge selection
     if (uiAdapter && uiAdapter->getVisualizationManager()) {
