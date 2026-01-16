@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QCheckBox>
 #include <QDialog>
 #include <QLineEdit>
 #include <QPushButton>
@@ -23,12 +24,14 @@ private slots:
     void onFaceDoubleClicked(int faceId, double nx, double ny, double nz);
     void onEdgeSelected(int edgeId);
     void onReferenceEdgeButtonClicked();
+    void onReverseDirectionToggled(bool checked);
 
 private:
     void setupUI();
     void enableFaceSelectionMode(bool enable);
     void cancelEdgeSelection();
     void updateDirectionFromEdge(int edgeId);
+    void updateDirectionDisplay();
 
     QLineEdit* m_nameEdit;
     QLineEdit* m_surfaceIdEdit;
@@ -36,6 +39,7 @@ private:
 
     // Edge selection UI
     QPushButton* m_referenceEdgeButton;
+    QCheckBox* m_reverseCheckBox;
     QLabel* m_selectedEdgeLabel;
     QLabel* m_directionDisplay;
 

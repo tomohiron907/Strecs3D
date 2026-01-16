@@ -105,16 +105,24 @@ void LoadPropertyWidget::setupUI()
 
     layout->addRow(new QLabel("Reference Edge:"), edgeWidget);
 
+    // Reverse Checkbox
+    m_reverseCheckBox = new QCheckBox(this);
+    m_reverseCheckBox->setStyleSheet("QCheckBox { background-color: transparent; }");
+    connect(m_reverseCheckBox, &QCheckBox::toggled, this, &LoadPropertyWidget::onReverseDirectionToggled);
+    
+    layout->addRow(new QLabel("Reverse Direction:"), m_reverseCheckBox);
+
     // Direction Display (read-only)
-    // Direction Display (simple numeric display)
     m_directionDisplay = new QLabel("(0.000, 0.000, 0.000)");
     m_directionDisplay->setStyleSheet(labelStyle); // Just text style, no border
     layout->addRow(new QLabel("Direction:"), m_directionDisplay);
     
     // Apply label style
     for(int i = 0; i < layout->rowCount(); ++i) {
-        QWidget* label = layout->itemAt(i, QFormLayout::LabelRole)->widget();
-        if(label) label->setStyleSheet(labelStyle);
+        QLayoutItem* item = layout->itemAt(i, QFormLayout::LabelRole);
+        if (item && item->widget()) {
+            item->widget()->setStyleSheet(labelStyle);
+        }
     }
 
     // Spacer to push Close button to the bottom
@@ -179,6 +187,11 @@ void LoadPropertyWidget::updateData()
         .arg(l.direction.x, 0, 'f', 3)
         .arg(l.direction.y, 0, 'f', 3)
         .arg(l.direction.z, 0, 'f', 3));
+        
+    // Reset reverse checkbox to false when loading (user can toggle it to flip relative to current)
+    bool oldCheckBlock = m_reverseCheckBox->blockSignals(true);
+    m_reverseCheckBox->setChecked(false);
+    m_reverseCheckBox->blockSignals(oldCheckBlock);
 
     blockSignals(oldBlock);
 }
@@ -284,9 +297,16 @@ void LoadPropertyWidget::updateDirectionFromEdge(int edgeId)
     l.direction.y = edgeGeom.dirY;
     l.direction.z = edgeGeom.dirZ;
 
+    l.direction.z = edgeGeom.dirZ;
+
     auto command = std::make_unique<UpdateLoadConditionCommand>(
         m_uiState, m_currentIndex, l);
     command->execute();
+
+    // Reset reverse checkbox
+    bool oldBlock = m_reverseCheckBox->blockSignals(true);
+    m_reverseCheckBox->setChecked(false);
+    m_reverseCheckBox->blockSignals(oldBlock);
 }
 
 void LoadPropertyWidget::cancelEdgeSelection()
@@ -314,4 +334,31 @@ void LoadPropertyWidget::onCloseClicked()
         m_uiState->setSelectedObject(ObjectType::NONE);
     }
     emit closeClicked();
+}
+
+void LoadPropertyWidget::onReverseDirectionToggled(bool checked)
+{
+    if (!m_uiState || m_currentIndex < 0) return;
+    
+    auto bc = m_uiState->getBoundaryCondition();
+    if (m_currentIndex >= (int)bc.loads.size()) return;
+    
+    LoadCondition l = bc.loads[m_currentIndex];
+    
+    // Invert direction
+    l.direction.x = -l.direction.x;
+    l.direction.y = -l.direction.y;
+    l.direction.z = -l.direction.z;
+    
+    // Update model (this will trigger updates, but we also update local UI for responsiveness)
+    auto command = std::make_unique<UpdateLoadConditionCommand>(
+        m_uiState, m_currentIndex, l);
+    command->execute();
+    
+    // Direction display will be updated by updateData() if signals are connected properly,
+    // or we can force update text here just in case (updateData resets the checkbox which might cycle)
+    // Actually, UpdateLoadConditionCommand will trigger UIState update, which might trigger MainWindow refresh,
+    // which might call setTarget again.
+    // If setTarget is called, updateData is called, which resets checkbox to false.
+    // This is desired: we flipped it, now the new state is "Force", and if we check it again, it flips again.
 }

@@ -143,9 +143,19 @@ void AddLoadDialog::setupUI()
     edgeLabel->setStyleSheet(labelStyle);
     formLayout->addRow(edgeLabel, edgeWidget);
 
+    // Reverse Checkbox
+    m_reverseCheckBox = new QCheckBox(this);
+    m_reverseCheckBox->setStyleSheet("QCheckBox { background-color: transparent; }");
+    connect(m_reverseCheckBox, &QCheckBox::toggled, this, &AddLoadDialog::onReverseDirectionToggled);
+    
+    QLabel* reverseLabel = new QLabel("Reverse Direction:", this);
+    reverseLabel->setStyleSheet(labelStyle);
+    formLayout->addRow(reverseLabel, m_reverseCheckBox);
+
     // Direction Display
     m_directionDisplay = new QLabel("(0.000, 0.000, -1.000)", this);
     m_directionDisplay->setStyleSheet(labelStyle);
+
     QLabel* dirLabel = new QLabel("Direction:", this);
     dirLabel->setStyleSheet(labelStyle);
     formLayout->addRow(dirLabel, m_directionDisplay);
@@ -216,15 +226,18 @@ void AddLoadDialog::enableFaceSelectionMode(bool enable)
 void AddLoadDialog::onFaceDoubleClicked(int faceId, double nx, double ny, double nz)
 {
     m_surfaceIdEdit->setText(QString::number(faceId));
+    
+    // Reset reverse checkbox since we are setting a new base direction
+    bool oldBlock = m_reverseCheckBox->blockSignals(true);
+    m_reverseCheckBox->setChecked(false);
+    m_reverseCheckBox->blockSignals(oldBlock);
 
     // Set direction as inverse of face normal
     m_currentLoad.direction = {-nx, -ny, -nz};
     m_currentLoad.reference_edge_id = 0;
     m_selectedEdgeLabel->setText("-");
-    m_directionDisplay->setText(QString("(%1, %2, %3)")
-        .arg(-nx, 0, 'f', 3)
-        .arg(-ny, 0, 'f', 3)
-        .arg(-nz, 0, 'f', 3));
+    
+    updateDirectionDisplay();
 
     // Show preview
     if (m_vizManager) {
@@ -273,23 +286,26 @@ void AddLoadDialog::updateDirectionFromEdge(int edgeId)
         return;
     }
 
+    // Reset reverse checkbox
+    bool oldBlock = m_reverseCheckBox->blockSignals(true);
+    m_reverseCheckBox->setChecked(false);
+    m_reverseCheckBox->blockSignals(oldBlock);
+
     // Update UI
     m_selectedEdgeLabel->setText(QString("Edge %1").arg(edgeId));
-    m_directionDisplay->setText(QString("(%1, %2, %3)")
-        .arg(edgeGeom.dirX, 0, 'f', 3)
-        .arg(edgeGeom.dirY, 0, 'f', 3)
-        .arg(edgeGeom.dirZ, 0, 'f', 3));
-
+    
     // Update stored load data
     m_currentLoad.reference_edge_id = edgeId;
     m_currentLoad.direction.x = edgeGeom.dirX;
     m_currentLoad.direction.y = edgeGeom.dirY;
     m_currentLoad.direction.z = edgeGeom.dirZ;
 
+    updateDirectionDisplay();
+
     // Update preview with new direction
     int surfaceId = m_surfaceIdEdit->text().toInt();
     if (m_vizManager && surfaceId > 0) {
-        m_vizManager->showLoadPreview(surfaceId, edgeGeom.dirX, edgeGeom.dirY, edgeGeom.dirZ);
+        m_vizManager->showLoadPreview(surfaceId, m_currentLoad.direction.x, m_currentLoad.direction.y, m_currentLoad.direction.z);
     }
 }
 
@@ -314,4 +330,31 @@ LoadCondition AddLoadDialog::getLoadCondition() const
     load.surface_id = m_surfaceIdEdit->text().toInt();
     load.magnitude = m_magnitudeEdit->text().toDouble();
     return load;
+}
+
+void AddLoadDialog::onReverseDirectionToggled(bool checked)
+{
+    // Invert direction
+    m_currentLoad.direction.x = -m_currentLoad.direction.x;
+    m_currentLoad.direction.y = -m_currentLoad.direction.y;
+    m_currentLoad.direction.z = -m_currentLoad.direction.z;
+
+    updateDirectionDisplay();
+
+    // Update preview
+    int surfaceId = m_surfaceIdEdit->text().toInt();
+    if (m_vizManager && surfaceId > 0) {
+        m_vizManager->showLoadPreview(surfaceId, 
+            m_currentLoad.direction.x, 
+            m_currentLoad.direction.y, 
+            m_currentLoad.direction.z);
+    }
+}
+
+void AddLoadDialog::updateDirectionDisplay()
+{
+    m_directionDisplay->setText(QString("(%1, %2, %3)")
+        .arg(m_currentLoad.direction.x, 0, 'f', 3)
+        .arg(m_currentLoad.direction.y, 0, 'f', 3)
+        .arg(m_currentLoad.direction.z, 0, 'f', 3));
 }

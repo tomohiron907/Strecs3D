@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QCheckBox>
 #include <QWidget>
 #include <QFormLayout>
 #include <QLineEdit>
@@ -36,6 +37,7 @@ private:
     void onEdgeSelected(int edgeId);
     void updateDirectionFromEdge(int edgeId);
     void cancelEdgeSelection();
+    void onReverseDirectionToggled(bool checked);
 
     UIState* m_uiState = nullptr;
     VisualizationManager* m_vizManager = nullptr;
@@ -50,6 +52,7 @@ private:
     QPushButton* m_referenceEdgeButton;
     QLabel* m_selectedEdgeLabel;
     QLabel* m_directionDisplay;  // Simple numeric display
+    QCheckBox* m_reverseCheckBox;
 
     QPushButton* m_closeButton;
 };
