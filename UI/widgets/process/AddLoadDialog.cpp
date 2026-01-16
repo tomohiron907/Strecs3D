@@ -31,6 +31,10 @@ AddLoadDialog::~AddLoadDialog()
     if (m_isSelectingEdge) {
         cancelEdgeSelection();
     }
+    // Clear preview when dialog is closed
+    if (m_vizManager) {
+        m_vizManager->clearPreview();
+    }
     enableFaceSelectionMode(false);
 }
 
@@ -168,7 +172,12 @@ void AddLoadDialog::setupUI()
         "QPushButton:hover { background-color: #555; }"
         "QPushButton:pressed { background-color: #333; }"
     );
-    connect(m_cancelButton, &QPushButton::clicked, this, &QDialog::reject);
+    connect(m_cancelButton, &QPushButton::clicked, this, [this]() {
+        if (m_vizManager) {
+            m_vizManager->clearPreview();
+        }
+        reject();
+    });
     buttonLayout->addWidget(m_cancelButton);
 
     m_okButton = new QPushButton("OK", this);
@@ -183,7 +192,12 @@ void AddLoadDialog::setupUI()
         .arg(ColorManager::BUTTON_HOVER_COLOR.name())
         .arg(ColorManager::BUTTON_PRESSED_COLOR.name())
     );
-    connect(m_okButton, &QPushButton::clicked, this, &QDialog::accept);
+    connect(m_okButton, &QPushButton::clicked, this, [this]() {
+        if (m_vizManager) {
+            m_vizManager->clearPreview();
+        }
+        accept();
+    });
     buttonLayout->addWidget(m_okButton);
 
     mainLayout->addLayout(buttonLayout);
@@ -211,6 +225,11 @@ void AddLoadDialog::onFaceDoubleClicked(int faceId, double nx, double ny, double
         .arg(-nx, 0, 'f', 3)
         .arg(-ny, 0, 'f', 3)
         .arg(-nz, 0, 'f', 3));
+
+    // Show preview
+    if (m_vizManager) {
+        m_vizManager->showLoadPreview(faceId, -nx, -ny, -nz);
+    }
 }
 
 void AddLoadDialog::onReferenceEdgeButtonClicked()
@@ -266,6 +285,12 @@ void AddLoadDialog::updateDirectionFromEdge(int edgeId)
     m_currentLoad.direction.x = edgeGeom.dirX;
     m_currentLoad.direction.y = edgeGeom.dirY;
     m_currentLoad.direction.z = edgeGeom.dirZ;
+
+    // Update preview with new direction
+    int surfaceId = m_surfaceIdEdit->text().toInt();
+    if (m_vizManager && surfaceId > 0) {
+        m_vizManager->showLoadPreview(surfaceId, edgeGeom.dirX, edgeGeom.dirY, edgeGeom.dirZ);
+    }
 }
 
 void AddLoadDialog::cancelEdgeSelection()

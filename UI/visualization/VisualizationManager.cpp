@@ -494,3 +494,80 @@ void VisualizationManager::resetStepReader() {
     currentStepReader_.reset();
     qDebug() << "VisualizationManager: StepReader reset";
 }
+
+void VisualizationManager::showConstraintPreview(int surfaceId) {
+    // Clear any existing preview
+    clearPreview();
+
+    if (!currentStepReader_ || !currentStepReader_->isValid()) {
+        return;
+    }
+
+    FaceGeometry geom = currentStepReader_->getFaceGeometry(surfaceId);
+    if (!geom.isValid) {
+        return;
+    }
+
+    // Create constraint preview actor
+    ConstraintCondition tempConstraint;
+    tempConstraint.surface_id = surfaceId;
+
+    BoundaryCondition tempCondition;
+    tempCondition.constraints.push_back(tempConstraint);
+
+    auto bcActors = bcVisualizer_->createBoundaryConditionActors(tempCondition, currentStepReader_.get());
+    if (!bcActors.constraintActors.empty()) {
+        previewActor_ = bcActors.constraintActors[0];
+        registerObject({previewActor_, "__preview_bc__", true, 0.8});
+        sceneRenderer_->addActorToRenderer(previewActor_);
+        render();
+    }
+}
+
+void VisualizationManager::showLoadPreview(int surfaceId, double dirX, double dirY, double dirZ) {
+    // Clear any existing preview
+    clearPreview();
+
+    if (!currentStepReader_ || !currentStepReader_->isValid()) {
+        return;
+    }
+
+    FaceGeometry geom = currentStepReader_->getFaceGeometry(surfaceId);
+    if (!geom.isValid) {
+        return;
+    }
+
+    // Create load preview actor
+    LoadCondition tempLoad;
+    tempLoad.surface_id = surfaceId;
+    tempLoad.direction = {dirX, dirY, dirZ};
+    tempLoad.magnitude = 10.0;
+
+    BoundaryCondition tempCondition;
+    tempCondition.loads.push_back(tempLoad);
+
+    auto bcActors = bcVisualizer_->createBoundaryConditionActors(tempCondition, currentStepReader_.get());
+    if (!bcActors.loadActors.empty()) {
+        previewActor_ = bcActors.loadActors[0];
+        registerObject({previewActor_, "__preview_bc__", true, 0.8});
+        sceneRenderer_->addActorToRenderer(previewActor_);
+        render();
+    }
+}
+
+void VisualizationManager::clearPreview() {
+    if (previewActor_) {
+        // Remove from objectList_
+        objectList_.erase(
+            std::remove_if(objectList_.begin(), objectList_.end(),
+                           [](const ObjectInfo& obj) {
+                               return obj.filename == "__preview_bc__";
+                           }),
+            objectList_.end());
+
+        // Remove from renderer
+        sceneRenderer_->removeActorFromRenderer(previewActor_);
+        previewActor_ = nullptr;
+        render();
+    }
+}

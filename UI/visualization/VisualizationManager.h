@@ -75,6 +75,11 @@ public:
     // StepReader Access (for edge geometry calculation)
     std::shared_ptr<StepReader> getCurrentStepReader() const { return currentStepReader_; }
 
+    // Preview Boundary Conditions (for dialogs)
+    void showConstraintPreview(int surfaceId);
+    void showLoadPreview(int surfaceId, double dirX, double dirY, double dirZ);
+    void clearPreview();
+
 signals:
     void faceClicked(int faceId, double nx, double ny, double nz);
     void faceDoubleClicked(int faceId, double nx, double ny, double nz);
@@ -95,6 +100,9 @@ private:
 
     // Boundary condition actors
     std::vector<vtkSmartPointer<vtkActor>> boundaryConditionActors_;
+
+    // Preview actor (for dialog previews)
+    vtkSmartPointer<vtkActor> previewActor_;
 
     // Helper methods
     void registerObject(const ObjectInfo& objInfo);

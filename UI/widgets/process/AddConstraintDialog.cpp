@@ -18,6 +18,10 @@ AddConstraintDialog::AddConstraintDialog(const QString& defaultName, QWidget* pa
 
 AddConstraintDialog::~AddConstraintDialog()
 {
+    // Clear preview when dialog is closed
+    if (m_vizManager) {
+        m_vizManager->clearPreview();
+    }
     enableFaceSelectionMode(false);
 }
 
@@ -95,7 +99,12 @@ void AddConstraintDialog::setupUI()
         "QPushButton:hover { background-color: #555; }"
         "QPushButton:pressed { background-color: #333; }"
     );
-    connect(m_cancelButton, &QPushButton::clicked, this, &QDialog::reject);
+    connect(m_cancelButton, &QPushButton::clicked, this, [this]() {
+        if (m_vizManager) {
+            m_vizManager->clearPreview();
+        }
+        reject();
+    });
     buttonLayout->addWidget(m_cancelButton);
 
     m_okButton = new QPushButton("OK", this);
@@ -110,7 +119,12 @@ void AddConstraintDialog::setupUI()
         .arg(ColorManager::BUTTON_HOVER_COLOR.name())
         .arg(ColorManager::BUTTON_PRESSED_COLOR.name())
     );
-    connect(m_okButton, &QPushButton::clicked, this, &QDialog::accept);
+    connect(m_okButton, &QPushButton::clicked, this, [this]() {
+        if (m_vizManager) {
+            m_vizManager->clearPreview();
+        }
+        accept();
+    });
     buttonLayout->addWidget(m_okButton);
 
     mainLayout->addLayout(buttonLayout);
@@ -133,6 +147,11 @@ void AddConstraintDialog::onFaceDoubleClicked(int faceId, double nx, double ny, 
     Q_UNUSED(nz);
 
     m_surfaceIdEdit->setText(QString::number(faceId));
+
+    // Show preview
+    if (m_vizManager) {
+        m_vizManager->showConstraintPreview(faceId);
+    }
 }
 
 ConstraintCondition AddConstraintDialog::getConstraintCondition() const
