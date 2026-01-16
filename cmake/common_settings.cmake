@@ -145,6 +145,8 @@ add_executable(Strecs3D
   UI/widgets/process/ProcessFlowWidget.cpp
   UI/widgets/process/ProcessManagerWidget.cpp
   UI/widgets/process/RollbackConfirmationDialog.cpp
+  UI/widgets/process/AddConstraintDialog.cpp
+  UI/widgets/process/AddLoadDialog.cpp
   UI/widgets/process/steps/ImportStepWidget.cpp
   UI/widgets/process/steps/BoundaryConditionStepWidget.cpp
   UI/widgets/process/steps/SimulationStepWidget.cpp

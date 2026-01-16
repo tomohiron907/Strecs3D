@@ -18,6 +18,8 @@
 #include "core/commands/visualization/SetMeshOpacityCommand.h"
 #include "core/commands/visualization/SetMeshOpacityCommand.h"
 #include "utils/tempPathUtility.h"
+#include "UI/widgets/process/AddLoadDialog.h"
+#include "UI/widgets/process/AddConstraintDialog.h"
 #include <QPushButton>
 #include <QFileDialog>
 #include <QVBoxLayout>
@@ -421,19 +423,30 @@ void MainWindow::onConstrainButtonClicked()
         nextId++;
     }
 
-    // Create a new default constraint
-    ConstraintCondition constraint;
-    constraint.name = newName;
-    constraint.surface_id = 0; // Default (empty)
+    // Show dialog to configure constraint
+    AddConstraintDialog* dialog = new AddConstraintDialog(QString::fromStdString(newName), this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
 
-    // Command pattern: Add constraint
-    auto command = std::make_unique<SetConstraintConditionCommand>(
-        state,
-        constraint
-    );
-    command->execute();
+    // Connect to VisualizationManager for face selection
+    if (uiAdapter && uiAdapter->getVisualizationManager()) {
+        dialog->setVisualizationManager(uiAdapter->getVisualizationManager());
+    }
 
-    logMessage("Added new Constraint Condition: " + QString::fromStdString(newName));
+    // Connect dialog result
+    connect(dialog, &QDialog::accepted, this, [this, dialog, state]() {
+        ConstraintCondition constraint = dialog->getConstraintCondition();
+
+        // Command pattern: Add constraint
+        auto command = std::make_unique<SetConstraintConditionCommand>(
+            state,
+            constraint
+        );
+        command->execute();
+
+        logMessage("Added new Constraint Condition: " + QString::fromStdString(constraint.name));
+    });
+
+    dialog->show();
 }
 
 void MainWindow::onLoadButtonClicked()
@@ -458,21 +471,30 @@ void MainWindow::onLoadButtonClicked()
         nextId++;
     }
 
-    // Create a new default load
-    LoadCondition load;
-    load.name = newName;
-    load.surface_id = 0; // Default (empty)
-    load.magnitude = 10.0;
-    load.direction = {0, 0, -1}; // Default Z down
+    // Show dialog to configure load
+    AddLoadDialog* dialog = new AddLoadDialog(QString::fromStdString(newName), this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
 
-    // Command pattern: Add load
-    auto command = std::make_unique<SetLoadConditionCommand>(
-        state,
-        load
-    );
-    command->execute();
+    // Connect to VisualizationManager for face/edge selection
+    if (uiAdapter && uiAdapter->getVisualizationManager()) {
+        dialog->setVisualizationManager(uiAdapter->getVisualizationManager());
+    }
 
-    logMessage("Added new Load Condition: " + QString::fromStdString(newName));
+    // Connect dialog result
+    connect(dialog, &QDialog::accepted, this, [this, dialog, state]() {
+        LoadCondition load = dialog->getLoadCondition();
+
+        // Command pattern: Add load
+        auto command = std::make_unique<SetLoadConditionCommand>(
+            state,
+            load
+        );
+        command->execute();
+
+        logMessage("Added new Load Condition: " + QString::fromStdString(load.name));
+    });
+
+    dialog->show();
 }
 
 void MainWindow::onSimulateButtonClicked()
