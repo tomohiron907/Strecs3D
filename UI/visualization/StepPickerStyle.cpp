@@ -172,22 +172,13 @@ void StepPickerStyle::OnLeftButtonDown()
     isClickPending_ = true;
 
     // ピッキングを実行
-    vtkSmartPointer<vtkCellPicker> cellPicker = vtkSmartPointer<vtkCellPicker>::New();
-    cellPicker->PickFromListOn();
-    cellPicker->SetTolerance(0.01);
-
+    // メンバー変数 picker_ を使用（UpdatePickListで設定済み）
+    // OnMouseMoveと条件を合わせるため、ここではPickのみ行う
+    
     // エッジ選択モードの場合はエッジのみをピック
     if (edgeSelectionMode_) {
-        // Add only edges to pick list
-        for (auto& actor : edgeActors_) {
-            if (actor) {
-                cellPicker->AddPickList(actor);
-            }
-        }
-
-        // Pick
-        cellPicker->Pick(clickPos[0], clickPos[1], 0, renderer_);
-        vtkActor* pickedActor = cellPicker->GetActor();
+        picker_->Pick(clickPos[0], clickPos[1], 0, renderer_);
+        vtkActor* pickedActor = picker_->GetActor();
 
         if (pickedActor) {
             // Find edge index
@@ -208,11 +199,45 @@ void StepPickerStyle::OnLeftButtonDown()
         return;  // エッジ選択モードでは回転を無効化
     }
 
-    // 通常モード: Add faces to pick list
-    // 面選択モードが有効な場合のみ面を追加
+    // 通常モード: 
     if (faceSelectionMode_) {
-        for (auto& actor : faceActors_) {
-            cellPicker->AddPickList(actor);
+        // 1. 直前にハイライトされていたアクターがあればそれを採用（見た目通りの選択）
+        vtkActor* pickedActor = nullptr;
+        if (lastPickedActor_) {
+             // 安全のためリストチェック
+             bool isValid = false;
+             for(const auto& actor : faceActors_) { if(actor == lastPickedActor_) { isValid = true; break; } }
+             if(isValid) pickedActor = lastPickedActor_;
+        }
+        
+        // 2. なければピック
+        if (!pickedActor) {
+             picker_->Pick(clickPos[0], clickPos[1], 0, renderer_);
+             pickedActor = picker_->GetActor();
+             // リストチェック
+             if (pickedActor) {
+                 bool isValid = false;
+                 for(const auto& actor : faceActors_) { if(actor == pickedActor) { isValid = true; break; } }
+                 if(!isValid) pickedActor = nullptr;
+             }
+        }
+
+        if (pickedActor) {
+            // ピックされたアクターが面アクターのリストに含まれているか確認
+            int faceIndex = -1;
+            for (size_t i = 0; i < faceActors_.size(); ++i) {
+                if (faceActors_[i] == pickedActor) {
+                    faceIndex = static_cast<int>(i);
+                    break;
+                }
+            }
+
+            if (faceIndex >= 0 && onFaceClicked_) {
+                double normal[3];
+                picker_->GetPickNormal(normal);
+                onFaceClicked_(faceIndex + 1, normal); // 1-based index for UI
+                isClickPending_ = false;  // 面選択時は背景クリック判定をリセット
+            }
         }
     } else {
         // 面選択モードが無効でも、背景クリック判定は行う（isClickPending_は維持）
@@ -220,28 +245,6 @@ void StepPickerStyle::OnLeftButtonDown()
         return;
     }
 
-    // Pick
-    cellPicker->Pick(clickPos[0], clickPos[1], 0, renderer_);
-
-    vtkActor* pickedActor = cellPicker->GetActor();
-
-    if (pickedActor) {
-        // ピックされたアクターが面アクターのリストに含まれているか確認
-        int faceIndex = -1;
-        for (size_t i = 0; i < faceActors_.size(); ++i) {
-            if (faceActors_[i] == pickedActor) {
-                faceIndex = static_cast<int>(i);
-                break;
-            }
-        }
-
-        if (faceIndex >= 0 && onFaceClicked_) {
-            double normal[3];
-            cellPicker->GetPickNormal(normal);
-            onFaceClicked_(faceIndex + 1, normal); // 1-based index for UI
-            isClickPending_ = false;  // 面選択時は背景クリック判定をリセット
-        }
-    }
     // 背景クリック判定はOnLeftButtonUpで行う
 
     // デフォルトの動作（回転など）も維持する
@@ -480,12 +483,16 @@ void StepPickerStyle::UpdatePickList()
     picker_->PickFromListOn();
 
     if (faceSelectionMode_) {
+        // Face selection: strict tolerance for precision
+        picker_->SetTolerance(0.0);
         for (const auto& actor : faceActors_) {
             if (actor) picker_->AddPickList(actor);
         }
     }
     
     if (edgeSelectionMode_) {
+        // Edge selection: loose tolerance for easier picking
+        picker_->SetTolerance(0.005);
         for (const auto& actor : edgeActors_) {
             if (actor) picker_->AddPickList(actor);
         }
