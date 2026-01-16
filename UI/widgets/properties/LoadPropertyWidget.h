@@ -22,15 +22,10 @@ public:
     // Set VisualizationManager reference for edge selection
     void setVisualizationManager(VisualizationManager* vizManager);
 
-signals:
-    void okClicked();
-
 private:
     void setupUI();
     void updateData();
     void pushData();
-    void updateOkButtonStyle();
-    void updateOkButtonState();
 
     // Edge selection handlers
     void onReferenceEdgeButtonClicked();
@@ -51,8 +46,4 @@ private:
     QPushButton* m_referenceEdgeButton;
     QLabel* m_selectedEdgeLabel;
     QLabel* m_directionDisplay;  // Simple numeric display
-
-    QPushButton* m_okButton;
-
-    void onOkClicked();
 };

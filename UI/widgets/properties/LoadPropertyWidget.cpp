@@ -3,12 +3,9 @@
 #include "../../ColorManager.h"
 #include "../../visualization/VisualizationManager.h"
 #include "../../../core/processing/StepReader.h"
-#include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QSpacerItem>
 #include <QIntValidator>
 #include <QDoubleValidator>
-#include <QDebug>
 
 LoadPropertyWidget::LoadPropertyWidget(QWidget* parent)
     : QWidget(parent)
@@ -56,7 +53,6 @@ void LoadPropertyWidget::setupUI()
     m_surfaceIdEdit->setStyleSheet(inputStyle);
     m_surfaceIdEdit->setFixedWidth(100);
     connect(m_surfaceIdEdit, &QLineEdit::editingFinished, this, &LoadPropertyWidget::pushData);
-    connect(m_surfaceIdEdit, &QLineEdit::textChanged, this, &LoadPropertyWidget::updateOkButtonState); // Update OK button immediately on type
     layout->addRow(new QLabel("Surface ID:"), m_surfaceIdEdit);
     
     // Magnitude (Value) with Unit "N"
@@ -119,29 +115,6 @@ void LoadPropertyWidget::setupUI()
         QWidget* label = layout->itemAt(i, QFormLayout::LabelRole)->widget();
         if(label) label->setStyleSheet(labelStyle);
     }
-    
-    // Spacer to push OK button to the bottom
-    layout->addItem(new QSpacerItem(0, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
-    
-    // OK Button container for right alignment
-    QWidget* okButtonContainer = new QWidget();
-    QHBoxLayout* okButtonLayout = new QHBoxLayout(okButtonContainer);
-    okButtonLayout->setContentsMargins(0, 0, 0, 0);
-    okButtonLayout->addStretch();
-    
-    m_okButton = new QPushButton("OK");
-    m_okButton->setFixedWidth(80);
-    m_okButton->setEnabled(false); // 初期状態は無効
-    updateOkButtonStyle();
-    connect(m_okButton, &QPushButton::clicked, this, &LoadPropertyWidget::onOkClicked);
-    okButtonLayout->addWidget(m_okButton);
-    
-    layout->addRow("", okButtonContainer);
-    
-    // surface_idが変更されたらOKボタンの状態も更新
-    // surface_idが変更されたらOKボタンの状態も更新
-    // connected in m_surfaceIdEdit connection above
-    // connect(m_surfaceIdSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &LoadPropertyWidget::updateOkButtonState);
 }
 
 void LoadPropertyWidget::updateData()
@@ -181,9 +154,6 @@ void LoadPropertyWidget::updateData()
         .arg(l.direction.z, 0, 'f', 3));
 
     blockSignals(oldBlock);
-
-    // OKボタンの状態を更新
-    updateOkButtonState();
 }
 
 void LoadPropertyWidget::pushData()
@@ -210,59 +180,6 @@ void LoadPropertyWidget::pushData()
         l
     );
     command->execute();
-}
-
-void LoadPropertyWidget::onOkClicked()
-{
-    // Cancel edge selection if active
-    if (m_isSelectingEdge) {
-        cancelEdgeSelection();
-    }
-
-    if (m_uiState) {
-        // 選択状態をクリアして何も選択されていない状態に戻す
-        m_uiState->setSelectedObject(ObjectType::NONE);
-    }
-    emit okClicked();
-}
-
-void LoadPropertyWidget::updateOkButtonStyle()
-{
-    if (!m_okButton) return;
-    
-    if (m_okButton->isEnabled()) {
-        // 有効時: 強調表示色
-        m_okButton->setStyleSheet(
-            QString("QPushButton { background-color: %1; color: %2; border: none; "
-                    "padding: 8px 16px; border-radius: 4px; font-weight: bold; }"
-                    "QPushButton:hover { background-color: %3; color: %5; }"
-                    "QPushButton:pressed { background-color: %4; }")
-            .arg(ColorManager::ACCENT_COLOR.name())
-            .arg(ColorManager::BUTTON_TEXT_COLOR.name())
-            .arg(ColorManager::BUTTON_HOVER_COLOR.name())
-            .arg(ColorManager::BUTTON_PRESSED_COLOR.name())
-            .arg(ColorManager::BUTTON_TEXT_COLOR.name())
-        );
-    } else {
-        // 無効時: グレーアウト
-        m_okButton->setStyleSheet(
-            QString("QPushButton { background-color: %1; color: %2; border: 1px solid %3; "
-                    "padding: 8px 16px; border-radius: 4px; font-weight: bold; }")
-            .arg(ColorManager::BUTTON_DISABLED_COLOR.name())
-            .arg(ColorManager::BUTTON_DISABLED_TEXT_COLOR.name())
-            .arg(ColorManager::BUTTON_EDGE_COLOR.name())
-        );
-    }
-}
-
-void LoadPropertyWidget::updateOkButtonState()
-{
-    if (!m_okButton || !m_surfaceIdEdit) return;
-
-    // surface_idが0以外の場合にOKボタンを有効化
-    bool hasValidSurface = m_surfaceIdEdit->text().toInt() > 0;
-    m_okButton->setEnabled(hasValidSurface);
-    updateOkButtonStyle();
 }
 
 void LoadPropertyWidget::setVisualizationManager(VisualizationManager* vizManager)
