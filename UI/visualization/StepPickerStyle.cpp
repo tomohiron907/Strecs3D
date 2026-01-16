@@ -282,37 +282,59 @@ void StepPickerStyle::OnLeftButtonDoubleClick()
         return;
     }
 
-    int* clickPos = this->Interactor->GetEventPosition();
-
-    // ピッキングを実行
-    vtkSmartPointer<vtkCellPicker> cellPicker = vtkSmartPointer<vtkCellPicker>::New();
-    cellPicker->PickFromListOn();
-    cellPicker->SetTolerance(0.01);
-
     // エッジ選択モードの場合はダブルクリック処理は不要
     if (edgeSelectionMode_) {
          vtkInteractorStyleTrackballCamera::OnLeftButtonDoubleClick();
          return;
     }
 
-    // 通常モード: Add faces to pick list
+    // 通常モード: 
     // 面選択モードが無効ならダブルクリック処理もしない
     if (!faceSelectionMode_) {
          vtkInteractorStyleTrackballCamera::OnLeftButtonDoubleClick();
          return;
     }
 
-    for (auto& actor : faceActors_) {
-        cellPicker->AddPickList(actor);
+    vtkActor* pickedActor = nullptr;
+
+    // 1. 直前にハイライトされていたアクターがあればそれを採用（見た目通りの選択）
+    if (lastPickedActor_) {
+        // 安全のため、面アクターリストに含まれているか確認
+        bool isValid = false;
+        for (const auto& actor : faceActors_) {
+            if (actor == lastPickedActor_) {
+                isValid = true;
+                break;
+            }
+        }
+        if (isValid) {
+            pickedActor = lastPickedActor_;
+        }
     }
 
-    // Pick
-    cellPicker->Pick(clickPos[0], clickPos[1], 0, renderer_);
+    // 2. 直前のアクターがない場合（マウスを動かさず連続クリックした場合など）、再ピックを試みる
+    if (!pickedActor) {
+        int* clickPos = this->Interactor->GetEventPosition();
+        
+        // メンバー変数のpicker_を使用（設定済み、許容誤差0.005）
+        picker_->Pick(clickPos[0], clickPos[1], 0, renderer_);
+        pickedActor = picker_->GetActor();
 
-    vtkActor* pickedActor = cellPicker->GetActor();
+        // リストに含まれるか確認（UpdatePickListでフィルタリングされているはずだが念のため）
+        if (pickedActor) {
+             bool isValid = false;
+             for (const auto& actor : faceActors_) {
+                 if (actor == pickedActor) {
+                     isValid = true;
+                     break;
+                 }
+             }
+             if (!isValid) pickedActor = nullptr;
+        }
+    }
 
     if (pickedActor) {
-        // ピックされたアクターが面アクターのリストに含まれているか確認
+        // ピックされたアクターのインデックスを探す
         int faceIndex = -1;
         for (size_t i = 0; i < faceActors_.size(); ++i) {
             if (faceActors_[i] == pickedActor) {
@@ -322,8 +344,10 @@ void StepPickerStyle::OnLeftButtonDoubleClick()
         }
 
         if (faceIndex >= 0 && onFaceDoubleClicked_) {
+            // 法線の取得には新しいPickが必要な場合があるが、
+            // vtkCellPickerは前回のPick結果を保持しているはず
             double normal[3];
-            cellPicker->GetPickNormal(normal);
+            picker_->GetPickNormal(normal);
             onFaceDoubleClicked_(faceIndex + 1, normal); // 1-based index for UI
         }
     }
@@ -335,33 +359,13 @@ void StepPickerStyle::OnLeftButtonDoubleClick()
 void StepPickerStyle::SetFaceActors(const std::vector<vtkSmartPointer<vtkActor>>& actors)
 {
     faceActors_ = actors;
-
-    // ピッカーのリストをクリア
-    picker_->InitializePickList();
-
-    // 面アクターをピックリストに追加
-    for (auto& actor : faceActors_) {
-        picker_->AddPickList(actor);
-    }
+    UpdatePickList();
 }
 
 void StepPickerStyle::SetEdgeActors(const std::vector<vtkSmartPointer<vtkActor>>& actors)
 {
     edgeActors_ = actors;
-
-    // エッジアクターをピックリストに追加
-    // FaceActorsが既にセットされている前提で、追加する形にする
-    // ただしInitializePickListされると消えるので、管理が必要。
-    // InitializePickListはSetFaceActorsで呼ばれているので、
-    // ここで追加するだけでよいが、SetFaceActorsが後で呼ばれると消える。
-    // 両方をマージしてセットするか、毎回再構築するのが安全。
-    
-    // 既存のPickerの設定を維持しつつ追加
-    for (auto& actor : edgeActors_) {
-        if (actor) {
-            picker_->AddPickList(actor);
-        }
-    }
+    UpdatePickList();
 }
 
 void StepPickerStyle::SetRenderer(vtkRenderer* renderer)
@@ -378,20 +382,20 @@ void StepPickerStyle::SetEdgeSelectionMode(bool enabled)
 {
     edgeSelectionMode_ = enabled;
     // エッジ選択モードが有効になるとき、面選択モードは無効にする（排他制御）
-    // 要件：「この時は、面のマウスオーバーハイライトはオフにして」
     if (enabled) {
         faceSelectionMode_ = false;
     }
+    UpdatePickList();
 }
 
 void StepPickerStyle::SetFaceSelectionMode(bool enabled)
 {
     faceSelectionMode_ = enabled;
     // 面選択モードが有効になるとき、エッジ選択モードは無効にする（排他制御）
-    // 要件：「この時は、エッジのマウスオーバーハイライトはオフにして」
     if (enabled) {
         edgeSelectionMode_ = false;
     }
+    UpdatePickList();
 }
 
 void StepPickerStyle::ResetLastPickedActor()
@@ -465,5 +469,25 @@ void StepPickerStyle::HideLabel()
 {
     if (label_) {
         label_->SetVisibility(0);
+    }
+}
+
+void StepPickerStyle::UpdatePickList()
+{
+    if(!picker_) return;
+
+    picker_->InitializePickList();
+    picker_->PickFromListOn();
+
+    if (faceSelectionMode_) {
+        for (const auto& actor : faceActors_) {
+            if (actor) picker_->AddPickList(actor);
+        }
+    }
+    
+    if (edgeSelectionMode_) {
+        for (const auto& actor : edgeActors_) {
+            if (actor) picker_->AddPickList(actor);
+        }
     }
 }

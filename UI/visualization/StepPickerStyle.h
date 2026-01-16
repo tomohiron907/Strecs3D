@@ -90,4 +90,6 @@ private:
     int clickStartPos_[2];
     bool isClickPending_;
     static constexpr int CLICK_THRESHOLD = 5; // ピクセル単位の移動閾値
+
+    void UpdatePickList();
 };
