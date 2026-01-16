@@ -370,6 +370,11 @@ void VisualizationManager::connectSignals() {
             [this](int edgeId) {
                 emit edgeClicked(edgeId);
             });
+
+    connect(sceneRenderer_.get(), &SceneRenderer::backgroundClicked,
+            [this]() {
+                emit backgroundClicked();
+            });
 }
 
 void VisualizationManager::setEdgeSelectionMode(bool enabled) {

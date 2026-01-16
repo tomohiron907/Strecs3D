@@ -176,6 +176,9 @@ void SceneRenderer::setupStepPicker(const std::vector<vtkSmartPointer<vtkActor>>
     stepPickerStyle_->SetOnEdgeClicked([this](int edgeId) {
         emit edgeClicked(edgeId);
     });
+    stepPickerStyle_->SetOnBackgroundClicked([this]() {
+        emit backgroundClicked();
+    });
     interactor->SetInteractorStyle(stepPickerStyle_);
 }
 

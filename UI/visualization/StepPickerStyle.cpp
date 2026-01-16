@@ -16,7 +16,10 @@ StepPickerStyle::StepPickerStyle()
     , hasOriginalColor_(false)
     , edgeSelectionMode_(false)
     , faceSelectionMode_(false)
+    , isClickPending_(false)
 {
+    clickStartPos_[0] = 0;
+    clickStartPos_[1] = 0;
     picker_ = vtkSmartPointer<vtkCellPicker>::New();
     picker_->PickFromListOn();
     picker_->SetTolerance(0.005); // 感度向上: 画面サイズの0.5%の許容誤差
@@ -163,6 +166,11 @@ void StepPickerStyle::OnLeftButtonDown()
 
     int* clickPos = this->Interactor->GetEventPosition();
 
+    // クリック開始位置を記録（背景クリック判定用）
+    clickStartPos_[0] = clickPos[0];
+    clickStartPos_[1] = clickPos[1];
+    isClickPending_ = true;
+
     // ピッキングを実行
     vtkSmartPointer<vtkCellPicker> cellPicker = vtkSmartPointer<vtkCellPicker>::New();
     cellPicker->PickFromListOn();
@@ -193,6 +201,7 @@ void StepPickerStyle::OnLeftButtonDown()
 
             if (edgeIndex >= 0 && onEdgeClicked_) {
                 onEdgeClicked_(edgeIndex + 1);  // 1-based index
+                isClickPending_ = false;  // エッジ選択時は背景クリック判定をリセット
                 return;  // エッジ選択モードでは回転を無効化
             }
         }
@@ -206,8 +215,7 @@ void StepPickerStyle::OnLeftButtonDown()
             cellPicker->AddPickList(actor);
         }
     } else {
-        // 面選択モードが無効なら、通常モードでのピック（回転など）のみを行うため、
-        // 以下のPick処理をスキップして親クラス呼び出しへ
+        // 面選択モードが無効でも、背景クリック判定は行う（isClickPending_は維持）
         TurntableInteractorStyle::OnLeftButtonDown();
         return;
     }
@@ -231,11 +239,39 @@ void StepPickerStyle::OnLeftButtonDown()
             double normal[3];
             cellPicker->GetPickNormal(normal);
             onFaceClicked_(faceIndex + 1, normal); // 1-based index for UI
+            isClickPending_ = false;  // 面選択時は背景クリック判定をリセット
         }
     }
+    // 背景クリック判定はOnLeftButtonUpで行う
 
     // デフォルトの動作（回転など）も維持する
     TurntableInteractorStyle::OnLeftButtonDown();
+}
+
+void StepPickerStyle::OnLeftButtonUp()
+{
+    // マウス位置を取得
+    if (this->Interactor && isClickPending_) {
+        int* clickPos = this->Interactor->GetEventPosition();
+
+        // クリック開始位置からの移動距離を計算
+        int dx = clickPos[0] - clickStartPos_[0];
+        int dy = clickPos[1] - clickStartPos_[1];
+        int distanceSquared = dx * dx + dy * dy;
+
+        // 移動距離が閾値以下ならシンプルなクリックとみなす
+        if (distanceSquared <= CLICK_THRESHOLD * CLICK_THRESHOLD) {
+            // 背景クリック（何も選択されていない領域をクリック）
+            if (onBackgroundClicked_) {
+                onBackgroundClicked_();
+            }
+        }
+    }
+
+    isClickPending_ = false;
+
+    // 親クラスの処理を呼び出す
+    TurntableInteractorStyle::OnLeftButtonUp();
 }
 
 void StepPickerStyle::OnLeftButtonDoubleClick()

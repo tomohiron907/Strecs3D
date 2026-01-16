@@ -2,6 +2,8 @@
 
 #include "../../../core/commands/state/UpdateConstraintConditionCommand.h"
 #include "../../ColorManager.h"
+#include <QHBoxLayout>
+#include <QSpacerItem>
 #include <QIntValidator>
 
 ConstraintPropertyWidget::ConstraintPropertyWidget(QWidget* parent)
@@ -63,6 +65,32 @@ void ConstraintPropertyWidget::setupUI()
         QWidget* label = layout->itemAt(i, QFormLayout::LabelRole)->widget();
         if(label) label->setStyleSheet(labelStyle);
     }
+
+    // Spacer to push Close button to the bottom
+    layout->addItem(new QSpacerItem(0, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
+    // Close Button container for right alignment
+    QWidget* closeButtonContainer = new QWidget();
+    QHBoxLayout* closeButtonLayout = new QHBoxLayout(closeButtonContainer);
+    closeButtonLayout->setContentsMargins(0, 0, 0, 0);
+    closeButtonLayout->addStretch();
+
+    m_closeButton = new QPushButton("Close");
+    m_closeButton->setFixedWidth(80);
+    m_closeButton->setStyleSheet(
+        QString("QPushButton { background-color: %1; color: %2; border: none; "
+                "padding: 8px 16px; border-radius: 4px; font-weight: bold; }"
+                "QPushButton:hover { background-color: %3; }"
+                "QPushButton:pressed { background-color: %4; }")
+        .arg(ColorManager::ACCENT_COLOR.name())
+        .arg(ColorManager::BUTTON_TEXT_COLOR.name())
+        .arg(ColorManager::BUTTON_HOVER_COLOR.name())
+        .arg(ColorManager::BUTTON_PRESSED_COLOR.name())
+    );
+    connect(m_closeButton, &QPushButton::clicked, this, &ConstraintPropertyWidget::onCloseClicked);
+    closeButtonLayout->addWidget(m_closeButton);
+
+    layout->addRow("", closeButtonContainer);
 }
 
 void ConstraintPropertyWidget::updateData()
@@ -102,4 +130,12 @@ void ConstraintPropertyWidget::pushData()
         c
     );
     command->execute();
+}
+
+void ConstraintPropertyWidget::onCloseClicked()
+{
+    if (m_uiState) {
+        m_uiState->setSelectedObject(ObjectType::NONE);
+    }
+    emit closeClicked();
 }

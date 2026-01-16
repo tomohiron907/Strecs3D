@@ -4,6 +4,7 @@
 #include "../../visualization/VisualizationManager.h"
 #include "../../../core/processing/StepReader.h"
 #include <QHBoxLayout>
+#include <QSpacerItem>
 #include <QIntValidator>
 #include <QDoubleValidator>
 
@@ -115,6 +116,32 @@ void LoadPropertyWidget::setupUI()
         QWidget* label = layout->itemAt(i, QFormLayout::LabelRole)->widget();
         if(label) label->setStyleSheet(labelStyle);
     }
+
+    // Spacer to push Close button to the bottom
+    layout->addItem(new QSpacerItem(0, 20, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
+    // Close Button container for right alignment
+    QWidget* closeButtonContainer = new QWidget();
+    QHBoxLayout* closeButtonLayout = new QHBoxLayout(closeButtonContainer);
+    closeButtonLayout->setContentsMargins(0, 0, 0, 0);
+    closeButtonLayout->addStretch();
+
+    m_closeButton = new QPushButton("Close");
+    m_closeButton->setFixedWidth(80);
+    m_closeButton->setStyleSheet(
+        QString("QPushButton { background-color: %1; color: %2; border: none; "
+                "padding: 8px 16px; border-radius: 4px; font-weight: bold; }"
+                "QPushButton:hover { background-color: %3; }"
+                "QPushButton:pressed { background-color: %4; }")
+        .arg(ColorManager::ACCENT_COLOR.name())
+        .arg(ColorManager::BUTTON_TEXT_COLOR.name())
+        .arg(ColorManager::BUTTON_HOVER_COLOR.name())
+        .arg(ColorManager::BUTTON_PRESSED_COLOR.name())
+    );
+    connect(m_closeButton, &QPushButton::clicked, this, &LoadPropertyWidget::onCloseClicked);
+    closeButtonLayout->addWidget(m_closeButton);
+
+    layout->addRow("", closeButtonContainer);
 }
 
 void LoadPropertyWidget::updateData()
@@ -275,4 +302,16 @@ void LoadPropertyWidget::cancelEdgeSelection()
         // Load編集中なので、面選択モードに戻す
         m_vizManager->setFaceSelectionMode(true);
     }
+}
+
+void LoadPropertyWidget::onCloseClicked()
+{
+    if (m_isSelectingEdge) {
+        cancelEdgeSelection();
+    }
+
+    if (m_uiState) {
+        m_uiState->setSelectedObject(ObjectType::NONE);
+    }
+    emit closeClicked();
 }

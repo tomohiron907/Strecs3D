@@ -91,6 +91,8 @@ void MainWindow::connectSignals()
                 this, &MainWindow::onFaceClicked);
         connect(uiAdapter->getVisualizationManager(), &VisualizationManager::faceDoubleClicked,
                 this, &MainWindow::onFaceDoubleClicked);
+        connect(uiAdapter->getVisualizationManager(), &VisualizationManager::backgroundClicked,
+                this, &MainWindow::onBackgroundClicked);
 
         // Connect VisualizationManager to PropertyWidget for edge selection
         if (ui && ui->getPropertyWidget()) {
@@ -559,6 +561,18 @@ void MainWindow::onFaceClicked(int faceId, double nx, double ny, double nz)
     Q_UNUSED(nx);
     Q_UNUSED(ny);
     Q_UNUSED(nz);
+}
+
+void MainWindow::onBackgroundClicked()
+{
+    UIState* state = getUIState();
+    if (!state) return;
+
+    // 背景（何も選択されていない領域）がクリックされた場合、選択を解除
+    SelectedObjectInfo selection = state->getSelectedObject();
+    if (selection.type != ObjectType::NONE) {
+        state->setSelectedObject(ObjectType::NONE);
+    }
 }
 
 void MainWindow::onFaceDoubleClicked(int faceId, double nx, double ny, double nz)

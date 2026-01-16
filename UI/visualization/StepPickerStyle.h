@@ -19,6 +19,7 @@ public:
 
     void OnMouseMove() override;
     void OnLeftButtonDown() override;
+    void OnLeftButtonUp() override;
     void OnLeftButtonDoubleClick() override;
 
     // 面アクターのリストを設定
@@ -43,6 +44,9 @@ public:
 
     // エッジクリック時のコールバックを設定
     void SetOnEdgeClicked(std::function<void(int)> callback) { onEdgeClicked_ = callback; }
+
+    // 背景クリック時のコールバックを設定（何も選択されていない領域をクリック）
+    void SetOnBackgroundClicked(std::function<void()> callback) { onBackgroundClicked_ = callback; }
 
     // レンダラーを設定
     void SetRenderer(vtkRenderer* renderer);
@@ -80,4 +84,10 @@ private:
 
     std::function<void(int, const double*)> onFaceClicked_;
     std::function<void(int, const double*)> onFaceDoubleClicked_;
+    std::function<void()> onBackgroundClicked_;
+
+    // クリック判定用（ドラッグとの区別）
+    int clickStartPos_[2];
+    bool isClickPending_;
+    static constexpr int CLICK_THRESHOLD = 5; // ピクセル単位の移動閾値
 };

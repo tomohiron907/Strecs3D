@@ -46,6 +46,7 @@ public slots:
     void onBoundaryConditionChanged(); // 境界条件が変更された時の処理
     void onFaceClicked(int faceId, double nx, double ny, double nz);
     void onFaceDoubleClicked(int faceId, double nx, double ny, double nz);
+    void onBackgroundClicked();
     void onSelectedObjectChanged(const SelectedObjectInfo& selection);
     void handleProcessRollback(ProcessStep targetStep);  // Handle process rollback
 
