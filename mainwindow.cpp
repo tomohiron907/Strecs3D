@@ -432,13 +432,7 @@ void MainWindow::onConstrainButtonClicked()
         constraint
     );
     command->execute();
-    
-    // Select the new item
-    // It's the last one
-    // Select the new item via UIState
-    int index = state->getBoundaryCondition().constraints.size() - 1;
-    state->setSelectedObject(ObjectType::ITEM_BC_CONSTRAINT, "", index);
-    
+
     logMessage("Added new Constraint Condition: " + QString::fromStdString(newName));
 }
 
@@ -477,12 +471,7 @@ void MainWindow::onLoadButtonClicked()
         load
     );
     command->execute();
-    
-    // Select the new item
-    // Select the new item via UIState
-    int index = state->getBoundaryCondition().loads.size() - 1;
-    state->setSelectedObject(ObjectType::ITEM_BC_LOAD, "", index);
-    
+
     logMessage("Added new Load Condition: " + QString::fromStdString(newName));
 }
 
