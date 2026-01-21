@@ -86,6 +86,16 @@ std::vector<double> DensitySlider::regionPercents() const {
     return m_regionPercents;
 }
 
+int DensitySlider::countMaxDensityRegions() const {
+    int count = 0;
+    for (double percent : m_regionPercents) {
+        if (static_cast<int>(percent) >= MAX_DENSITY) {
+            count++;
+        }
+    }
+    return count;
+}
+
 // ====================
 // Other Public API
 // ====================
@@ -314,7 +324,6 @@ int DensitySlider::calculateDensityFromStress(double stress) const {
     const double C = 0.23;
     const double M = 2.0 / 3.0;
     const int MIN_DENSITY = 5;
-    const int MAX_DENSITY = 90;
 
     // Pa から MPa に変換
     double stressMPa = stress / 1e6;

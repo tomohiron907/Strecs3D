@@ -209,6 +209,11 @@ void MainWindow::processFiles()
 
     logMessage("File processing completed successfully");
     updateButtonsAfterProcessing(true);
+
+    // Check for high density warning after division processing
+    if (uiAdapter) {
+        uiAdapter->checkHighDensityWarning();
+    }
 }
 
 void MainWindow::updateButtonsAfterProcessing(bool success)

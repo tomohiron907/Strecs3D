@@ -7,6 +7,8 @@
 class DensitySlider : public QWidget {
     Q_OBJECT
 public:
+    static constexpr int MAX_DENSITY = 90;
+
     explicit DensitySlider(QWidget* parent = nullptr);
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
@@ -18,6 +20,7 @@ public:
     std::vector<StressDensityMapping> stressDensityMappings() const;
     std::vector<int> stressThresholds() const;
     std::vector<QColor> getRegionColors() const;
+    int countMaxDensityRegions() const;
 
 signals:
     void handlePositionsChanged(const std::vector<int>& positions);

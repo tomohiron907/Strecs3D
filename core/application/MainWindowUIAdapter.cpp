@@ -90,7 +90,7 @@ void MainWindowUIAdapter::initializeStressConfiguration(double minStress, double
     UIState* uiState = ui->getUIState();
     if (uiState) {
         uiState->setStressRange(minStress, maxStress);
-        
+
         // DensitySliderからStressDensityMappingを取得してUIStateに登録
         if (slider) {
             auto mappings = slider->stressDensityMappings();
@@ -301,5 +301,29 @@ void MainWindowUIAdapter::setSimulationRunning(bool running) {
 void MainWindowUIAdapter::appendSimulationLog(const QString& message) {
     if (ui && ui->getProcessManagerWidget() && ui->getProcessManagerWidget()->getSimulationStep()) {
         ui->getProcessManagerWidget()->getSimulationStep()->appendLog(message);
+    }
+}
+
+void MainWindowUIAdapter::checkHighDensityWarning() {
+    if (!ui) return;
+
+    auto slider = ui->getRangeSlider();
+    if (!slider) return;
+
+    int maxDensityCount = slider->countMaxDensityRegions();
+
+    // Show warning if 2 or more regions have reached maximum density
+    if (maxDensityCount >= 2) {
+        QString message = QString(
+            "%1 of 4 regions are at maximum density (90%).\n\n"
+            "Consider reviewing your design, load, or constraints."
+        ).arg(maxDensityCount);
+
+        QMessageBox msgBox(qobject_cast<QWidget*>(ui));
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setWindowTitle("High Density Warning");
+        msgBox.setText(message);
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
     }
 }

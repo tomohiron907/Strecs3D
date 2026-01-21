@@ -63,6 +63,7 @@ public:
     // Adapter specific methods
     MainWindowUI* getMainWindowUI() const { return ui; }
     VisualizationManager* getVisualizationManager() const { return visualizationManager.get(); }
+    void checkHighDensityWarning();
 
 private:
     ObjectDisplayOptionsWidget* getDividedMeshWidget(int meshIndex) const;
