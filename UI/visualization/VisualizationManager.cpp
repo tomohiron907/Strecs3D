@@ -131,7 +131,6 @@ void VisualizationManager::displayStepFile(const std::string& stepFile) {
     // I should remove the single edge actor registration from lines 80-84.
 
     sceneRenderer_->renderObjects(objectList_);
-    sceneRenderer_->resetCamera();
 }
 
 void VisualizationManager::showTempDividedStl(VtkProcessor* vtkProcessor, QWidget* parent, UIState* uiState) {
