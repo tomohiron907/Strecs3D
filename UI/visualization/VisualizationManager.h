@@ -20,7 +20,6 @@ class VtkProcessor;
 class UIState;
 class MainWindowUI;
 class QWidget;
-class BoundaryConditionVisualizer;
 class StepReader;
 struct BoundaryCondition;
 
@@ -91,7 +90,6 @@ private:
     // Components
     std::unique_ptr<ActorFactory> actorFactory_;
     std::unique_ptr<SceneRenderer> sceneRenderer_;
-    std::unique_ptr<BoundaryConditionVisualizer> bcVisualizer_;
 
     // Data - ObjectInfo list is the single source of truth
     std::vector<ObjectInfo> objectList_;

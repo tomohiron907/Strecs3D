@@ -1,7 +1,6 @@
 #include "VisualizationManager.h"
 #include "ActorFactory.h"
 #include "SceneRenderer.h"
-#include "BoundaryConditionVisualizer.h"
 #include "../../core/processing/VtkProcessor.h"
 #include "../../core/processing/StepReader.h"
 #include "../../core/ui/UIState.h"
@@ -21,7 +20,6 @@
 VisualizationManager::VisualizationManager(MainWindowUI* ui) : QObject() {
     actorFactory_ = std::make_unique<ActorFactory>();
     sceneRenderer_ = std::make_unique<SceneRenderer>(ui);
-    bcVisualizer_ = std::make_unique<BoundaryConditionVisualizer>();
     currentStepReader_ = nullptr;
 
     // Create and register grid
@@ -415,7 +413,8 @@ void VisualizationManager::displayBoundaryConditions(const BoundaryCondition& co
     }
 
     // Create boundary condition actors
-    auto bcActors = bcVisualizer_->createBoundaryConditionActors(condition, currentStepReader_.get());
+    // Create boundary condition actors
+    auto bcActors = actorFactory_->createBoundaryConditionActors(condition, currentStepReader_.get());
 
     // Add constraint actors
     int constraintIndex = 0;
@@ -517,15 +516,16 @@ void VisualizationManager::showConstraintPreview(int surfaceId) {
     }
 
     // Create constraint preview actor
-    ConstraintCondition tempConstraint;
-    tempConstraint.surface_id = surfaceId;
-
-    BoundaryCondition tempCondition;
-    tempCondition.constraints.push_back(tempConstraint);
-
-    auto bcActors = bcVisualizer_->createBoundaryConditionActors(tempCondition, currentStepReader_.get());
-    if (!bcActors.constraintActors.empty()) {
-        previewActor_ = bcActors.constraintActors[0];
+    // Create constraint preview actor directly
+    // Get geometry info
+    double centerX = geom.centerX;
+    double centerY = geom.centerY;
+    double centerZ = geom.centerZ;
+    
+    // Create actor via factory
+    previewActor_ = actorFactory_->createConstraintActor(centerX, centerY, centerZ);
+    
+    if (previewActor_) {
         registerObject({previewActor_, "__preview_bc__", true, 0.8});
         sceneRenderer_->addActorToRenderer(previewActor_);
         render();
@@ -546,17 +546,14 @@ void VisualizationManager::showLoadPreview(int surfaceId, double dirX, double di
     }
 
     // Create load preview actor
-    LoadCondition tempLoad;
-    tempLoad.surface_id = surfaceId;
-    tempLoad.direction = {dirX, dirY, dirZ};
-    tempLoad.magnitude = 10.0;
-
-    BoundaryCondition tempCondition;
-    tempCondition.loads.push_back(tempLoad);
-
-    auto bcActors = bcVisualizer_->createBoundaryConditionActors(tempCondition, currentStepReader_.get());
-    if (!bcActors.loadActors.empty()) {
-        previewActor_ = bcActors.loadActors[0];
+    // Create load preview actor directly
+    previewActor_ = actorFactory_->createLoadArrowActor(
+        geom.centerX, geom.centerY, geom.centerZ,
+        dirX, dirY, dirZ,
+        geom.normalX, geom.normalY, geom.normalZ
+    );
+    
+    if (previewActor_) {
         registerObject({previewActor_, "__preview_bc__", true, 0.8});
         sceneRenderer_->addActorToRenderer(previewActor_);
         render();
@@ -576,67 +573,14 @@ void VisualizationManager::showBedPreview(int surfaceId) {
         return;
     }
 
-    // Create a simple plane source
-    auto planeSource = vtkSmartPointer<vtkPlaneSource>::New();
-    // Default plane is on Z=0, centered at origin.
-    // We make it reasonably large to visualize a "bed".
-    // Size should probably depend on object size, but for now let's use a fixed size or estimated from bounding box?
-    // Using a fixed size might be too small or too big.
-    // Let's check if we have object bounds.
-    // For now, let's use a size of 200x200 (mm presumably).
-    planeSource->SetOrigin(-50, -50, 0);
-    planeSource->SetPoint1(50, -50, 0);
-    planeSource->SetPoint2(-50, 50, 0);
-    planeSource->Update();
-
-    // Transform the plane to match the face center and normal
-    auto transform = vtkSmartPointer<vtkTransform>::New();
-    transform->Translate(geom.centerX, geom.centerY, geom.centerZ);
-
-    // Calculate rotation from Z-axis (0,0,1) to face normal
-    double normal[3] = {geom.normalX, geom.normalY, geom.normalZ};
-    double zAxis[3] = {0.0, 0.0, 1.0};
+    // Use ActorFactory to create bed preview actor
+    previewActor_ = actorFactory_->createBedPreviewActor(geom);
     
-    // vtkMath::Cross and Dot? Or just use vtkTransform's RotateWXYZ via simple math.
-    // But vtkTransform doesn't have "Align" method directly.
-    // However, if we simply want to place it ON the face, we can align Z axis to Normal.
-    
-    // Compute rotation axis (cross product of Z and Normal)
-    double rotationAxis[3];
-    vtkMath::Cross(zAxis, normal, rotationAxis);
-    
-    // Compute rotation angle (acos of dot product)
-    double dot = vtkMath::Dot(zAxis, normal);
-    double angle = acos(dot) * 180.0 / M_PI;
-
-    // Apply rotation
-    if (vtkMath::Norm(rotationAxis) > 1e-6) {
-         transform->RotateWXYZ(angle, rotationAxis);
-    } else if (dot < 0) {
-         // Anti-parallel (180 degrees)
-         transform->RotateWXYZ(180, 1, 0, 0);
+    if (previewActor_) {
+        registerObject({previewActor_, "__preview_bc__", true, 0.5});
+        sceneRenderer_->addActorToRenderer(previewActor_);
+        render();
     }
-    
-    auto transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-    transformFilter->SetInputConnection(planeSource->GetOutputPort());
-    transformFilter->SetTransform(transform);
-    transformFilter->Update();
-
-    // Mapper
-    auto mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputConnection(transformFilter->GetOutputPort());
-
-    // Actor
-    previewActor_ = vtkSmartPointer<vtkActor>::New();
-    previewActor_->SetMapper(mapper);
-    
-    // Set Color (Blue-ish) and Opacity
-    previewActor_->GetProperty()->SetColor(0.2, 0.6, 1.0); // Light Blue
-    previewActor_->GetProperty()->SetOpacity(0.5);
-    previewActor_->GetProperty()->SetLighting(false); // Flat shading, no lighting effects preferred for overlay? Or true? False is safer for "guide" visuals.
-
-    registerObject({previewActor_, "__preview_bc__", true, 0.5});
-    sceneRenderer_->addActorToRenderer(previewActor_);
     render();
 }
 

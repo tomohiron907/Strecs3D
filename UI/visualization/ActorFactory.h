@@ -13,6 +13,8 @@ class StepReader;
 class UIState;
 struct MeshInfo;
 class QColor;
+struct BoundaryCondition;
+struct FaceGeometry;
 
 class ActorFactory {
 public:
@@ -99,4 +101,34 @@ private:
     // Helper for creating single divided mesh actor
     vtkSmartPointer<vtkActor> createSingleDividedMeshActor(
         const DividedMeshActorParams& params);
+
+public:
+    // --- Boundary Condition Actors ---
+    struct BoundaryConditionActors {
+        std::vector<vtkSmartPointer<vtkActor>> constraintActors;
+        std::vector<vtkSmartPointer<vtkActor>> loadActors;
+    };
+
+    BoundaryConditionActors createBoundaryConditionActors(
+        const BoundaryCondition& condition,
+        const StepReader* stepReader);
+
+    // Individual actor creation methods (exposed for flexibility and unit testing)
+    vtkSmartPointer<vtkActor> createConstraintActor(
+        double centerX, double centerY, double centerZ);
+
+    vtkSmartPointer<vtkActor> createLoadArrowActor(
+        double centerX, double centerY, double centerZ,
+        double dirX, double dirY, double dirZ,
+        double normalX, double normalY, double normalZ);
+
+    vtkSmartPointer<vtkActor> createBedPreviewActor(
+        const FaceGeometry& geom);
+
+private:
+    static constexpr double CONSTRAINT_CUBE_SIZE = 5.0;
+    static constexpr double ARROW_CYLINDER_RADIUS = 1.0;
+    static constexpr double ARROW_CYLINDER_LENGTH = 20.0;
+    static constexpr double ARROW_CONE_RADIUS = 2.0;
+    static constexpr double ARROW_CONE_HEIGHT = 5.0;
 };

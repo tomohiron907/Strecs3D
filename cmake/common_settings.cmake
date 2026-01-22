@@ -174,7 +174,6 @@ add_executable(Strecs3D
   core/ui/UIState.cpp
   UI/visualization/VisualizationManager.cpp
   UI/visualization/ActorFactory.cpp
-  UI/visualization/BoundaryConditionVisualizer.cpp
   core/export/ExportManager.cpp
   core/processing/3mf/slicers/prusa/ModelConverter.cpp
   FEM/SimulationConditionExporter.cpp

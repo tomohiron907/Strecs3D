@@ -10,9 +10,19 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkLine.h>
 #include <vtkSphereSource.h>
+#include <vtkCubeSource.h>
+#include <vtkCylinderSource.h>
+#include <vtkConeSource.h>
+#include <vtkPlaneSource.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkAppendPolyData.h>
+#include <vtkMath.h>
 #include <QColor>
 #include <regex>
 #include <algorithm>
+#include <cmath>
+#include "../../core/types/BoundaryCondition.h"
 
 // --- VTK File Actors ---
 vtkSmartPointer<vtkActor> ActorFactory::createVtkActor(
@@ -370,4 +380,223 @@ vtkSmartPointer<vtkActor> ActorFactory::createSingleDividedMeshActor(
         params.maxStress,
         params.vtkProcessor
     );
+}
+
+// --- Boundary Condition Actors ---
+ActorFactory::BoundaryConditionActors ActorFactory::createBoundaryConditionActors(
+    const BoundaryCondition& condition,
+    const StepReader* stepReader)
+{
+    BoundaryConditionActors result;
+
+    if (!stepReader || !stepReader->isValid()) {
+        return result;
+    }
+
+    // Constraint Visualization
+    for (const auto& constraint : condition.constraints) {
+        FaceGeometry geom = stepReader->getFaceGeometry(constraint.surface_id);
+
+        if (!geom.isValid) {
+            continue;
+        }
+
+        auto actor = createConstraintActor(geom.centerX, geom.centerY, geom.centerZ);
+        if (actor) {
+            result.constraintActors.push_back(actor);
+        }
+    }
+
+    // Load Visualization
+    for (const auto& load : condition.loads) {
+        FaceGeometry geom = stepReader->getFaceGeometry(load.surface_id);
+
+        if (!geom.isValid) {
+            continue;
+        }
+
+        auto actor = createLoadArrowActor(
+            geom.centerX, geom.centerY, geom.centerZ,
+            load.direction.x, load.direction.y, load.direction.z,
+            geom.normalX, geom.normalY, geom.normalZ
+        );
+
+        if (actor) {
+            result.loadActors.push_back(actor);
+        }
+    }
+
+    return result;
+}
+
+vtkSmartPointer<vtkActor> ActorFactory::createConstraintActor(
+    double centerX, double centerY, double centerZ)
+{
+    vtkSmartPointer<vtkCubeSource> cube = vtkSmartPointer<vtkCubeSource>::New();
+    cube->SetXLength(CONSTRAINT_CUBE_SIZE);
+    cube->SetYLength(CONSTRAINT_CUBE_SIZE);
+    cube->SetZLength(CONSTRAINT_CUBE_SIZE);
+    cube->SetCenter(centerX, centerY, centerZ);
+
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputConnection(cube->GetOutputPort());
+
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(mapper);
+
+    // Green color for constraints
+    actor->GetProperty()->SetColor(0.0, 1.0, 0.0);
+    actor->GetProperty()->SetOpacity(0.8);
+
+    return actor;
+}
+
+vtkSmartPointer<vtkActor> ActorFactory::createLoadArrowActor(
+    double centerX, double centerY, double centerZ,
+    double dirX, double dirY, double dirZ,
+    double normalX, double normalY, double normalZ)
+{
+    // Validate direction
+    double length = std::sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ);
+    if (length < 1e-6) {
+        return nullptr;
+    }
+
+    dirX /= length;
+    dirY /= length;
+    dirZ /= length;
+
+    // Check dot product with normal to decide placement
+    double dotProduct = normalX * dirX + normalY * dirY + normalZ * dirZ;
+
+    // If result is tension (dot > 0), shift arrow base to face center
+    if (dotProduct > 0) {
+        double arrowLength = ARROW_CONE_HEIGHT + ARROW_CYLINDER_LENGTH;
+        centerX += dirX * arrowLength;
+        centerY += dirY * arrowLength;
+        centerZ += dirZ * arrowLength;
+    }
+
+    // Create Cylinder Body
+    vtkSmartPointer<vtkCylinderSource> cylinder = vtkSmartPointer<vtkCylinderSource>::New();
+    cylinder->SetRadius(ARROW_CYLINDER_RADIUS);
+    cylinder->SetHeight(ARROW_CYLINDER_LENGTH);
+    cylinder->SetResolution(16);
+
+    // Place cylinder (local Y axis)
+    double cylinderLocalY = -(ARROW_CONE_HEIGHT / 2.0 + ARROW_CYLINDER_LENGTH / 2.0);
+    cylinder->SetCenter(0, cylinderLocalY, 0);
+
+    // Create Cone Head
+    vtkSmartPointer<vtkConeSource> cone = vtkSmartPointer<vtkConeSource>::New();
+    cone->SetRadius(ARROW_CONE_RADIUS);
+    cone->SetHeight(ARROW_CONE_HEIGHT);
+    cone->SetResolution(16);
+    cone->SetDirection(0, 1, 0);
+
+    // Place cone (local Y axis)
+    cone->SetCenter(0, -ARROW_CONE_HEIGHT / 2.0, 0);
+
+    // Append Cylinder and Cone
+    vtkSmartPointer<vtkAppendPolyData> appendFilter = vtkSmartPointer<vtkAppendPolyData>::New();
+    appendFilter->AddInputConnection(cylinder->GetOutputPort());
+    appendFilter->AddInputConnection(cone->GetOutputPort());
+    appendFilter->Update();
+
+    // Create Transform
+    vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+    transform->Translate(centerX, centerY, centerZ);
+
+    // Calculate Rotation
+    double yAxis[3] = {0, 1, 0};
+    double targetDir[3] = {dirX, dirY, dirZ};
+    double rotationAxis[3];
+    vtkMath::Cross(yAxis, targetDir, rotationAxis);
+    double rotationAxisLength = vtkMath::Norm(rotationAxis);
+
+    if (rotationAxisLength > 1e-6) {
+        double angle = std::acos(vtkMath::Dot(yAxis, targetDir)) * 180.0 / vtkMath::Pi();
+        vtkMath::Normalize(rotationAxis);
+        transform->RotateWXYZ(angle, rotationAxis);
+    } else if (vtkMath::Dot(yAxis, targetDir) < 0) {
+        // Anti-parallel
+        transform->RotateWXYZ(180.0, 1, 0, 0); // Or z axis
+    }
+
+    // Apply Transform
+    vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter =
+        vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+    transformFilter->SetInputConnection(appendFilter->GetOutputPort());
+    transformFilter->SetTransform(transform);
+
+    // Create Actor
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputConnection(transformFilter->GetOutputPort());
+
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(mapper);
+
+    // Red color for loads
+    actor->GetProperty()->SetColor(1.0, 0.0, 0.0);
+    actor->GetProperty()->SetOpacity(0.8);
+
+    return actor;
+}
+
+vtkSmartPointer<vtkActor> ActorFactory::createBedPreviewActor(
+    const FaceGeometry& geom)
+{
+    if (!geom.isValid) {
+        return nullptr;
+    }
+
+    // Create Plane
+    vtkSmartPointer<vtkPlaneSource> planeSource = vtkSmartPointer<vtkPlaneSource>::New();
+    planeSource->SetOrigin(-50, -50, 0);
+    planeSource->SetPoint1(50, -50, 0);
+    planeSource->SetPoint2(-50, 50, 0);
+    planeSource->Update();
+
+    // Create Transform
+    vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+    transform->Translate(geom.centerX, geom.centerY, geom.centerZ);
+
+    double normal[3] = {geom.normalX, geom.normalY, geom.normalZ};
+    double zAxis[3] = {0.0, 0.0, 1.0};
+    double rotationAxis[3];
+    vtkMath::Cross(zAxis, normal, rotationAxis);
+
+    double dot = vtkMath::Dot(zAxis, normal);
+    // Clamp dot product to avoid acos domain error
+    if (dot > 1.0) dot = 1.0;
+    if (dot < -1.0) dot = -1.0;
+    
+    double angle = std::acos(dot) * 180.0 / vtkMath::Pi();
+
+    if (vtkMath::Norm(rotationAxis) > 1e-6) {
+         transform->RotateWXYZ(angle, rotationAxis);
+    } else if (dot < 0) {
+         // Anti-parallel (180 degrees)
+         transform->RotateWXYZ(180, 1, 0, 0);
+    }
+
+    // Apply Transform
+    vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+    transformFilter->SetInputConnection(planeSource->GetOutputPort());
+    transformFilter->SetTransform(transform);
+    transformFilter->Update();
+
+    // Create Actor
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputConnection(transformFilter->GetOutputPort());
+
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(mapper);
+
+    // Light Blue color, semi-transparent
+    actor->GetProperty()->SetColor(0.2, 0.6, 1.0);
+    actor->GetProperty()->SetOpacity(0.5);
+    actor->GetProperty()->SetLighting(false);
+
+    return actor;
 }
