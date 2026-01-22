@@ -52,6 +52,9 @@ public:
     // STEPファイル変形
     bool applyTransformToStep(const gp_Trsf& transform, IUserInterface* ui);
     
+    // 境界条件の変換
+    void transformBoundaryConditions(const gp_Trsf& transform, IUserInterface* ui);
+    
     // ゲッター
     ProcessPipeline* getFileProcessor() { return fileProcessor.get(); }
     ExportManager* getExportManager() { return exportManager.get(); }

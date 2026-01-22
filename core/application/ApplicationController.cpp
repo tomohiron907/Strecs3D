@@ -1,4 +1,5 @@
 #include "ApplicationController.h"
+#include <gp_Vec.hxx>
 #include "MainWindowUIAdapter.h"
 #include "../../UI/mainwindowui.h"
 #include "../../utils/fileUtility.h"
@@ -553,4 +554,36 @@ bool ApplicationController::applyTransformToStep(const gp_Trsf& transform, IUser
     }
 
     return false;
+}
+
+void ApplicationController::transformBoundaryConditions(const gp_Trsf& transform, IUserInterface* ui)
+{
+    if (!ui) return;
+
+    auto* uiState = getUIState(ui);
+    if (!uiState) return;
+
+    // --- Boundary Conditionの変換 ---
+    BoundaryCondition bc = uiState->getBoundaryCondition();
+    bool bcChanged = false;
+
+    // LoadConditionの方向ベクトルを回転
+    // Transforms() メソッドで gp_Vec (ベクトル) を変換すると、移動成分は無視され回転・スケーリングのみ適用される
+    for (auto& load : bc.loads) {
+        gp_Vec direction(load.direction.x, load.direction.y, load.direction.z);
+        direction.Transform(transform);
+        
+        load.direction.x = direction.X();
+        load.direction.y = direction.Y();
+        load.direction.z = direction.Z();
+        bcChanged = true;
+    }
+
+    // 必要に応じてConstraintも変換（現在はSurface ID依存なので、Surface IDが変わらなければ特に変更不要だが、
+    // もし座標依存のデータが含まれる場合はここで変換する）
+    // 現状のConstraintConditionは surface_id と name のみなので変換不要
+
+    if (bcChanged) {
+        uiState->setBoundaryCondition(bc);
+    }
 }

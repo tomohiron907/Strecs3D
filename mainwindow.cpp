@@ -857,7 +857,9 @@ void MainWindow::alignModelToFace(int faceId)
     
     // Apply transform
     logMessage("Applying transform to align face to bed...");
-    appController->applyTransformToStep(finalTrsf, uiAdapter.get());
+    if (appController->applyTransformToStep(finalTrsf, uiAdapter.get())) {
+        appController->transformBoundaryConditions(finalTrsf, uiAdapter.get());
+    }
     
     // Success message
     uiAdapter->showInfoMessage("Success", "Model aligned to bed surface.");
