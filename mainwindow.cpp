@@ -816,13 +816,17 @@ void MainWindow::alignModelToFace(int faceId)
     // Get face geometry from StepReader
     auto stepReader = uiAdapter->getVisualizationManager()->getCurrentStepReader();
     if (!stepReader) {
-        logMessage("Error: No valid STEP reader available.");
+        QString msg = "Error: No valid STEP reader available.";
+        logMessage(msg);
+        uiAdapter->showCriticalMessage("Error", msg);
         return;
     }
     
     FaceGeometry geom = stepReader->getFaceGeometry(faceId);
     if (!geom.isValid) {
-        logMessage("Error: Invalid face geometry.");
+        QString msg = "Error: Invalid face geometry.";
+        logMessage(msg);
+        uiAdapter->showCriticalMessage("Error", msg);
         return;
     }
     
@@ -868,8 +872,5 @@ void MainWindow::alignModelToFace(int faceId)
     if (appController->applyTransformToStep(finalTrsf, uiAdapter.get())) {
         appController->transformBoundaryConditions(finalTrsf, uiAdapter.get());
     }
-    
-    // Success message
-    uiAdapter->showInfoMessage("Success", "Model aligned to bed surface.");
 }
 
