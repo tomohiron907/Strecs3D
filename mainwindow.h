@@ -63,7 +63,7 @@ private:
     void updateUIStateFromWidgets();
     void alignModelToFace(int faceId); // Helper to align model to bed
 
-    bool m_isSelectingBedSurface = false;
+
     
     std::unique_ptr<ApplicationController> appController;
     std::unique_ptr<MainWindowUI> ui;

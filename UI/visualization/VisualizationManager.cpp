@@ -12,6 +12,11 @@
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
+#include <vtkPlaneSource.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkProperty.h>
 
 VisualizationManager::VisualizationManager(MainWindowUI* ui) : QObject() {
     actorFactory_ = std::make_unique<ActorFactory>();
@@ -556,6 +561,83 @@ void VisualizationManager::showLoadPreview(int surfaceId, double dirX, double di
         sceneRenderer_->addActorToRenderer(previewActor_);
         render();
     }
+}
+
+void VisualizationManager::showBedPreview(int surfaceId) {
+    // Clear any existing preview
+    clearPreview();
+
+    if (!currentStepReader_ || !currentStepReader_->isValid()) {
+        return;
+    }
+
+    FaceGeometry geom = currentStepReader_->getFaceGeometry(surfaceId);
+    if (!geom.isValid) {
+        return;
+    }
+
+    // Create a simple plane source
+    auto planeSource = vtkSmartPointer<vtkPlaneSource>::New();
+    // Default plane is on Z=0, centered at origin.
+    // We make it reasonably large to visualize a "bed".
+    // Size should probably depend on object size, but for now let's use a fixed size or estimated from bounding box?
+    // Using a fixed size might be too small or too big.
+    // Let's check if we have object bounds.
+    // For now, let's use a size of 200x200 (mm presumably).
+    planeSource->SetOrigin(-50, -50, 0);
+    planeSource->SetPoint1(50, -50, 0);
+    planeSource->SetPoint2(-50, 50, 0);
+    planeSource->Update();
+
+    // Transform the plane to match the face center and normal
+    auto transform = vtkSmartPointer<vtkTransform>::New();
+    transform->Translate(geom.centerX, geom.centerY, geom.centerZ);
+
+    // Calculate rotation from Z-axis (0,0,1) to face normal
+    double normal[3] = {geom.normalX, geom.normalY, geom.normalZ};
+    double zAxis[3] = {0.0, 0.0, 1.0};
+    
+    // vtkMath::Cross and Dot? Or just use vtkTransform's RotateWXYZ via simple math.
+    // But vtkTransform doesn't have "Align" method directly.
+    // However, if we simply want to place it ON the face, we can align Z axis to Normal.
+    
+    // Compute rotation axis (cross product of Z and Normal)
+    double rotationAxis[3];
+    vtkMath::Cross(zAxis, normal, rotationAxis);
+    
+    // Compute rotation angle (acos of dot product)
+    double dot = vtkMath::Dot(zAxis, normal);
+    double angle = acos(dot) * 180.0 / M_PI;
+
+    // Apply rotation
+    if (vtkMath::Norm(rotationAxis) > 1e-6) {
+         transform->RotateWXYZ(angle, rotationAxis);
+    } else if (dot < 0) {
+         // Anti-parallel (180 degrees)
+         transform->RotateWXYZ(180, 1, 0, 0);
+    }
+    
+    auto transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+    transformFilter->SetInputConnection(planeSource->GetOutputPort());
+    transformFilter->SetTransform(transform);
+    transformFilter->Update();
+
+    // Mapper
+    auto mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputConnection(transformFilter->GetOutputPort());
+
+    // Actor
+    previewActor_ = vtkSmartPointer<vtkActor>::New();
+    previewActor_->SetMapper(mapper);
+    
+    // Set Color (Blue-ish) and Opacity
+    previewActor_->GetProperty()->SetColor(0.2, 0.6, 1.0); // Light Blue
+    previewActor_->GetProperty()->SetOpacity(0.5);
+    previewActor_->GetProperty()->SetLighting(false); // Flat shading, no lighting effects preferred for overlay? Or true? False is safer for "guide" visuals.
+
+    registerObject({previewActor_, "__preview_bc__", true, 0.5});
+    sceneRenderer_->addActorToRenderer(previewActor_);
+    render();
 }
 
 void VisualizationManager::clearPreview() {

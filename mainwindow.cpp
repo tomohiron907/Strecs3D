@@ -20,6 +20,7 @@
 #include "utils/tempPathUtility.h"
 #include "UI/widgets/process/AddLoadDialog.h"
 #include "UI/widgets/process/AddConstraintDialog.h"
+#include "UI/widgets/process/SelectBedSurfaceDialog.h"
 #include "core/processing/StepReader.h"
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
@@ -643,17 +644,6 @@ void MainWindow::onFaceDoubleClicked(int faceId, double nx, double ny, double nz
     // Use selection from UIState
     SelectedObjectInfo selection = state->getSelectedObject();
 
-    // Check if we are selecting bed surface
-    if (m_isSelectingBedSurface) {
-        alignModelToFace(faceId);
-        m_isSelectingBedSurface = false;
-        
-        if (uiAdapter && uiAdapter->getVisualizationManager()) {
-            uiAdapter->getVisualizationManager()->setFaceSelectionMode(false);
-        }
-        return;
-    }
-
     if (selection.type == ObjectType::ITEM_BC_CONSTRAINT) {
         // Update the constraint at this index
         if (selection.index >= 0) {
@@ -791,14 +781,32 @@ void MainWindow::onBedSurfaceSelectionRequested()
 {
     if (!uiAdapter || !uiAdapter->getVisualizationManager()) return;
 
-    m_isSelectingBedSurface = true;
-    
-    // Activate face selection mode
-    uiAdapter->getVisualizationManager()->setFaceSelectionMode(true);
-    
-    // Provide user instruction
-    logMessage("Please double-click a face to align it to the bed surface.");
-    uiAdapter->showInfoMessage("Select Bed Surface", "Double-click a face to align it to the bed surface (XY plane).");
+    // Show dialog to select bed surface
+    SelectBedSurfaceDialog* dialog = new SelectBedSurfaceDialog(this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+
+    // Initial position relative to BoundaryConditionStepWidget (Bottom Widget)
+    if (ui && ui->getProcessManagerWidget()) {
+        if (auto* bcWidget = ui->getProcessManagerWidget()->getBoundaryConditionStep()) {
+            QPoint widgetPos = bcWidget->mapToGlobal(QPoint(0, 0));
+            int targetX = widgetPos.x() + bcWidget->width() + 20;
+            int targetY = widgetPos.y();
+            dialog->move(targetX, targetY);
+        }
+    }
+
+    // Connect to VisualizationManager for face selection
+    dialog->setVisualizationManager(uiAdapter->getVisualizationManager());
+
+    // Connect dialog result
+    connect(dialog, &QDialog::accepted, this, [this, dialog]() {
+        int faceId = dialog->getSelectedFaceId();
+        if (faceId > 0) {
+            alignModelToFace(faceId);
+        }
+    });
+
+    dialog->show();
 }
 
 void MainWindow::alignModelToFace(int faceId)

@@ -78,6 +78,7 @@ public:
     // Preview Boundary Conditions (for dialogs)
     void showConstraintPreview(int surfaceId);
     void showLoadPreview(int surfaceId, double dirX, double dirY, double dirZ);
+    void showBedPreview(int surfaceId);
     void clearPreview();
 
 signals:
