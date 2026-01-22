@@ -5,6 +5,7 @@
 #include "../../utils/tempPathUtility.h"
 #include "../processing/VtkProcessor.h"
 #include "../processing/StepToStlConverter.h"
+#include "../processing/StepTransformer.h"
 #include "../ui/UIState.h"
 #include "../../FEM/SimulationConditionExporter.h"
 #include "../../FEM/fem_pipeline.h"
@@ -14,6 +15,9 @@
 #include <stdexcept>
 #include <algorithm>
 #include <vector>
+#include <QDateTime>
+#include <QFileInfo>
+#include <QDir>
 
 ApplicationController::ApplicationController(QObject* parent)
     : QObject(parent)
@@ -503,4 +507,50 @@ bool ApplicationController::isVtkFileLoaded(UIState* uiState) const
 bool ApplicationController::areBothFilesLoaded(UIState* uiState) const
 {
     return isStlFileLoaded(uiState) && isVtkFileLoaded(uiState);
-} 
+}
+
+
+
+bool ApplicationController::applyTransformToStep(const gp_Trsf& transform, IUserInterface* ui)
+{
+    if (!ui) return false;
+
+    auto* uiState = getUIState(ui);
+    if (!uiState) return false;
+
+    QString currentStepPath = uiState->getStepFilePath();
+    if (currentStepPath.isEmpty()) {
+        std::cerr << "Error: No STEP file loaded to transform." << std::endl;
+        return false;
+    }
+
+    // 一時ファイルパスの生成
+    // 例: temp/step/original_name.stp
+    QFileInfo fileInfo(currentStepPath);
+    QString originalName = fileInfo.fileName();
+    
+    QString stepTempDir = TempPathUtility::getTempSubDir("step");
+    QDir dir;
+    if (!dir.exists(stepTempDir)) {
+        dir.mkpath(stepTempDir);
+    }
+
+    QString newPath = stepTempDir + "/" + originalName;
+    
+    // 変換実行
+    if (!StepTransformer::transformAndSave(currentStepPath.toStdString(), 
+                                           newPath.toStdString(), 
+                                           transform)) {
+        std::cerr << "Error: Failed to transform STEP file." << std::endl;
+        ui->showCriticalMessage("Error", "Failed to transform STEP file.");
+        return false;
+    }
+
+    // 新しいファイルとして再読み込み（表示更新、STL再生成含む）
+    if (openStepFile(newPath.toStdString(), ui)) {
+        uiState->setStepFilePath(newPath);
+        return true;
+    }
+
+    return false;
+}

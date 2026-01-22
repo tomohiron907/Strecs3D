@@ -4,6 +4,7 @@
 #include <string>
 #include <QString>
 #include <QObject>
+#include <gp_Trsf.hxx>
 #include <vtkSmartPointer.h>
 #include <vtkPolyData.h>
 #include "../processing/ProcessPipeline.h"
@@ -47,6 +48,9 @@ public:
     bool isStlFileLoaded(UIState* uiState) const;
     bool isVtkFileLoaded(UIState* uiState) const;
     bool areBothFilesLoaded(UIState* uiState) const;
+
+    // STEPファイル変形
+    bool applyTransformToStep(const gp_Trsf& transform, IUserInterface* ui);
     
     // ゲッター
     ProcessPipeline* getFileProcessor() { return fileProcessor.get(); }
