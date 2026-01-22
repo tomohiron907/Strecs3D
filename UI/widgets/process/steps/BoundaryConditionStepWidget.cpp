@@ -18,6 +18,11 @@ BoundaryConditionStepWidget::BoundaryConditionStepWidget(QWidget* parent) : QWid
     layout->addWidget(m_addConstraintButton);
     layout->addWidget(m_addLoadButton);
     
+    // Select Bed Surface Button
+    m_selectBedSurfaceButton = new Button("Select Bed Surface", this);
+    connect(m_selectBedSurfaceButton, &Button::clicked, this, &BoundaryConditionStepWidget::selectBedSurfaceClicked);
+    layout->addWidget(m_selectBedSurfaceButton);
+    
     layout->addSpacing(20); // Small gap
     
     // Done Button

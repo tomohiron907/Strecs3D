@@ -361,12 +361,20 @@ void StepPickerStyle::OnLeftButtonDoubleClick()
 
 void StepPickerStyle::SetFaceActors(const std::vector<vtkSmartPointer<vtkActor>>& actors)
 {
+    // アクターが更新されるため、保持しているポインタをリセット
+    lastPickedActor_ = nullptr;
+    hasOriginalColor_ = false;
+
     faceActors_ = actors;
     UpdatePickList();
 }
 
 void StepPickerStyle::SetEdgeActors(const std::vector<vtkSmartPointer<vtkActor>>& actors)
 {
+    // アクターが更新されるため、保持しているポインタをリセット
+    lastPickedActor_ = nullptr;
+    hasOriginalColor_ = false;
+
     edgeActors_ = actors;
     UpdatePickList();
 }

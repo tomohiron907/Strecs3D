@@ -54,6 +54,9 @@ void VisualizationManager::displayVtkFile(const std::string& vtkFile, VtkProcess
 }
 
 void VisualizationManager::displayStepFile(const std::string& stepFile) {
+    // Clear any existing STEP file actors first to prevent ghost objects
+    clearStepFileActors();
+
     // Create and hold StepReader for boundary condition visualization
     currentStepReader_ = std::make_shared<StepReader>();
     if (!currentStepReader_->readStepFile(stepFile)) {

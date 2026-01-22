@@ -49,6 +49,7 @@ public slots:
     void onBackgroundClicked();
     void onSelectedObjectChanged(const SelectedObjectInfo& selection);
     void handleProcessRollback(ProcessStep targetStep);  // Handle process rollback
+    void onBedSurfaceSelectionRequested();  // Handle bed surface selection request
 
 private:
     // Initialization methods
@@ -60,6 +61,9 @@ private:
     void updateButtonsAfterProcessing(bool success);
     void resetExportButton();
     void updateUIStateFromWidgets();
+    void alignModelToFace(int faceId); // Helper to align model to bed
+
+    bool m_isSelectingBedSurface = false;
     
     std::unique_ptr<ApplicationController> appController;
     std::unique_ptr<MainWindowUI> ui;

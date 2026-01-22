@@ -20,6 +20,11 @@
 #include "utils/tempPathUtility.h"
 #include "UI/widgets/process/AddLoadDialog.h"
 #include "UI/widgets/process/AddConstraintDialog.h"
+#include "core/processing/StepReader.h"
+#include <gp_Trsf.hxx>
+#include <gp_Vec.hxx>
+#include <gp_Ax3.hxx>
+#include <gp_Dir.hxx>
 #include <QPushButton>
 #include <QFileDialog>
 #include <QVBoxLayout>
@@ -99,6 +104,10 @@ void MainWindow::connectSignals()
         connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::addConstraintClicked, this, clearSelection);
         connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::simulateClicked, this, clearSelection);
         connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::processInfillClicked, this, clearSelection);
+        
+        // Connect Bed Surface Selection
+        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::bedSurfaceSelectionRequested, 
+                this, &MainWindow::onBedSurfaceSelectionRequested);
     }
 
     // Connect face selection signal from VisualizationManager
@@ -634,6 +643,17 @@ void MainWindow::onFaceDoubleClicked(int faceId, double nx, double ny, double nz
     // Use selection from UIState
     SelectedObjectInfo selection = state->getSelectedObject();
 
+    // Check if we are selecting bed surface
+    if (m_isSelectingBedSurface) {
+        alignModelToFace(faceId);
+        m_isSelectingBedSurface = false;
+        
+        if (uiAdapter && uiAdapter->getVisualizationManager()) {
+            uiAdapter->getVisualizationManager()->setFaceSelectionMode(false);
+        }
+        return;
+    }
+
     if (selection.type == ObjectType::ITEM_BC_CONSTRAINT) {
         // Update the constraint at this index
         if (selection.index >= 0) {
@@ -765,5 +785,81 @@ void MainWindow::handleProcessRollback(ProcessStep targetStep)
     processManager->rollbackToStep(targetStep);
 
     logMessage("Rollback completed");
+}
+
+void MainWindow::onBedSurfaceSelectionRequested()
+{
+    if (!uiAdapter || !uiAdapter->getVisualizationManager()) return;
+
+    m_isSelectingBedSurface = true;
+    
+    // Activate face selection mode
+    uiAdapter->getVisualizationManager()->setFaceSelectionMode(true);
+    
+    // Provide user instruction
+    logMessage("Please double-click a face to align it to the bed surface.");
+    uiAdapter->showInfoMessage("Select Bed Surface", "Double-click a face to align it to the bed surface (XY plane).");
+}
+
+void MainWindow::alignModelToFace(int faceId)
+{
+    if (!appController || !uiAdapter || !uiAdapter->getVisualizationManager()) return;
+    
+    // Get face geometry from StepReader
+    auto stepReader = uiAdapter->getVisualizationManager()->getCurrentStepReader();
+    if (!stepReader) {
+        logMessage("Error: No valid STEP reader available.");
+        return;
+    }
+    
+    FaceGeometry geom = stepReader->getFaceGeometry(faceId);
+    if (!geom.isValid) {
+        logMessage("Error: Invalid face geometry.");
+        return;
+    }
+    
+    // Target:
+    // 1. Move Center to (0,0,0)
+    // 2. Rotate Normal to (0,0,-1) [Assuming bed is XY and object sits ON it, normal points DOWN]
+    
+    gp_Pnt center(geom.centerX, geom.centerY, geom.centerZ);
+    gp_Dir normal(geom.normalX, geom.normalY, geom.normalZ);
+    
+    // Transformation 1: Translation to bring center to origin
+    gp_Trsf translation;
+    translation.SetTranslation(center, gp::Origin());
+    
+    // Transformation 2: Rotation to align normal to -Z
+    gp_Trsf rotation;
+    gp_Dir targetNormal(0, 0, -1);
+    
+    // Check if normal is already aligned (or anti-aligned)
+    if (!normal.IsParallel(targetNormal, 1e-6)) {
+        gp_Ax1 rotationAxis(gp::Origin(), normal.Crossed(targetNormal));
+        double angle = normal.Angle(targetNormal);
+        rotation.SetRotation(rotationAxis, angle);
+    } else if (normal.IsOpposite(targetNormal, 1e-6)) {
+         // Already aligned to -Z ? No, Opposite of a vector that is -Z means it is +Z. 
+         // If normal is (0,0,1) and target is (0,0,-1). They are opposite.
+         // We want to rotate 180 degrees.
+         // Axis can be X or Y.
+         gp_Ax1 rotationAxis(gp::Origin(), gp::DX());
+         rotation.SetRotation(rotationAxis, M_PI);
+    }
+    
+    // Composite transform: R * T
+    // We want to translate first (relative to object) then rotate around new origin?
+    // Actually standard composite is T2 * T1. 
+    // If we apply T first (move to origin), then R (rotate around origin).
+    // Final = R * T.
+    
+    gp_Trsf finalTrsf = rotation * translation;
+    
+    // Apply transform
+    logMessage("Applying transform to align face to bed...");
+    appController->applyTransformToStep(finalTrsf, uiAdapter.get());
+    
+    // Success message
+    uiAdapter->showInfoMessage("Success", "Model aligned to bed surface.");
 }
 

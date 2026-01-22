@@ -97,6 +97,7 @@ void ProcessManagerWidget::connectSignals()
     // BC Step
     connect(m_bcWidget, &BoundaryConditionStepWidget::addLoadClicked, this, &ProcessManagerWidget::addLoadClicked);
     connect(m_bcWidget, &BoundaryConditionStepWidget::addConstraintClicked, this, &ProcessManagerWidget::addConstraintClicked);
+    connect(m_bcWidget, &BoundaryConditionStepWidget::selectBedSurfaceClicked, this, &ProcessManagerWidget::bedSurfaceSelectionRequested);
     connect(m_bcWidget, &BoundaryConditionStepWidget::doneClicked, this, &ProcessManagerWidget::nextStep);
 
     // Sim Step

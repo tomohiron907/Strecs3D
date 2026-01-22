@@ -34,6 +34,7 @@ signals:
     void importFile(const QString& filePath);
     void addLoadClicked();
     void addConstraintClicked();
+    void bedSurfaceSelectionRequested();
     void simulateClicked();
     void processInfillClicked();
 
