@@ -10,6 +10,9 @@
 #include <vtkPolyData.h>
 #include "core/application/ApplicationController.h"
 #include "core/application/MainWindowUIAdapter.h"
+#include "UI/controllers/BoundaryConditionController.h"
+#include "UI/controllers/ProcessController.h"
+#include "UI/controllers/ModelAlignmentController.h"
 #include "UI/mainwindowui.h"
 #include <QString>
 
@@ -56,18 +59,23 @@ private:
     void initializeComponents();
     void setupWindow();
     void connectSignals();
+    void connectProcessManagerSignals();
+    void connectVisualizationSignals();
 
     // UI update methods
     void updateButtonsAfterProcessing(bool success);
     void resetExportButton();
     void updateUIStateFromWidgets();
-    void alignModelToFace(int faceId); // Helper to align model to bed
 
-
-    
+    // Core components
     std::unique_ptr<ApplicationController> appController;
     std::unique_ptr<MainWindowUI> ui;
     std::unique_ptr<MainWindowUIAdapter> uiAdapter;
+
+    // Controllers
+    std::unique_ptr<BoundaryConditionController> bcController_;
+    std::unique_ptr<ProcessController> processController_;
+    std::unique_ptr<ModelAlignmentController> alignmentController_;
 };
 
 #endif // MAINWINDOW_H

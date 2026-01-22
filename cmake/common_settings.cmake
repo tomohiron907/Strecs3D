@@ -169,6 +169,9 @@ add_executable(Strecs3D
   utils/xmlConverter.cpp
   core/application/ApplicationController.cpp
   core/application/MainWindowUIAdapter.cpp
+  UI/controllers/BoundaryConditionController.cpp
+  UI/controllers/ProcessController.cpp
+  UI/controllers/ModelAlignmentController.cpp
   core/interfaces/IUserInterface.cpp
   core/processing/ProcessPipeline.cpp
   core/ui/UIState.cpp

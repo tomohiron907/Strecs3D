@@ -6,26 +6,11 @@
 #include "core/commands/file/OpenStepFileCommand.h"
 #include "core/commands/processing/ProcessFilesCommand.h"
 #include "core/commands/processing/Export3mfCommand.h"
-#include "core/commands/processing/RunFEMPipelineCommand.h"
 #include "core/commands/state/SetStressRangeCommand.h"
-
 #include "core/commands/state/SetStressDensityMappingCommand.h"
-#include "core/commands/state/SetConstraintConditionCommand.h"
-#include "core/commands/state/SetLoadConditionCommand.h"
-#include "core/commands/state/UpdateConstraintConditionCommand.h"
-#include "core/commands/state/UpdateLoadConditionCommand.h"
 #include "core/commands/visualization/SetMeshVisibilityCommand.h"
 #include "core/commands/visualization/SetMeshOpacityCommand.h"
-#include "core/commands/visualization/SetMeshOpacityCommand.h"
-#include "utils/tempPathUtility.h"
-#include "UI/widgets/process/AddLoadDialog.h"
-#include "UI/widgets/process/AddConstraintDialog.h"
-#include "UI/widgets/process/SelectBedSurfaceDialog.h"
-#include "core/processing/StepReader.h"
-#include <gp_Trsf.hxx>
-#include <gp_Vec.hxx>
-#include <gp_Ax3.hxx>
-#include <gp_Dir.hxx>
+
 #include <QPushButton>
 #include <QFileDialog>
 #include <QVBoxLayout>
@@ -53,6 +38,29 @@ void MainWindow::initializeComponents()
     ui = std::make_unique<MainWindowUI>(this);
     uiAdapter = std::make_unique<MainWindowUIAdapter>(ui.get(), this);
     appController = std::make_unique<ApplicationController>(this);
+
+    // Initialize controllers
+    bcController_ = std::make_unique<BoundaryConditionController>(
+        ui->getUIState(),
+        uiAdapter->getVisualizationManager(),
+        ui->getProcessManagerWidget(),
+        this
+    );
+
+    processController_ = std::make_unique<ProcessController>(
+        appController.get(),
+        uiAdapter.get(),
+        ui->getProcessManagerWidget(),
+        ui->getUIState(),
+        this
+    );
+
+    alignmentController_ = std::make_unique<ModelAlignmentController>(
+        appController.get(),
+        uiAdapter.get(),
+        ui->getProcessManagerWidget(),
+        this
+    );
 }
 
 void MainWindow::setupWindow()
@@ -64,7 +72,7 @@ void MainWindow::setupWindow()
 
 void MainWindow::connectSignals()
 {
-    // UI要素のシグナル接続
+    // UI buttons -> MainWindow slots
     connect(ui->getOpenStlButton(), &QPushButton::clicked, this, &MainWindow::openSTEPFile);
     connect(ui->getOpenVtkButton(), &QPushButton::clicked, this, &MainWindow::openVTKFile);
     connect(ui->getOpenStepButton(), &QPushButton::clicked, this, &MainWindow::openSTEPFile);
@@ -74,61 +82,62 @@ void MainWindow::connectSignals()
     connect(ui->getProcessButton(), &QPushButton::clicked, this, &MainWindow::processFiles);
     connect(ui->getExport3mfButton(), &QPushButton::clicked, this, &MainWindow::export3mfFile);
 
+    // Sliders/Widgets -> MainWindow slots
     connect(ui->getRangeSlider(), &DensitySlider::handlePositionsChanged, this, &MainWindow::onDensitySliderChanged);
     connect(ui->getRangeSlider(), &DensitySlider::regionPercentsChanged, this, &MainWindow::onDensitySliderChanged);
     connect(ui->getStressRangeWidget(), &StressRangeWidget::stressRangeChanged, this, &MainWindow::onStressRangeChanged);
 
+    // UIState -> MainWindow slots
+    connect(ui->getUIState(), &UIState::boundaryConditionChanged, this, &MainWindow::onBoundaryConditionChanged);
+    connect(ui->getUIState(), &UIState::selectedObjectChanged, this, &MainWindow::onSelectedObjectChanged);
 
-    // UIStateのシグナル接続
-    connect(ui->getUIState(), &UIState::boundaryConditionChanged,
-            this, &MainWindow::onBoundaryConditionChanged);
-    connect(ui->getUIState(), &UIState::selectedObjectChanged,
-            this, &MainWindow::onSelectedObjectChanged);
+    // ProcessManager and Visualization signals
+    connectProcessManagerSignals();
+    connectVisualizationSignals();
 
-    // ProcessManagerWidget signals
-    if (ui->getProcessManagerWidget()) {
-        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::importFile,
-                this, &MainWindow::loadSTEPFile);
-        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::rollbackRequested,
-                this, &MainWindow::handleProcessRollback);
-
-        // Auto-close property widget (by clearing selection) on left pane interactions
-        auto clearSelection = [this]() {
-            if (UIState* state = getUIState()) {
-                state->setSelectedObject(ObjectType::NONE);
-            }
-        };
-
-        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::stepChanged, this, clearSelection);
-        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::importStepClicked, this, clearSelection);
-        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::addLoadClicked, this, clearSelection);
-        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::addConstraintClicked, this, clearSelection);
-        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::simulateClicked, this, clearSelection);
-        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::processInfillClicked, this, clearSelection);
-        
-        // Connect Bed Surface Selection
-        connect(ui->getProcessManagerWidget(), &ProcessManagerWidget::bedSurfaceSelectionRequested, 
-                this, &MainWindow::onBedSurfaceSelectionRequested);
-    }
-
-    // Connect face selection signal from VisualizationManager
-    if (uiAdapter && uiAdapter->getVisualizationManager()) {
-        connect(uiAdapter->getVisualizationManager(), &VisualizationManager::faceClicked,
-                this, &MainWindow::onFaceClicked);
-        connect(uiAdapter->getVisualizationManager(), &VisualizationManager::faceDoubleClicked,
-                this, &MainWindow::onFaceDoubleClicked);
-        connect(uiAdapter->getVisualizationManager(), &VisualizationManager::backgroundClicked,
-                this, &MainWindow::onBackgroundClicked);
-
-        // Connect VisualizationManager to PropertyWidget for edge selection
-        if (ui && ui->getPropertyWidget()) {
-            ui->getPropertyWidget()->setVisualizationManager(
-                uiAdapter->getVisualizationManager());
-        }
-    }
-
-    // 初期状態でUIStateを更新
+    // Initialize UIState from widgets
     updateUIStateFromWidgets();
+}
+
+void MainWindow::connectProcessManagerSignals()
+{
+    if (!ui->getProcessManagerWidget()) return;
+
+    auto* pm = ui->getProcessManagerWidget();
+
+    connect(pm, &ProcessManagerWidget::importFile, this, &MainWindow::loadSTEPFile);
+    connect(pm, &ProcessManagerWidget::rollbackRequested, this, &MainWindow::handleProcessRollback);
+    connect(pm, &ProcessManagerWidget::bedSurfaceSelectionRequested, this, &MainWindow::onBedSurfaceSelectionRequested);
+
+    // Auto-close property widget on left pane interactions
+    auto clearSelection = [this]() {
+        if (UIState* state = getUIState()) {
+            state->setSelectedObject(ObjectType::NONE);
+        }
+    };
+
+    connect(pm, &ProcessManagerWidget::stepChanged, this, clearSelection);
+    connect(pm, &ProcessManagerWidget::importStepClicked, this, clearSelection);
+    connect(pm, &ProcessManagerWidget::addLoadClicked, this, clearSelection);
+    connect(pm, &ProcessManagerWidget::addConstraintClicked, this, clearSelection);
+    connect(pm, &ProcessManagerWidget::simulateClicked, this, clearSelection);
+    connect(pm, &ProcessManagerWidget::processInfillClicked, this, clearSelection);
+}
+
+void MainWindow::connectVisualizationSignals()
+{
+    if (!uiAdapter || !uiAdapter->getVisualizationManager()) return;
+
+    auto* vm = uiAdapter->getVisualizationManager();
+
+    connect(vm, &VisualizationManager::faceClicked, this, &MainWindow::onFaceClicked);
+    connect(vm, &VisualizationManager::faceDoubleClicked, this, &MainWindow::onFaceDoubleClicked);
+    connect(vm, &VisualizationManager::backgroundClicked, this, &MainWindow::onBackgroundClicked);
+
+    // Connect VisualizationManager to PropertyWidget for edge selection
+    if (ui && ui->getPropertyWidget()) {
+        ui->getPropertyWidget()->setVisualizationManager(vm);
+    }
 }
 
 MainWindow::~MainWindow() = default;
@@ -432,195 +441,28 @@ void MainWindow::showUIStateDebugInfo()
 
 void MainWindow::onConstrainButtonClicked()
 {
-    UIState* state = getUIState();
-    if (!state) return;
-
-    // Generate a unique name for the new constraint
-    BoundaryCondition bc = state->getBoundaryCondition();
-    int nextId = 1;
-    std::string newName;
-    while (true) {
-        newName = "Constraint" + std::to_string(nextId);
-        bool exists = false;
-        for (const auto& c : bc.constraints) {
-            if (c.name == newName) {
-                exists = true;
-                break;
-            }
-        }
-        if (!exists) break;
-        nextId++;
-    }
-
-    // Show dialog to configure constraint
-    AddConstraintDialog* dialog = new AddConstraintDialog(QString::fromStdString(newName), this);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-
-    // Initial position relative to BoundaryConditionStepWidget (Bottom Widget)
-    if (ui && ui->getProcessManagerWidget()) {
-        if (auto* bcWidget = ui->getProcessManagerWidget()->getBoundaryConditionStep()) {
-            QPoint widgetPos = bcWidget->mapToGlobal(QPoint(0, 0));
-            int targetX = widgetPos.x() + bcWidget->width() + 20;
-            int targetY = widgetPos.y();
-            dialog->move(targetX, targetY);
-        }
-    }
-
-    // Connect to VisualizationManager for face selection
-    if (uiAdapter && uiAdapter->getVisualizationManager()) {
-        dialog->setVisualizationManager(uiAdapter->getVisualizationManager());
-    }
-
-    // Connect dialog result
-    connect(dialog, &QDialog::accepted, this, [this, dialog, state]() {
-        ConstraintCondition constraint = dialog->getConstraintCondition();
-
-        // Command pattern: Add constraint
-        auto command = std::make_unique<SetConstraintConditionCommand>(
-            state,
-            constraint
-        );
-        command->execute();
-
-        logMessage("Added new Constraint Condition: " + QString::fromStdString(constraint.name));
-    });
-
-    dialog->show();
+    bcController_->showAddConstraintDialog();
 }
 
 void MainWindow::onLoadButtonClicked()
 {
-    UIState* state = getUIState();
-    if (!state) return;
-
-    // Generate a unique name for the new load
-    BoundaryCondition bc = state->getBoundaryCondition();
-    int nextId = 1;
-    std::string newName;
-    while (true) {
-        newName = "Load" + std::to_string(nextId);
-        bool exists = false;
-        for (const auto& l : bc.loads) {
-            if (l.name == newName) {
-                exists = true;
-                break;
-            }
-        }
-        if (!exists) break;
-        nextId++;
-    }
-
-    // Show dialog to configure load
-    AddLoadDialog* dialog = new AddLoadDialog(QString::fromStdString(newName), this);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-
-    // Initial position relative to BoundaryConditionStepWidget (Bottom Widget)
-    if (ui && ui->getProcessManagerWidget()) {
-        if (auto* bcWidget = ui->getProcessManagerWidget()->getBoundaryConditionStep()) {
-            QPoint widgetPos = bcWidget->mapToGlobal(QPoint(0, 0));
-            int targetX = widgetPos.x() + bcWidget->width() + 20;
-            int targetY = widgetPos.y();
-            dialog->move(targetX, targetY);
-        }
-    }
-
-    // Connect to VisualizationManager for face/edge selection
-    if (uiAdapter && uiAdapter->getVisualizationManager()) {
-        dialog->setVisualizationManager(uiAdapter->getVisualizationManager());
-    }
-
-    // Connect dialog result
-    connect(dialog, &QDialog::accepted, this, [this, dialog, state]() {
-        LoadCondition load = dialog->getLoadCondition();
-
-        // Command pattern: Add load
-        auto command = std::make_unique<SetLoadConditionCommand>(
-            state,
-            load
-        );
-        command->execute();
-
-        logMessage("Added new Load Condition: " + QString::fromStdString(load.name));
-    });
-
-    dialog->show();
+    bcController_->showAddLoadDialog();
 }
 
 void MainWindow::onSimulateButtonClicked()
 {
-    logMessage("Starting FEM analysis pipeline...");
-
-    UIState* uiState = getUIState();
-    if (!uiState) {
-        logMessage("Error: UIState is null");
-        QMessageBox::critical(this, "エラー", "UIStateが取得できませんでした");
-        return;
-    }
-
-    // 一時ディレクトリのFEMサブディレクトリに保存
-    QString femTempDir = TempPathUtility::getTempSubDir("FEM");
-
-    // FEMディレクトリが存在しない場合は作成
-    QDir dir;
-    if (!dir.exists(femTempDir)) {
-        dir.mkpath(femTempDir);
-        logMessage("Created FEM temp directory: " + femTempDir);
-    }
-
-    // 一時ファイルパスを生成
-    QString outputPath = femTempDir + "/simulation_condition.json";
-
-    // コマンドパターンを使用してFEM解析パイプライン全体を実行
-    // (設定ファイルのエクスポート → FEM解析の実行)
-    auto command = std::make_unique<RunFEMPipelineCommand>(
-        appController.get(),
-        uiAdapter.get(),
-        uiState,
-        outputPath
-    );
-    command->execute();
-
-    logMessage("FEM analysis pipeline completed.");
-
-    // Notify ProcessManager to advance step
-    if (ui->getProcessManagerWidget()) {
-        ui->getProcessManagerWidget()->onSimulationCompleted();
-    }
-
+    processController_->runSimulation();
     updateProcessButtonState();
 }
 
 void MainWindow::onBoundaryConditionChanged()
 {
-    UIState* state = getUIState();
-    if (!state) {
-        return;
-    }
-
-    BoundaryCondition condition = state->getBoundaryCondition();
-
-    if (uiAdapter) {
-        auto* vizManager = uiAdapter->getVisualizationManager();
-        if (vizManager) {
-            vizManager->displayBoundaryConditions(condition);
-        }
-    }
+    bcController_->updateVisualization();
 }
 
 void MainWindow::onFaceClicked(int faceId, double nx, double ny, double nz)
 {
-    // Check if an object is selected in the list
-    UIState* state = getUIState();
-    if (!state) return;
-
-    // Use selection from UIState
-    SelectedObjectInfo selection = state->getSelectedObject();
-
-    // Constraint update moved to double-click handler
-    Q_UNUSED(faceId);
-    Q_UNUSED(nx);
-    Q_UNUSED(ny);
-    Q_UNUSED(nz);
+    bcController_->handleFaceClicked(faceId, nx, ny, nz);
 }
 
 void MainWindow::onBackgroundClicked()
@@ -637,61 +479,7 @@ void MainWindow::onBackgroundClicked()
 
 void MainWindow::onFaceDoubleClicked(int faceId, double nx, double ny, double nz)
 {
-    // Check if an object is selected in the list
-    UIState* state = getUIState();
-    if (!state) return;
-
-    // Use selection from UIState
-    SelectedObjectInfo selection = state->getSelectedObject();
-
-    if (selection.type == ObjectType::ITEM_BC_CONSTRAINT) {
-        // Update the constraint at this index
-        if (selection.index >= 0) {
-            // Get current to keep name
-            BoundaryCondition bc = state->getBoundaryCondition();
-            if (selection.index < (int)bc.constraints.size()) {
-                ConstraintCondition c = bc.constraints[selection.index];
-                c.surface_id = faceId;
-                
-                // Command pattern: Update constraint
-                auto command = std::make_unique<UpdateConstraintConditionCommand>(
-                    state,
-                    selection.index,
-                    c
-                );
-                command->execute();
-
-                logMessage(QString("Updated Constraint '%1' to Surface ID: %2").arg(QString::fromStdString(c.name)).arg(faceId));
-            }
-        }
-    } else if (selection.type == ObjectType::ITEM_BC_LOAD) {
-        // Update the load at this index
-        if (selection.index >= 0) {
-            // Get current to keep name/values
-            BoundaryCondition bc = state->getBoundaryCondition();
-            if (selection.index < (int)bc.loads.size()) {
-                LoadCondition l = bc.loads[selection.index];
-                l.surface_id = faceId;
-                l.direction = {-nx, -ny, -nz}; // Automatically input inverse normal vector
-                l.reference_edge_id = 0;  // Clear edge reference when face is clicked
-
-                // Command pattern: Update load
-                auto command = std::make_unique<UpdateLoadConditionCommand>(
-                    state,
-                    selection.index,
-                    l
-                );
-                command->execute();
-
-                logMessage(QString("Updated Load '%1' to Surface ID: %2, Direction: (%3, %4, %5)")
-                    .arg(QString::fromStdString(l.name))
-                    .arg(faceId)
-                    .arg(-nx, 0, 'f', 2)
-                    .arg(-ny, 0, 'f', 2)
-                    .arg(-nz, 0, 'f', 2));
-            }
-        }
-    }
+    bcController_->handleFaceDoubleClicked(faceId, nx, ny, nz);
 }
 
 void MainWindow::onSelectedObjectChanged(const SelectedObjectInfo& selection)
@@ -714,163 +502,11 @@ void MainWindow::onSelectedObjectChanged(const SelectedObjectInfo& selection)
 
 void MainWindow::handleProcessRollback(ProcessStep targetStep)
 {
-    logMessage(QString("Rolling back to step %1").arg(static_cast<int>(targetStep)));
-
-    UIState* uiState = ui->getUIState();
-    if (!uiState) {
-        QMessageBox::critical(this, "Error", "UIState not available");
-        return;
-    }
-
-    VisualizationManager* visManager = uiAdapter ? uiAdapter->getVisualizationManager() : nullptr;
-    if (!visManager) {
-        QMessageBox::critical(this, "Error", "VisualizationManager not available");
-        return;
-    }
-
-    ProcessManagerWidget* processManager = ui->getProcessManagerWidget();
-    if (!processManager) {
-        return;
-    }
-
-    ProcessStep currentStep = processManager->getFlowWidget()->currentStep();
-
-    int targetIdx = static_cast<int>(targetStep);
-    int currentIdx = static_cast<int>(currentStep);
-
-    // Reset data for each step that needs to be cleared
-    // Process in reverse order (highest to lowest)
-
-    // Step 4: Infill Map (if current >= 3 && target < 3)
-    if (currentIdx >= 3 && targetIdx < 3) {
-        logMessage("Clearing infill data...");
-        uiState->clearAllInfillRegions();
-        visManager->clearInfillActors();
-    }
-
-    // Step 3: Simulation (if current >= 2 && target < 2)
-    if (currentIdx >= 2 && targetIdx < 2) {
-        logMessage("Clearing simulation data...");
-        uiState->clearSimulationResult();
-        visManager->clearSimulationActors();
-    }
-
-    // Step 2: Boundary Conditions (if current >= 1 && target < 1)
-    if (currentIdx >= 1 && targetIdx < 1) {
-        logMessage("Clearing boundary conditions...");
-        uiState->clearLoadConditions();
-        uiState->clearConstraintConditions();
-        visManager->clearBoundaryConditions();
-    }
-
-    // Step 1: Import STEP (if target == 0)
-    if (targetIdx == 0) {
-        logMessage("Clearing STEP file...");
-        uiState->clearStepFile();
-        visManager->clearStepFileActors();
-        visManager->resetStepReader();
-    }
-
-    // Update ProcessManager UI
-    processManager->rollbackToStep(targetStep);
-
-    logMessage("Rollback completed");
+    processController_->rollbackToStep(targetStep);
 }
 
 void MainWindow::onBedSurfaceSelectionRequested()
 {
-    if (!uiAdapter || !uiAdapter->getVisualizationManager()) return;
-
-    // Show dialog to select bed surface
-    SelectBedSurfaceDialog* dialog = new SelectBedSurfaceDialog(this);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-
-    // Initial position relative to BoundaryConditionStepWidget (Bottom Widget)
-    if (ui && ui->getProcessManagerWidget()) {
-        if (auto* bcWidget = ui->getProcessManagerWidget()->getBoundaryConditionStep()) {
-            QPoint widgetPos = bcWidget->mapToGlobal(QPoint(0, 0));
-            int targetX = widgetPos.x() + bcWidget->width() + 20;
-            int targetY = widgetPos.y();
-            dialog->move(targetX, targetY);
-        }
-    }
-
-    // Connect to VisualizationManager for face selection
-    dialog->setVisualizationManager(uiAdapter->getVisualizationManager());
-
-    // Connect dialog result
-    connect(dialog, &QDialog::accepted, this, [this, dialog]() {
-        int faceId = dialog->getSelectedFaceId();
-        if (faceId > 0) {
-            alignModelToFace(faceId);
-        }
-    });
-
-    dialog->show();
-}
-
-void MainWindow::alignModelToFace(int faceId)
-{
-    if (!appController || !uiAdapter || !uiAdapter->getVisualizationManager()) return;
-    
-    // Get face geometry from StepReader
-    auto stepReader = uiAdapter->getVisualizationManager()->getCurrentStepReader();
-    if (!stepReader) {
-        QString msg = "Error: No valid STEP reader available.";
-        logMessage(msg);
-        uiAdapter->showCriticalMessage("Error", msg);
-        return;
-    }
-    
-    FaceGeometry geom = stepReader->getFaceGeometry(faceId);
-    if (!geom.isValid) {
-        QString msg = "Error: Invalid face geometry.";
-        logMessage(msg);
-        uiAdapter->showCriticalMessage("Error", msg);
-        return;
-    }
-    
-    // Target:
-    // 1. Move Center to (0,0,0)
-    // 2. Rotate Normal to (0,0,-1) [Assuming bed is XY and object sits ON it, normal points DOWN]
-    
-    gp_Pnt center(geom.centerX, geom.centerY, geom.centerZ);
-    gp_Dir normal(geom.normalX, geom.normalY, geom.normalZ);
-    
-    // Transformation 1: Translation to bring center to origin
-    gp_Trsf translation;
-    translation.SetTranslation(center, gp::Origin());
-    
-    // Transformation 2: Rotation to align normal to -Z
-    gp_Trsf rotation;
-    gp_Dir targetNormal(0, 0, -1);
-    
-    // Check if normal is already aligned (or anti-aligned)
-    if (!normal.IsParallel(targetNormal, 1e-6)) {
-        gp_Ax1 rotationAxis(gp::Origin(), normal.Crossed(targetNormal));
-        double angle = normal.Angle(targetNormal);
-        rotation.SetRotation(rotationAxis, angle);
-    } else if (normal.IsOpposite(targetNormal, 1e-6)) {
-         // Already aligned to -Z ? No, Opposite of a vector that is -Z means it is +Z. 
-         // If normal is (0,0,1) and target is (0,0,-1). They are opposite.
-         // We want to rotate 180 degrees.
-         // Axis can be X or Y.
-         gp_Ax1 rotationAxis(gp::Origin(), gp::DX());
-         rotation.SetRotation(rotationAxis, M_PI);
-    }
-    
-    // Composite transform: R * T
-    // We want to translate first (relative to object) then rotate around new origin?
-    // Actually standard composite is T2 * T1. 
-    // If we apply T first (move to origin), then R (rotate around origin).
-    // Final = R * T.
-    
-    gp_Trsf finalTrsf = rotation * translation;
-    
-    // Apply transform
-    logMessage("Applying transform to align face to bed...");
-    if (appController->applyTransformToStep(finalTrsf, uiAdapter.get())) {
-        appController->transformBoundaryConditions(finalTrsf, uiAdapter.get());
-    }
+    alignmentController_->showBedSurfaceSelectionDialog();
 }
 
