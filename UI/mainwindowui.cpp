@@ -8,6 +8,9 @@
 #include <QPixmap>
 #include <QFrame>
 #include <QTimer>
+#include <QPropertyAnimation>
+#include <QParallelAnimationGroup>
+#include <QGraphicsOpacityEffect>
 
 #include "widgets/Button.h"
 #include "widgets/TabButton.h"
@@ -144,9 +147,51 @@ void MainWindowUI::createMainContentStack(QVBoxLayout* outerLayout)
 
 void MainWindowUI::switchToTab(int index)
 {
-    m_mainContentStack->setCurrentIndex(index);
+    int currentIndex = m_mainContentStack->currentIndex();
+    if (currentIndex == index) {
+        return;
+    }
+
+    // Update tab button states
     m_homeTab->setActive(index == 0);
     m_settingsTab->setActive(index == 1);
+
+    QWidget* currentWidget = m_mainContentStack->widget(currentIndex);
+    QWidget* nextWidget = m_mainContentStack->widget(index);
+
+    int width = m_mainContentStack->width();
+    int direction = (index > currentIndex) ? 1 : -1;
+
+    // Position next widget off-screen
+    nextWidget->setGeometry(direction * width, 0, width, m_mainContentStack->height());
+    nextWidget->show();
+    nextWidget->raise();
+
+    // Animation for current widget (slide out)
+    QPropertyAnimation* currentAnim = new QPropertyAnimation(currentWidget, "geometry", this);
+    currentAnim->setDuration(450);
+    currentAnim->setStartValue(QRect(0, 0, width, m_mainContentStack->height()));
+    currentAnim->setEndValue(QRect(-direction * width, 0, width, m_mainContentStack->height()));
+    currentAnim->setEasingCurve(QEasingCurve::InOutQuad);
+
+    // Animation for next widget (slide in)
+    QPropertyAnimation* nextAnim = new QPropertyAnimation(nextWidget, "geometry", this);
+    nextAnim->setDuration(450);
+    nextAnim->setStartValue(QRect(direction * width, 0, width, m_mainContentStack->height()));
+    nextAnim->setEndValue(QRect(0, 0, width, m_mainContentStack->height()));
+    nextAnim->setEasingCurve(QEasingCurve::InOutQuad);
+
+    // Run animations in parallel
+    QParallelAnimationGroup* group = new QParallelAnimationGroup(this);
+    group->addAnimation(currentAnim);
+    group->addAnimation(nextAnim);
+
+    connect(group, &QParallelAnimationGroup::finished, this, [this, index, group]() {
+        m_mainContentStack->setCurrentIndex(index);
+        group->deleteLater();
+    });
+
+    group->start();
 }
 
 void MainWindowUI::createButtons()
