@@ -10,6 +10,8 @@
 #include <QTimer>
 
 #include "widgets/Button.h"
+#include "widgets/TabButton.h"
+#include "widgets/SettingsWidget.h"
 #include "ColorManager.h"
 
 MainWindowUI::MainWindowUI(MainWindow* mainWindow)
@@ -25,19 +27,11 @@ void MainWindowUI::setupUI()
     centralWidget = new QWidget(mainWindow);
     QVBoxLayout* outerLayout = new QVBoxLayout(centralWidget);
     outerLayout->setContentsMargins(0, 0, 0, 0);
-
-    createHeaderWidget(outerLayout);
-    createVtkWidget();
-    
-    QHBoxLayout* mainLayout = new QHBoxLayout();
-    mainLayout->addWidget(vtkWidget, 1);
-    outerLayout->addLayout(mainLayout);
     outerLayout->setSpacing(5);
 
-    createButtons();
-    createLeftPaneWidget(vtkWidget);
-    createRightPaneWidget(vtkWidget);
-    
+    createHeaderWidget(outerLayout);
+    createMainContentStack(outerLayout);
+
     setupWidgetPositioning();
     setupStyle();
 }
@@ -73,27 +67,86 @@ void MainWindowUI::createHeaderWidget(QVBoxLayout* outerLayout)
     QWidget* headerWidget = new QWidget(centralWidget);
     headerWidget->setFixedHeight(HEADER_HEIGHT);
     headerWidget->setStyleSheet(QString("background-color: %1;").arg(ColorManager::HEADER_COLOR.name()));
-    
+
     QHBoxLayout* headerLayout = new QHBoxLayout(headerWidget);
     headerLayout->setContentsMargins(0, 0, 0, 0);
-    
+
     QLabel* logoLabel = new QLabel(centralWidget);
     QPixmap logoPixmap(":/resources/white_symbol.png");
     logoLabel->setPixmap(logoPixmap.scaled(LOGO_SIZE, LOGO_SIZE, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     logoLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     headerLayout->addWidget(logoLabel);
-    
+
     QLabel* logoTypeLabel = new QLabel(centralWidget);
     QPixmap logoTypePixmap(":/resources/logo_type.png");
     logoTypeLabel->setPixmap(logoTypePixmap.scaledToHeight(LOGO_TYPE_HEIGHT, Qt::SmoothTransformation));
     logoTypeLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     headerLayout->addWidget(logoTypeLabel);
-    
+
+    // Add spacing before tabs
+    headerLayout->addSpacing(30);
+
+    // Add tab buttons
+    createTabButtons(headerLayout);
+
     headerLayout->addStretch();
     headerLayout->setSpacing(HEADER_SPACING);
     headerLayout->setContentsMargins(HEADER_LEFT_MARGIN, 0, 0, HEADER_BOTTOM_MARGIN);
-    
+
     outerLayout->addWidget(headerWidget);
+}
+
+void MainWindowUI::createTabButtons(QHBoxLayout* headerLayout)
+{
+    m_homeTab = new TabButton("Home", centralWidget);
+    m_settingsTab = new TabButton("Settings", centralWidget);
+
+    m_homeTab->setActive(true);
+
+    headerLayout->addWidget(m_homeTab);
+    headerLayout->addWidget(m_settingsTab);
+
+    connect(m_homeTab, &QPushButton::clicked, this, [this]() {
+        switchToTab(0);
+    });
+    connect(m_settingsTab, &QPushButton::clicked, this, [this]() {
+        switchToTab(1);
+    });
+}
+
+void MainWindowUI::createMainContentStack(QVBoxLayout* outerLayout)
+{
+    m_mainContentStack = new QStackedWidget(centralWidget);
+
+    // Home content (Index 0)
+    m_homeContent = new QWidget(m_mainContentStack);
+    QHBoxLayout* homeLayout = new QHBoxLayout(m_homeContent);
+    homeLayout->setContentsMargins(0, 0, 0, 0);
+
+    createVtkWidget();
+    homeLayout->addWidget(vtkWidget, 1);
+
+    createButtons();
+    createLeftPaneWidget(vtkWidget);
+    createRightPaneWidget(vtkWidget);
+
+    m_mainContentStack->addWidget(m_homeContent);
+
+    // Settings content (Index 1)
+    m_settingsWidget = new SettingsWidget(m_mainContentStack);
+    m_mainContentStack->addWidget(m_settingsWidget);
+
+    // Start with Home tab
+    m_mainContentStack->setCurrentIndex(0);
+
+    outerLayout->addWidget(m_mainContentStack, 1);
+}
+
+void MainWindowUI::switchToTab(int index)
+{
+    m_mainContentStack->setCurrentIndex(index);
+    m_homeTab->setActive(index == 0);
+    m_settingsTab->setActive(index == 1);
 }
 
 void MainWindowUI::createButtons()

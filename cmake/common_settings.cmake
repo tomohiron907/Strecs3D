@@ -134,6 +134,8 @@ add_executable(Strecs3D
   UI/widgets/StressRangeWidget.cpp
   UI/ColorManager.cpp
   UI/widgets/Button.cpp
+  UI/widgets/TabButton.cpp
+  UI/widgets/SettingsWidget.cpp
 
   UI/widgets/ObjectDisplayOptionsWidget.cpp
   UI/widgets/DisplayOptionsContainer.cpp

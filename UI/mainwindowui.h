@@ -23,8 +23,11 @@
 #include "../core/ui/UIState.h"
 #include <QObject>
 #include <QTouchEvent>
+#include <QStackedWidget>
 
 class MainWindow;
+class TabButton;
+class SettingsWidget;
 
 class MainWindowUI : public QObject {
     Q_OBJECT
@@ -86,11 +89,14 @@ private:
     // Setup methods
     void setupStyle();
     void createHeaderWidget(QVBoxLayout* outerLayout);
+    void createTabButtons(QHBoxLayout* headerLayout);
+    void createMainContentStack(QVBoxLayout* outerLayout);
     void createLeftPaneWidget(QWidget* vtkParent);
     void createRightPaneWidget(QWidget* vtkParent);
     void createVtkWidget();
     void createButtons();
     void setupWidgetPositioning();
+    void switchToTab(int index);
 
     MainWindow* mainWindow;
     QWidget* centralWidget;
@@ -113,6 +119,13 @@ private:
     PropertyWidget* propertyWidget;
     QWidget* rightPaneWidget;
     UIState* uiState;
+
+    // Tab navigation
+    TabButton* m_homeTab;
+    TabButton* m_settingsTab;
+    QStackedWidget* m_mainContentStack;
+    QWidget* m_homeContent;
+    SettingsWidget* m_settingsWidget;
 };
 
 #endif // MAINWINDOWUI_H 
