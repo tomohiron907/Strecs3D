@@ -30,7 +30,7 @@ void MainWindowUI::setupUI()
     centralWidget = new QWidget(mainWindow);
     QVBoxLayout* outerLayout = new QVBoxLayout(centralWidget);
     outerLayout->setContentsMargins(0, 0, 0, 0);
-    outerLayout->setSpacing(5);
+    outerLayout->setSpacing(0);
 
     createHeaderWidget(outerLayout);
     createMainContentStack(outerLayout);
@@ -74,17 +74,27 @@ void MainWindowUI::createHeaderWidget(QVBoxLayout* outerLayout)
     QHBoxLayout* headerLayout = new QHBoxLayout(headerWidget);
     headerLayout->setContentsMargins(0, 0, 0, 0);
 
+    // Creates a container for the logo to center it relative to the left pane
+    QWidget* logoContainer = new QWidget(centralWidget);
+    logoContainer->setFixedWidth(LEFT_PANE_MAX_WIDTH);
+    QHBoxLayout* logoLayout = new QHBoxLayout(logoContainer);
+    logoLayout->setContentsMargins(0, 0, 0, 0);
+    logoLayout->setAlignment(Qt::AlignCenter);
+    logoLayout->setSpacing(10); // Spacing between logo and text
+
     QLabel* logoLabel = new QLabel(centralWidget);
     QPixmap logoPixmap(":/resources/white_symbol.png");
     logoLabel->setPixmap(logoPixmap.scaled(LOGO_SIZE, LOGO_SIZE, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    logoLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    headerLayout->addWidget(logoLabel);
+    logoLabel->setAlignment(Qt::AlignCenter);
+    logoLayout->addWidget(logoLabel);
 
     QLabel* logoTypeLabel = new QLabel(centralWidget);
     QPixmap logoTypePixmap(":/resources/logo_type.png");
     logoTypeLabel->setPixmap(logoTypePixmap.scaledToHeight(LOGO_TYPE_HEIGHT, Qt::SmoothTransformation));
-    logoTypeLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    headerLayout->addWidget(logoTypeLabel);
+    logoTypeLabel->setAlignment(Qt::AlignCenter);
+    logoLayout->addWidget(logoTypeLabel);
+
+    headerLayout->addWidget(logoContainer);
 
     // Add spacing before tabs
     headerLayout->addSpacing(30);
@@ -94,7 +104,7 @@ void MainWindowUI::createHeaderWidget(QVBoxLayout* outerLayout)
 
     headerLayout->addStretch();
     headerLayout->setSpacing(HEADER_SPACING);
-    headerLayout->setContentsMargins(HEADER_LEFT_MARGIN, 0, 0, HEADER_BOTTOM_MARGIN);
+    headerLayout->setContentsMargins(WIDGET_MARGIN, 0, 0, HEADER_BOTTOM_MARGIN);
 
     outerLayout->addWidget(headerWidget);
 }

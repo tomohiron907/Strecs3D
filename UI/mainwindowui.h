@@ -72,8 +72,8 @@ public slots:
 
 private:
     // Constants
-    static constexpr int HEADER_HEIGHT = 70;
-    static constexpr int LOGO_SIZE = 40;
+    static constexpr int HEADER_HEIGHT = 50;
+    static constexpr int LOGO_SIZE = 35;
     static constexpr int LOGO_TYPE_HEIGHT = 19;
     static constexpr int HEADER_SPACING = 15;
     static constexpr int HEADER_LEFT_MARGIN = 35;
