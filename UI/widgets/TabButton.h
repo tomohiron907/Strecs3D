@@ -2,6 +2,7 @@
 #define TABBUTTON_H
 
 #include <QPushButton>
+#include <QEnterEvent>
 
 class TabButton : public QPushButton
 {
@@ -15,18 +16,21 @@ public:
 
 protected:
     void paintEvent(QPaintEvent* event) override;
+    void enterEvent(QEnterEvent* event) override;
+    void leaveEvent(QEvent* event) override;
 
 private:
     void updateStyle();
 
-    static constexpr int UNDERLINE_HEIGHT = 3;
-    static constexpr int HORIZONTAL_PADDING = 16;
-    static constexpr int VERTICAL_PADDING = 8;
+    static constexpr int HORIZONTAL_PADDING = 20;
+    static constexpr int VERTICAL_PADDING = 12;
+    static constexpr int FONT_SIZE = 15;
 
     bool m_active = false;
+    bool m_hovered = false;
     QColor m_activeTextColor;
     QColor m_inactiveTextColor;
-    QColor m_underlineColor;
+    QColor m_hoverTextColor;
 };
 
 #endif // TABBUTTON_H

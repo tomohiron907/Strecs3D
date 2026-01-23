@@ -5,12 +5,18 @@
 TabButton::TabButton(const QString& text, QWidget* parent)
     : QPushButton(text, parent)
     , m_active(false)
+    , m_hovered(false)
     , m_activeTextColor(Qt::white)
     , m_inactiveTextColor(QColor(0x88, 0x88, 0x88))
-    , m_underlineColor(Qt::white)
+    , m_hoverTextColor(QColor(0xCC, 0xCC, 0xCC))
 {
     setCursor(Qt::PointingHandCursor);
     setFlat(true);
+
+    QFont f = font();
+    f.setPixelSize(FONT_SIZE);
+    setFont(f);
+
     updateStyle();
 }
 
@@ -29,9 +35,23 @@ void TabButton::updateStyle()
     int textHeight = fm.height();
 
     setFixedSize(textWidth + HORIZONTAL_PADDING * 2,
-                 textHeight + VERTICAL_PADDING * 2 + UNDERLINE_HEIGHT);
+                 textHeight + VERTICAL_PADDING * 2);
 
     setStyleSheet("background: transparent; border: none;");
+}
+
+void TabButton::enterEvent(QEnterEvent* event)
+{
+    m_hovered = true;
+    update();
+    QPushButton::enterEvent(event);
+}
+
+void TabButton::leaveEvent(QEvent* event)
+{
+    m_hovered = false;
+    update();
+    QPushButton::leaveEvent(event);
 }
 
 void TabButton::paintEvent(QPaintEvent* event)
@@ -41,20 +61,17 @@ void TabButton::paintEvent(QPaintEvent* event)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    // Draw text
-    QColor textColor = m_active ? m_activeTextColor : m_inactiveTextColor;
-    painter.setPen(textColor);
-
-    QRect textRect = rect();
-    textRect.setBottom(textRect.bottom() - UNDERLINE_HEIGHT);
-    painter.drawText(textRect, Qt::AlignCenter, text());
-
-    // Draw underline if active
+    // Determine text color based on state
+    QColor textColor;
     if (m_active) {
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(m_underlineColor);
-
-        QRect underlineRect(0, height() - UNDERLINE_HEIGHT, width(), UNDERLINE_HEIGHT);
-        painter.drawRect(underlineRect);
+        textColor = m_activeTextColor;
+    } else if (m_hovered) {
+        textColor = m_hoverTextColor;
+    } else {
+        textColor = m_inactiveTextColor;
     }
+
+    painter.setFont(font());
+    painter.setPen(textColor);
+    painter.drawText(rect(), Qt::AlignCenter, text());
 }
