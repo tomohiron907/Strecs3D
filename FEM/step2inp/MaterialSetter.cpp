@@ -38,14 +38,21 @@ void MaterialSetter::writePhysicalConstants(std::ofstream& f) const {
 }
 
 void MaterialSetter::writeMaterial(std::ofstream& f) const {
+    // Material property values for PLA (FDM) are based on:
+    // Li, M., Xu, Y., & Fang, J. (2024). Orthotropic mechanical properties of PLA
+    // materials fabricated by fused deposition modeling. Thin-Walled Structures,
+    // 199, 111800. https://doi.org/10.1016/j.tws.2024.111800
     f << "***********************************************************\n";
     f << "** Materials\n";
     f << "** see information about units at file end\n";
     f << "** FreeCAD material name: " << material_.name << "\n";
     f << "** " << material_.name << "\n";
     f << "*MATERIAL, NAME=" << material_.name << "\n";
-    f << "*ELASTIC\n";
-    f << material_.youngs_modulus << "," << material_.poisson_ratio << "\n";
+    f << "*ELASTIC, TYPE=ENGINEERING CONSTANTS\n";
+    f << "** E1,   E2,   E3,   nu12, nu13, nu23, G12, G13\n";
+    f << "2669., 2583., 2208., 0.43, 0.37, 0.37, 919., 844.\n";
+    f << "** G23\n";
+    f << "844.\n";
 }
 
 void MaterialSetter::writeSections(std::ofstream& f) const {
