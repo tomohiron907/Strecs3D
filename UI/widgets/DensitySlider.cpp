@@ -1,5 +1,6 @@
 #include "DensitySlider.h"
 #include "../ColorManager.h"
+#include "../../utils/SettingsManager.h"
 #include <QPainter>
 #include <QMouseEvent>
 #include <algorithm>
@@ -89,7 +90,7 @@ std::vector<double> DensitySlider::regionPercents() const {
 int DensitySlider::countMaxDensityRegions() const {
     int count = 0;
     for (double percent : m_regionPercents) {
-        if (static_cast<int>(percent) >= MAX_DENSITY) {
+        if (static_cast<int>(percent) >= SettingsManager::instance().maxDensity()) {
             count++;
         }
     }
@@ -323,7 +324,10 @@ int DensitySlider::calculateDensityFromStress(double stress) const {
     const double YIELD_STRENGTH = 30.0;
     const double C = 0.23;
     const double M = 2.0 / 3.0;
-    const int MIN_DENSITY = 5;
+
+    // SettingsManagerから密度の最小値・最大値を取得
+    const int minDensity = SettingsManager::instance().minDensity();
+    const int maxDensity = SettingsManager::instance().maxDensity();
 
     // Pa から MPa に変換
     double stressMPa = stress / 1e6;
@@ -336,9 +340,9 @@ int DensitySlider::calculateDensityFromStress(double stress) const {
     // パーセンテージに変換（0-1 → 0-100）
     double densityPercent = density * 100.0;
 
-    // 整数に変換（5-90の範囲でクランプ）
+    // 整数に変換（設定された範囲でクランプ）
     int densityInt = static_cast<int>(std::round(densityPercent));
-    densityInt = std::clamp(densityInt, MIN_DENSITY, MAX_DENSITY);
+    densityInt = std::clamp(densityInt, minDensity, maxDensity);
 
     return densityInt;
 }

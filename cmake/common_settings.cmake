@@ -167,6 +167,7 @@ add_executable(Strecs3D
   utils/fileUtility.cpp
   utils/tempPathUtility.cpp
   utils/xmlConverter.cpp
+  utils/SettingsManager.cpp
   core/application/ApplicationController.cpp
   core/application/MainWindowUIAdapter.cpp
   UI/controllers/BoundaryConditionController.cpp

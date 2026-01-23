@@ -7,8 +7,6 @@
 class DensitySlider : public QWidget {
     Q_OBJECT
 public:
-    static constexpr int MAX_DENSITY = 90;
-
     explicit DensitySlider(QWidget* parent = nullptr);
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
