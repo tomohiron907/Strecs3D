@@ -97,6 +97,9 @@ function(apply_windows_settings TARGET_NAME)
       VS_DEBUGGER_ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/$<CONFIG>;$ENV{PATH}"
     )
   endif()
+
+  # Add Windows specific source files
+  target_sources(${TARGET_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/UI/platform/windows/WindowUtils.cpp")
 endfunction()
 
 # Qtプラグインパスの設定

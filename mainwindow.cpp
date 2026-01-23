@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "core/application/MainWindowUIAdapter.h"
 #include "UI/visualization/VisualizationManager.h"
+#include "UI/platform/WindowUtils.h"
 
 #include "core/commands/file/OpenVtkFileCommand.h"
 #include "core/commands/file/OpenStepFileCommand.h"
@@ -68,6 +69,8 @@ void MainWindow::setupWindow()
     setWindowTitle("Strecs3D");
     setCentralWidget(ui->getCentralWidget());
     resize(1600, 900);
+
+    Platform::WindowUtils::customizeTitleBar(this);
 }
 
 void MainWindow::connectSignals()

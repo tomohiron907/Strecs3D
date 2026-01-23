@@ -42,7 +42,11 @@ function(apply_macos_settings TARGET_NAME)
     $<IF:$<TARGET_EXISTS:gmsh::shared>,gmsh::shared,gmsh::lib>
     ${OpenCASCADE_LIBRARIES}
     nlohmann_json::nlohmann_json
+    "-framework Cocoa"
   )
+
+  # Add macOS specific source files
+  target_sources(${TARGET_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/UI/platform/mac/WindowUtils.mm")
 
   # macOSでのQtプラグインパス設定
   set_target_properties(${TARGET_NAME} PROPERTIES
