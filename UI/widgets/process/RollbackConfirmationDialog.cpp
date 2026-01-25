@@ -1,4 +1,5 @@
 #include "RollbackConfirmationDialog.h"
+#include "../../../utils/StyleManager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -19,8 +20,11 @@ RollbackConfirmationDialog::RollbackConfirmationDialog(
 
 void RollbackConfirmationDialog::setupUI() {
     QVBoxLayout* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(20, 20, 20, 20);
-    layout->setSpacing(15);
+    layout->setContentsMargins(StyleManager::PADDING_LARGE + StyleManager::PADDING_SMALL,
+                               StyleManager::PADDING_LARGE + StyleManager::PADDING_SMALL,
+                               StyleManager::PADDING_LARGE + StyleManager::PADDING_SMALL,
+                               StyleManager::PADDING_LARGE + StyleManager::PADDING_SMALL);
+    layout->setSpacing(StyleManager::PADDING_LARGE - 1);
 
     // Message
     m_messageLabel = new QLabel(generateWarningMessage(m_targetStep, m_currentStep));
@@ -44,8 +48,12 @@ void RollbackConfirmationDialog::setupUI() {
     connect(m_cancelButton, &QPushButton::clicked, this, &QDialog::reject);
 
     // Simple styling
-    m_okButton->setStyleSheet("QPushButton { padding: 5px 15px; }");
-    m_cancelButton->setStyleSheet("QPushButton { padding: 5px 15px; }");
+    m_okButton->setStyleSheet(QString("QPushButton { padding: %1px %2px; }")
+        .arg(StyleManager::BUTTON_PADDING_V)
+        .arg(StyleManager::BUTTON_PADDING_H));
+    m_cancelButton->setStyleSheet(QString("QPushButton { padding: %1px %2px; }")
+        .arg(StyleManager::BUTTON_PADDING_V)
+        .arg(StyleManager::BUTTON_PADDING_H));
     setMinimumWidth(400);
 }
 

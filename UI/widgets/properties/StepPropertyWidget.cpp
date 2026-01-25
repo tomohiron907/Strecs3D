@@ -1,4 +1,5 @@
 #include "StepPropertyWidget.h"
+#include "../../../utils/StyleManager.h"
 #include <QVBoxLayout>
 
 StepPropertyWidget::StepPropertyWidget(QWidget* parent)
@@ -40,8 +41,9 @@ void StepPropertyWidget::setupUI()
     QFormLayout* layout = new QFormLayout(this);
     layout->setLabelAlignment(Qt::AlignLeft);
     layout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
-    layout->setSpacing(10);
-    layout->setContentsMargins(10, 10, 10, 10);
+    layout->setSpacing(StyleManager::FORM_SPACING);
+    layout->setContentsMargins(StyleManager::FORM_SPACING, StyleManager::FORM_SPACING,
+                               StyleManager::FORM_SPACING, StyleManager::FORM_SPACING);
     
     // Labels style
     QString labelStyle = "color: #aaaaaa;";

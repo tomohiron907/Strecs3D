@@ -1,5 +1,6 @@
 #include "StressRangeWidget.h"
 #include "../../utils/ColorManager.h"
+#include "../../utils/StyleManager.h"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QDoubleValidator>
@@ -17,10 +18,12 @@ StressRangeWidget::StressRangeWidget(QWidget* parent)
     m_label->setStyleSheet("color: white; font-weight: bold;");
     layout->addWidget(m_label);
     
-    QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: 4px; border-radius: 4px; selection-background-color: #555555; }")
+    QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: %4px; border-radius: %5px; selection-background-color: #555555; }")
         .arg(ColorManager::INPUT_TEXT_COLOR.name())
         .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
-        .arg(ColorManager::INPUT_BORDER_COLOR.name());
+        .arg(ColorManager::INPUT_BORDER_COLOR.name())
+        .arg(StyleManager::PADDING_SMALL)
+        .arg(StyleManager::RADIUS_SMALL);
     
     // 最小値入力欄
     m_minStressEdit = new QLineEdit(this);

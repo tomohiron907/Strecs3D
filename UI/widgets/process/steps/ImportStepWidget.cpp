@@ -1,6 +1,7 @@
 #include "ImportStepWidget.h"
 #include "../../Button.h"
 #include "../../../../utils/ColorManager.h"
+#include "../../../../utils/StyleManager.h"
 #include <QVBoxLayout>
 #include <QDragEnterEvent>
 #include <QDropEvent>
@@ -14,18 +15,18 @@ DropAreaWidget::DropAreaWidget(QWidget* parent) : QLabel(parent) {
     setText("Drop STEP file here");
     setAlignment(Qt::AlignCenter);
     setAcceptDrops(true);
-    
+
     // Default Style
-    setStyleSheet(R"(
+    setStyleSheet(QString(R"(
         QLabel {
             border: 2px dashed #666;
-            border-radius: 8px;
+            border-radius: %1px;
             color: #aaa;
             background-color: rgba(255, 255, 255, 10);
-            font-size: 14px;
+            font-size: %2px;
         }
-    )");
-    
+    )").arg(StyleManager::RADIUS_MEDIUM).arg(StyleManager::FONT_SIZE_LARGE));
+
     setMinimumHeight(250);
 }
 
@@ -43,13 +44,15 @@ void DropAreaWidget::dragEnterEvent(QDragEnterEvent* event) {
                 setStyleSheet(QString(
                     "QLabel {"
                     "    border: 2px dashed %1;"
-                    "    border-radius: 8px;"
+                    "    border-radius: %5px;"
                     "    color: %1;"
                     "    background-color: rgba(%2, %3, %4, 40);"
-                    "    font-size: 14px;"
+                    "    font-size: %6px;"
                     "}"
                 ).arg(accent.name())
-                 .arg(accent.red()).arg(accent.green()).arg(accent.blue()));
+                 .arg(accent.red()).arg(accent.green()).arg(accent.blue())
+                 .arg(StyleManager::RADIUS_MEDIUM)
+                 .arg(StyleManager::FONT_SIZE_LARGE));
                 return;
             }
         }
@@ -60,15 +63,15 @@ void DropAreaWidget::dragEnterEvent(QDragEnterEvent* event) {
 void DropAreaWidget::dragLeaveEvent(QDragLeaveEvent* event) {
     Q_UNUSED(event);
     // Revert to default style
-    setStyleSheet(R"(
+    setStyleSheet(QString(R"(
         QLabel {
             border: 2px dashed #666;
-            border-radius: 8px;
+            border-radius: %1px;
             color: #aaa;
             background-color: rgba(255, 255, 255, 10);
-            font-size: 14px;
+            font-size: %2px;
         }
-    )");
+    )").arg(StyleManager::RADIUS_MEDIUM).arg(StyleManager::FONT_SIZE_LARGE));
 }
 
 void DropAreaWidget::dropEvent(QDropEvent* event) {
@@ -77,18 +80,18 @@ void DropAreaWidget::dropEvent(QDropEvent* event) {
         QString filePath = mimeData->urls().at(0).toLocalFile();
         emit fileDropped(filePath);
     }
-    
+
     // Revert style
-    setStyleSheet(R"(
+    setStyleSheet(QString(R"(
         QLabel {
             border: 2px dashed #666;
-            border-radius: 8px;
+            border-radius: %1px;
             color: #aaa;
             background-color: rgba(255, 255, 255, 10);
-            font-size: 14px;
+            font-size: %2px;
         }
-    )");
-    
+    )").arg(StyleManager::RADIUS_MEDIUM).arg(StyleManager::FONT_SIZE_LARGE));
+
     event->acceptProposedAction();
 }
 
@@ -112,7 +115,9 @@ ImportStepWidget::ImportStepWidget(QWidget* parent) : QWidget(parent) {
     // "or" Separator
     QLabel* orLabel = new QLabel(" or ", this);
     orLabel->setAlignment(Qt::AlignCenter);
-    orLabel->setStyleSheet("color: #888; font-size: 17px; font-weight: bold; margin: 5px 0;");
+    orLabel->setStyleSheet(QString("color: #888; font-size: %1px; font-weight: bold; margin: %2px 0;")
+        .arg(StyleManager::FONT_SIZE_XLARGE)
+        .arg(StyleManager::PADDING_MEDIUM / 2));
     layout->addWidget(orLabel);
     
     // Drop Area

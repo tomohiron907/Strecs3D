@@ -4,6 +4,7 @@
 #include <QStyle>
 #include <QMouseEvent>
 #include "../../../utils/ColorManager.h"
+#include "../../../utils/StyleManager.h"
 
 // --- ProcessCard Implementation ---
 
@@ -133,9 +134,9 @@ void ProcessCard::updateStyle() {
         "ProcessCard {"
         "  background-color: %1;"
         "  border: 1px solid %2;"
-        "  border-radius: 3px;"
+        "  border-radius: %3px;"
         "}"
-    ).arg(bgColor, borderColor);
+    ).arg(bgColor, borderColor).arg(StyleManager::RADIUS_SMALL);
 
     textStyle = QString("color: %1;").arg(textColor);
 

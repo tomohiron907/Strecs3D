@@ -1,5 +1,6 @@
 #include "SettingsWidget.h"
 #include "../../utils/SettingsManager.h"
+#include "../../utils/StyleManager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -26,20 +27,23 @@ void SettingsWidget::setupUI()
     // Density Slider section
     QGroupBox* densityGroup = new QGroupBox("Density Slider", this);
     densityGroup->setStyleSheet(
-        "QGroupBox {"
+        QString("QGroupBox {"
         "  color: #FFFFFF;"
-        "  font-size: 14px;"
+        "  font-size: %1px;"
         "  font-weight: bold;"
         "  border: 1px solid #444444;"
-        "  border-radius: 8px;"
+        "  border-radius: %2px;"
         "  margin-top: 10px;"
         "  padding-top: 10px;"
         "}"
         "QGroupBox::title {"
         "  subcontrol-origin: margin;"
         "  left: 15px;"
-        "  padding: 0 5px;"
-        "}"
+        "  padding: 0 %3px;"
+        "}")
+        .arg(StyleManager::FONT_SIZE_LARGE)
+        .arg(StyleManager::RADIUS_MEDIUM)
+        .arg(StyleManager::PADDING_MEDIUM / 2)
     );
 
     QVBoxLayout* densityLayout = new QVBoxLayout(densityGroup);
@@ -50,21 +54,26 @@ void SettingsWidget::setupUI()
     m_densityValidator = new QIntValidator(0, 100, this);
 
     // Common stylesheet for labels
-    QString labelStyle = "QLabel { color: #CCCCCC; font-size: 13px; }";
+    QString labelStyle = QString("QLabel { color: #CCCCCC; font-size: %1px; }")
+        .arg(StyleManager::FONT_SIZE_LARGE);
 
     // Common stylesheet for line edits
     QString lineEditStyle =
-        "QLineEdit {"
+        QString("QLineEdit {"
         "  background-color: #333333;"
         "  color: #FFFFFF;"
         "  border: 1px solid #555555;"
-        "  border-radius: 4px;"
-        "  padding: 8px 12px;"
-        "  font-size: 13px;"
+        "  border-radius: %1px;"
+        "  padding: %2px %3px;"
+        "  font-size: %4px;"
         "}"
         "QLineEdit:focus {"
         "  border-color: #0078D4;"
-        "}";
+        "}")
+        .arg(StyleManager::RADIUS_SMALL)
+        .arg(StyleManager::PADDING_MEDIUM)
+        .arg(StyleManager::FORM_SPACING)
+        .arg(StyleManager::FONT_SIZE_LARGE);
 
     // Min Density row
     QHBoxLayout* minDensityRow = new QHBoxLayout();

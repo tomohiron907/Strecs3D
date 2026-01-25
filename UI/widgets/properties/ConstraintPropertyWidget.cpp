@@ -2,6 +2,7 @@
 
 #include "../../../core/commands/state/UpdateConstraintConditionCommand.h"
 #include "../../../utils/ColorManager.h"
+#include "../../../utils/StyleManager.h"
 #include <QHBoxLayout>
 #include <QSpacerItem>
 #include <QIntValidator>
@@ -32,17 +33,21 @@ void ConstraintPropertyWidget::setupUI()
     QFormLayout* layout = new QFormLayout(this);
     layout->setLabelAlignment(Qt::AlignLeft);
     layout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
-    layout->setSpacing(10);
-    layout->setContentsMargins(10, 10, 10, 10);
-    
+    layout->setSpacing(StyleManager::FORM_SPACING);
+    layout->setContentsMargins(StyleManager::FORM_SPACING, StyleManager::FORM_SPACING,
+                               StyleManager::FORM_SPACING, StyleManager::FORM_SPACING);
+
     // Labels style
     QString labelStyle = "color: #aaaaaa;";
-    
+
     // Updated input style: unified width, rounded corners, min-height to prevent collapse
-    QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: 4px; border-radius: 4px; min-height: 20px; selection-background-color: #555555; }")
+    QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: %4px; border-radius: %5px; min-height: %6px; selection-background-color: #555555; }")
         .arg(ColorManager::INPUT_TEXT_COLOR.name())
         .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
-        .arg(ColorManager::INPUT_BORDER_COLOR.name());
+        .arg(ColorManager::INPUT_BORDER_COLOR.name())
+        .arg(StyleManager::PADDING_SMALL)
+        .arg(StyleManager::RADIUS_SMALL)
+        .arg(StyleManager::INPUT_HEIGHT_SMALL);
     
     // Name
     m_nameEdit = new QLineEdit();
@@ -79,13 +84,16 @@ void ConstraintPropertyWidget::setupUI()
     m_closeButton->setFixedWidth(80);
     m_closeButton->setStyleSheet(
         QString("QPushButton { background-color: %1; color: %2; border: none; "
-                "padding: 8px 16px; border-radius: 4px; font-weight: bold; }"
+                "padding: %5px %6px; border-radius: %7px; font-weight: bold; }"
                 "QPushButton:hover { background-color: %3; }"
                 "QPushButton:pressed { background-color: %4; }")
         .arg(ColorManager::ACCENT_COLOR.name())
         .arg(ColorManager::BUTTON_TEXT_COLOR.name())
         .arg(ColorManager::BUTTON_HOVER_COLOR.name())
         .arg(ColorManager::BUTTON_PRESSED_COLOR.name())
+        .arg(StyleManager::BUTTON_PADDING_V)
+        .arg(StyleManager::BUTTON_PADDING_H)
+        .arg(StyleManager::BUTTON_RADIUS)
     );
     connect(m_closeButton, &QPushButton::clicked, this, &ConstraintPropertyWidget::onCloseClicked);
     closeButtonLayout->addWidget(m_closeButton);

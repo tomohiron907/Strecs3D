@@ -1,5 +1,6 @@
 #include "SimulationStepWidget.h"
 #include "../../Button.h"
+#include "../../../../utils/StyleManager.h"
 #include <QVBoxLayout>
 #include <QProgressBar>
 #include <QLabel>
@@ -25,41 +26,42 @@ SimulationStepWidget::SimulationStepWidget(QWidget* parent) : QWidget(parent) {
     m_progressBar->setVisible(true);  // Always visible
 
     // Style the progress bar to match app theme
-    m_progressBar->setStyleSheet(R"(
+    m_progressBar->setStyleSheet(QString(R"(
         QProgressBar {
             border: 1px solid #444;
-            border-radius: 4px;
+            border-radius: %1px;
             background-color: #333;
             text-align: center;
         }
         QProgressBar::chunk {
             background-color: #0078D7;
-            border-radius: 3px;
+            border-radius: %2px;
         }
-    )");
+    )").arg(StyleManager::RADIUS_SMALL).arg(StyleManager::RADIUS_SMALL - 1));
 
     layout->addWidget(m_progressBar);
 
     // Optional: Status label
     m_statusLabel = new QLabel("", this);
     m_statusLabel->setAlignment(Qt::AlignCenter);
-    m_statusLabel->setStyleSheet("color: #aaa; font-size: 11px;");
+    m_statusLabel->setStyleSheet(QString("color: #aaa; font-size: %1px;")
+        .arg(StyleManager::FONT_SIZE_SMALL));
     m_statusLabel->setVisible(false);
     layout->addWidget(m_statusLabel);
 
     // Log Text Edit
     m_logTextEdit = new QTextEdit(this);
     m_logTextEdit->setReadOnly(true);
-    m_logTextEdit->setStyleSheet(R"(
+    m_logTextEdit->setStyleSheet(QString(R"(
         QTextEdit {
             background-color: #222;
             color: #ddd;
             border: 1px solid #444;
-            border-radius: 4px;
+            border-radius: %1px;
             font-family: Consolas, Monaco, monospace;
-            font-size: 11px;
+            font-size: %2px;
         }
-    )");
+    )").arg(StyleManager::RADIUS_SMALL).arg(StyleManager::FONT_SIZE_SMALL));
     m_logTextEdit->setMinimumHeight(120);
     layout->addWidget(m_logTextEdit);
 

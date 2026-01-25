@@ -1,4 +1,5 @@
 #include "ObjectListWidget.h"
+#include "../../utils/StyleManager.h"
 #include <QHeaderView>
 #include <QDebug>
 #include <QMenu>
@@ -26,13 +27,13 @@ void ObjectListWidget::setupUI()
     // スタイル設定（オプション）
     // スタイル設定（オプション）
     // MessageConsoleと同様の角丸ウィジェットスタイルを適用
-    setStyleSheet(R"(
+    setStyleSheet(QString(R"(
         QTreeWidget {
             background-color: rgba(26, 26, 26, 180);
             color: #e0e0e0;
             border: 1px solid #444;
-            border-radius: 4px;
-            font-size: 12px;
+            border-radius: %1px;
+            font-size: %2px;
         }
         QTreeWidget::item:selected {
             background-color: #4a4a4a;
@@ -42,18 +43,23 @@ void ObjectListWidget::setupUI()
             background-color: transparent;
             color: #ffffff;
             font-weight: bold;
-            font-size: 14px;
+            font-size: %3px;
             border: none;
-            padding: 4px 8px;
+            padding: %4px %5px;
             border-bottom: 1px solid #444; /* ヘッダー下の区切り線 */
         }
         QHeaderView {
             background-color: transparent;
             border: none;
-            border-top-left-radius: 4px;
-            border-top-right-radius: 4px;
+            border-top-left-radius: %1px;
+            border-top-right-radius: %1px;
         }
-    )");
+    )")
+    .arg(StyleManager::RADIUS_SMALL)
+    .arg(StyleManager::FONT_SIZE_NORMAL)
+    .arg(StyleManager::FONT_SIZE_LARGE)
+    .arg(StyleManager::PADDING_SMALL)
+    .arg(StyleManager::PADDING_MEDIUM));
 }
 
 void ObjectListWidget::setUIState(UIState* uiState)

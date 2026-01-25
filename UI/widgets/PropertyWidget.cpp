@@ -1,4 +1,5 @@
 #include "PropertyWidget.h"
+#include "../../utils/StyleManager.h"
 #include <QFrame>
 #include <QDebug>
 
@@ -16,17 +17,17 @@ void PropertyWidget::setupUI()
 
     // Container Frame to provide the unified rounded border look
     QFrame* containerFrame = new QFrame(this);
-    containerFrame->setStyleSheet(R"(
+    containerFrame->setStyleSheet(QString(R"(
         QFrame {
             background-color: rgba(26, 26, 26, 180);
             border: 1px solid #444;
-            border-radius: 4px;
+            border-radius: %1px;
         }
         QLabel {
             border: none;
             background-color: transparent;
         }
-    )");
+    )").arg(StyleManager::RADIUS_SMALL));
 
     QVBoxLayout* containerLayout = new QVBoxLayout(containerFrame);
     containerLayout->setContentsMargins(0, 0, 0, 0);
@@ -34,7 +35,9 @@ void PropertyWidget::setupUI()
 
     // Title
     m_titleLabel = new QLabel("Properties", containerFrame);
-    m_titleLabel->setStyleSheet("font-weight: bold; font-size: 14px; padding: 8px; color: #ffffff; border-bottom: 1px solid #444;");
+    m_titleLabel->setStyleSheet(QString("font-weight: bold; font-size: %1px; padding: %2px; color: #ffffff; border-bottom: 1px solid #444;")
+        .arg(StyleManager::FONT_SIZE_LARGE)
+        .arg(StyleManager::PADDING_MEDIUM));
     containerLayout->addWidget(m_titleLabel);
 
     // Stacked Widget for content

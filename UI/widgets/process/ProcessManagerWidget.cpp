@@ -1,4 +1,5 @@
 #include "ProcessManagerWidget.h"
+#include "../../../utils/StyleManager.h"
 #include <QVBoxLayout>
 #include <QFrame>
 #include "steps/ImportStepWidget.h"
@@ -32,17 +33,17 @@ void ProcessManagerWidget::setupUI()
     mainLayout->setSpacing(10); // Gap between top and bottom frames
 
     // Common Style for frames
-    QString frameStyle = R"(
+    QString frameStyle = QString(R"(
         QFrame {
             background-color: rgba(26, 26, 26, 180);
             border: 1px solid #444;
-            border-radius: 4px;
+            border-radius: %1px;
         }
         QLabel {
             border: none;
             background-color: transparent;
         }
-    )";
+    )").arg(StyleManager::RADIUS_SMALL);
 
     // --- Top Frame (Flow) ---
     QFrame* topFrame = new QFrame(this);

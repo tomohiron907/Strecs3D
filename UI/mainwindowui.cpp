@@ -16,6 +16,7 @@
 #include "widgets/TabButton.h"
 #include "widgets/SettingsWidget.h"
 #include "../utils/ColorManager.h"
+#include "../utils/StyleManager.h"
 
 MainWindowUI::MainWindowUI(MainWindow* mainWindow)
     : mainWindow(mainWindow)
@@ -121,10 +122,11 @@ void MainWindowUI::createTabButtons(QHBoxLayout* headerLayout)
     // Container for tabs (The pill shape background)
     QWidget* tabContainer = new QWidget(centralWidget);
     tabContainer->setObjectName("tabContainer");
-    
+
     // Using a slightly lighter background than the main header
     // Header is #1a1a1a usually. Let's use #272727 for the tab pill.
-    tabContainer->setStyleSheet("QWidget#tabContainer { background-color: #272727; border-radius: 22px; }");
+    tabContainer->setStyleSheet(QString("QWidget#tabContainer { background-color: #272727; border-radius: %1px; }")
+        .arg(StyleManager::TAB_CONTAINER_RADIUS));
     
     QHBoxLayout* containerLayout = new QHBoxLayout(tabContainer);
     containerLayout->setContentsMargins(6, 4, 6, 4); // Padding around the buttons inside the pill
@@ -288,7 +290,8 @@ void MainWindowUI::createLeftPaneWidget(QWidget* vtkParent)
     leftPaneWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     leftPaneWidget->setMaximumWidth(LEFT_PANE_MAX_WIDTH);
     leftPaneWidget->setParent(vtkParent);
-    leftPaneWidget->setStyleSheet("QWidget { background-color:rgba(45, 45, 45, 0); border-radius: 10px; }");
+    leftPaneWidget->setStyleSheet(QString("QWidget { background-color:rgba(45, 45, 45, 0); border-radius: %1px; }")
+        .arg(StyleManager::CONTAINER_RADIUS));
 }
 
 // Implement Legacy Getters
@@ -359,7 +362,8 @@ void MainWindowUI::createRightPaneWidget(QWidget* vtkParent)
 
     // コンテナの設定
     rightPaneWidget->setParent(vtkParent);
-    rightPaneWidget->setStyleSheet("QWidget { background-color:rgba(45, 45, 45, 0); border-radius: 10px; }");
+    rightPaneWidget->setStyleSheet(QString("QWidget { background-color:rgba(45, 45, 45, 0); border-radius: %1px; }")
+        .arg(StyleManager::CONTAINER_RADIUS));
     rightPaneWidget->setFixedWidth(RIGHT_PANE_WIDTH);
     
     // シグナル接続

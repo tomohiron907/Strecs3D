@@ -1,5 +1,6 @@
 #include "AddConstraintDialog.h"
 #include "../../../utils/ColorManager.h"
+#include "../../../utils/StyleManager.h"
 #include "../../visualization/VisualizationManager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -45,19 +46,23 @@ void AddConstraintDialog::setVisualizationManager(VisualizationManager* vizManag
 void AddConstraintDialog::setupUI()
 {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(15, 15, 15, 15);
-    mainLayout->setSpacing(12);
+    mainLayout->setContentsMargins(StyleManager::PADDING_LARGE, StyleManager::PADDING_LARGE,
+                                   StyleManager::PADDING_LARGE, StyleManager::PADDING_LARGE);
+    mainLayout->setSpacing(StyleManager::FORM_SPACING);
 
     // Labels style - transparent background
     QString labelStyle = "color: #aaaaaa; background-color: transparent;";
-    QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: 4px; border-radius: 4px; min-height: 20px; }")
+    QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: %4px; border-radius: %5px; min-height: %6px; }")
         .arg(ColorManager::INPUT_TEXT_COLOR.name())
         .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
-        .arg(ColorManager::INPUT_BORDER_COLOR.name());
+        .arg(ColorManager::INPUT_BORDER_COLOR.name())
+        .arg(StyleManager::PADDING_SMALL)
+        .arg(StyleManager::RADIUS_SMALL)
+        .arg(StyleManager::INPUT_HEIGHT_SMALL);
 
     // Form layout for fields
     QFormLayout* formLayout = new QFormLayout();
-    formLayout->setSpacing(10);
+    formLayout->setSpacing(StyleManager::FORM_SPACING);
 
     // Name field
     m_nameEdit = new QLineEdit(this);
@@ -82,7 +87,8 @@ void AddConstraintDialog::setupUI()
     // Hint label
     QLabel* hintLabel = new QLabel("Hint: Double-click a face to set the Surface ID.", this);
     hintLabel->setWordWrap(true);
-    hintLabel->setStyleSheet("color: #888888; font-size: 11px; background-color: transparent;");
+    hintLabel->setStyleSheet(QString("color: #888888; font-size: %1px; background-color: transparent;")
+        .arg(StyleManager::FONT_SIZE_SMALL));
     mainLayout->addWidget(hintLabel);
 
     mainLayout->addStretch();
@@ -94,10 +100,13 @@ void AddConstraintDialog::setupUI()
     m_cancelButton = new QPushButton("Cancel", this);
     m_cancelButton->setFixedWidth(80);
     m_cancelButton->setStyleSheet(
-        "QPushButton { background-color: #444; color: white; border: 1px solid #666; "
-        "padding: 8px 16px; border-radius: 4px; }"
+        QString("QPushButton { background-color: #444; color: white; border: 1px solid #666; "
+        "padding: %1px %2px; border-radius: %3px; }"
         "QPushButton:hover { background-color: #555; }"
-        "QPushButton:pressed { background-color: #333; }"
+        "QPushButton:pressed { background-color: #333; }")
+        .arg(StyleManager::BUTTON_PADDING_V)
+        .arg(StyleManager::BUTTON_PADDING_H)
+        .arg(StyleManager::BUTTON_RADIUS)
     );
     connect(m_cancelButton, &QPushButton::clicked, this, [this]() {
         if (m_vizManager) {
@@ -111,13 +120,16 @@ void AddConstraintDialog::setupUI()
     m_okButton->setFixedWidth(80);
     m_okButton->setStyleSheet(
         QString("QPushButton { background-color: %1; color: %2; border: none; "
-                "padding: 8px 16px; border-radius: 4px; font-weight: bold; }"
+                "padding: %5px %6px; border-radius: %7px; font-weight: bold; }"
                 "QPushButton:hover { background-color: %3; }"
                 "QPushButton:pressed { background-color: %4; }")
         .arg(ColorManager::ACCENT_COLOR.name())
         .arg(ColorManager::BUTTON_TEXT_COLOR.name())
         .arg(ColorManager::BUTTON_HOVER_COLOR.name())
         .arg(ColorManager::BUTTON_PRESSED_COLOR.name())
+        .arg(StyleManager::BUTTON_PADDING_V)
+        .arg(StyleManager::BUTTON_PADDING_H)
+        .arg(StyleManager::BUTTON_RADIUS)
     );
     connect(m_okButton, &QPushButton::clicked, this, [this]() {
         if (m_vizManager) {

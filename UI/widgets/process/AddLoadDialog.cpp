@@ -1,5 +1,6 @@
 #include "AddLoadDialog.h"
 #include "../../../utils/ColorManager.h"
+#include "../../../utils/StyleManager.h"
 #include "../../visualization/VisualizationManager.h"
 #include "../../../core/processing/StepReader.h"
 #include <QVBoxLayout>
@@ -61,20 +62,26 @@ void AddLoadDialog::setVisualizationManager(VisualizationManager* vizManager)
 void AddLoadDialog::setupUI()
 {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(15, 15, 15, 15);
-    mainLayout->setSpacing(12);
+    mainLayout->setContentsMargins(StyleManager::PADDING_LARGE, StyleManager::PADDING_LARGE,
+                                   StyleManager::PADDING_LARGE, StyleManager::PADDING_LARGE);
+    mainLayout->setSpacing(StyleManager::FORM_SPACING);
 
     // Labels style - transparent background
     QString labelStyle = "color: #aaaaaa; background-color: transparent;";
-    QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: 4px; border-radius: 4px; min-height: 20px; }")
+    QString inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: %4px; border-radius: %5px; min-height: %6px; }")
         .arg(ColorManager::INPUT_TEXT_COLOR.name())
         .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
-        .arg(ColorManager::INPUT_BORDER_COLOR.name());
-    QString buttonStyle = "color: white; background-color: #444; border: 1px solid #666; padding: 6px; border-radius: 3px;";
+        .arg(ColorManager::INPUT_BORDER_COLOR.name())
+        .arg(StyleManager::PADDING_SMALL)
+        .arg(StyleManager::RADIUS_SMALL)
+        .arg(StyleManager::INPUT_HEIGHT_SMALL);
+    QString buttonStyle = QString("color: white; background-color: #444; border: 1px solid #666; padding: %1px; border-radius: %2px;")
+        .arg(StyleManager::PADDING_MEDIUM)
+        .arg(StyleManager::RADIUS_SMALL);
 
     // Form layout for fields
     QFormLayout* formLayout = new QFormLayout();
-    formLayout->setSpacing(10);
+    formLayout->setSpacing(StyleManager::FORM_SPACING);
 
     // Name field
     m_nameEdit = new QLineEdit(this);
@@ -96,10 +103,13 @@ void AddLoadDialog::setupUI()
 
     // Magnitude field with unit
     QWidget* valueContainer = new QWidget(this);
-    QString containerStyle = QString(".QWidget { color: %1; background-color: %2; border: 1px solid %3; padding: 4px; border-radius: 3px; min-height: 20px; }")
+    QString containerStyle = QString(".QWidget { color: %1; background-color: %2; border: 1px solid %3; padding: %4px; border-radius: %5px; min-height: %6px; }")
         .arg(ColorManager::INPUT_TEXT_COLOR.name())
         .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
-        .arg(ColorManager::INPUT_BORDER_COLOR.name());
+        .arg(ColorManager::INPUT_BORDER_COLOR.name())
+        .arg(StyleManager::PADDING_SMALL)
+        .arg(StyleManager::RADIUS_SMALL)
+        .arg(StyleManager::INPUT_HEIGHT_SMALL);
     valueContainer->setStyleSheet(containerStyle);
     valueContainer->setFixedWidth(150);
     QHBoxLayout* valueLayout = new QHBoxLayout(valueContainer);
@@ -112,7 +122,8 @@ void AddLoadDialog::setupUI()
     m_magnitudeEdit->setText("10.0");
 
     QLabel* unitLabel = new QLabel("N", this);
-    unitLabel->setStyleSheet("color: #aaaaaa; border: none; background: transparent; font-size: 12px;");
+    unitLabel->setStyleSheet(QString("color: #aaaaaa; border: none; background: transparent; font-size: %1px;")
+        .arg(StyleManager::FONT_SIZE_NORMAL));
 
     valueLayout->addWidget(m_magnitudeEdit);
     valueLayout->addWidget(unitLabel);
@@ -165,7 +176,8 @@ void AddLoadDialog::setupUI()
     // Hint label
     QLabel* hintLabel = new QLabel("ヒント: 面をダブルクリックするとSurface IDと方向が設定されます。\nエッジを選択すると方向ベクトルを設定できます。", this);
     hintLabel->setWordWrap(true);
-    hintLabel->setStyleSheet("color: #888888; font-size: 11px; background-color: transparent;");
+    hintLabel->setStyleSheet(QString("color: #888888; font-size: %1px; background-color: transparent;")
+        .arg(StyleManager::FONT_SIZE_SMALL));
     mainLayout->addWidget(hintLabel);
 
     mainLayout->addStretch();
@@ -177,10 +189,13 @@ void AddLoadDialog::setupUI()
     m_cancelButton = new QPushButton("Cancel", this);
     m_cancelButton->setFixedWidth(80);
     m_cancelButton->setStyleSheet(
-        "QPushButton { background-color: #444; color: white; border: 1px solid #666; "
-        "padding: 8px 16px; border-radius: 4px; }"
+        QString("QPushButton { background-color: #444; color: white; border: 1px solid #666; "
+        "padding: %1px %2px; border-radius: %3px; }"
         "QPushButton:hover { background-color: #555; }"
-        "QPushButton:pressed { background-color: #333; }"
+        "QPushButton:pressed { background-color: #333; }")
+        .arg(StyleManager::BUTTON_PADDING_V)
+        .arg(StyleManager::BUTTON_PADDING_H)
+        .arg(StyleManager::BUTTON_RADIUS)
     );
     connect(m_cancelButton, &QPushButton::clicked, this, [this]() {
         if (m_vizManager) {
@@ -194,13 +209,16 @@ void AddLoadDialog::setupUI()
     m_okButton->setFixedWidth(80);
     m_okButton->setStyleSheet(
         QString("QPushButton { background-color: %1; color: %2; border: none; "
-                "padding: 8px 16px; border-radius: 4px; font-weight: bold; }"
+                "padding: %5px %6px; border-radius: %7px; font-weight: bold; }"
                 "QPushButton:hover { background-color: %3; }"
                 "QPushButton:pressed { background-color: %4; }")
         .arg(ColorManager::ACCENT_COLOR.name())
         .arg(ColorManager::BUTTON_TEXT_COLOR.name())
         .arg(ColorManager::BUTTON_HOVER_COLOR.name())
         .arg(ColorManager::BUTTON_PRESSED_COLOR.name())
+        .arg(StyleManager::BUTTON_PADDING_V)
+        .arg(StyleManager::BUTTON_PADDING_H)
+        .arg(StyleManager::BUTTON_RADIUS)
     );
     connect(m_okButton, &QPushButton::clicked, this, [this]() {
         if (m_vizManager) {
@@ -314,8 +332,10 @@ void AddLoadDialog::cancelEdgeSelection()
     m_isSelectingEdge = false;
     m_referenceEdgeButton->setText("Select Edge");
     m_referenceEdgeButton->setStyleSheet(
-        "color: white; background-color: #444; border: 1px solid #666; "
-        "padding: 6px; border-radius: 3px;");
+        QString("color: white; background-color: #444; border: 1px solid #666; "
+        "padding: %1px; border-radius: %2px;")
+        .arg(StyleManager::PADDING_MEDIUM)
+        .arg(StyleManager::RADIUS_SMALL));
 
     if (m_vizManager) {
         m_vizManager->setEdgeSelectionMode(false);
