@@ -3,16 +3,19 @@
 #include <QLabel>
 #include <QStyle>
 #include <QMouseEvent>
+#include <QPainter>
+#include <QPainterPath>
 #include "../../../utils/ColorManager.h"
 #include "../../../utils/StyleManager.h"
 
 // --- ProcessCard Implementation ---
 
-ProcessCard::ProcessCard(int stepNumber, const QString& title, QWidget* parent)
-    : QWidget(parent), m_stepNumber(stepNumber), m_title(title)
+ProcessCard::ProcessCard(int stepNumber, const QString& title, bool isFirst, bool isLast, QWidget* parent)
+    : QWidget(parent), m_stepNumber(stepNumber), m_title(title), m_isFirst(isFirst), m_isLast(isLast)
 {
     QHBoxLayout* layout = new QHBoxLayout(this);
-    layout->setContentsMargins(15, 12, 15, 12);
+    // Left padding increases to make room for the stepper graphic (approx 50px)
+    layout->setContentsMargins(50, 12, 15, 12);
     layout->setSpacing(10);
     
     setAttribute(Qt::WA_StyledBackground, true);
@@ -23,36 +26,50 @@ ProcessCard::ProcessCard(int stepNumber, const QString& title, QWidget* parent)
     font.setPointSize(12);
     m_textLabel->setFont(font);
     
-    // Centered text
-    m_textLabel->setAlignment(Qt::AlignCenter);
+    // Left aligned text for better stepper look? Or Keep Center?
+    // User image shows text aligned left relative to the content area (right of the dots)
+    m_textLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     
     layout->addWidget(m_textLabel);
     layout->addStretch();
     
     setFixedHeight(60);
+    // Don't call updateStyle() here yet, we'll do it after setup or rely on defaults
+    // But we need to set initial style.
     updateStyle();
+}
+
+void ProcessCard::setFirst(bool first) {
+    if (m_isFirst == first) return;
+    m_isFirst = first;
+    update();
+}
+
+void ProcessCard::setLast(bool last) {
+    if (m_isLast == last) return;
+    m_isLast = last;
+    update();
 }
 
 void ProcessCard::setActive(bool active) {
     if (m_isActive == active) return;
     m_isActive = active;
     updateStyle();
+    update(); // Trigger repaint for the graphic
 }
 
 void ProcessCard::setCompleted(bool completed) {
     if (m_isCompleted == completed) return;
     m_isCompleted = completed;
-    
-    if (m_isCompleted) {
-        // Completed state logic if needed (e.g. green border)
-    }
     updateStyle();
+    update(); // Trigger repaint
 }
 
 void ProcessCard::setLocked(bool locked) {
     if (m_isLocked == locked) return;
     m_isLocked = locked;
     updateStyle();
+    update(); // Trigger repaint
 }
 
 void ProcessCard::setClickable(bool clickable) {
@@ -69,10 +86,107 @@ void ProcessCard::setClickable(bool clickable) {
 void ProcessCard::mousePressEvent(QMouseEvent* event) {
     if (m_isClickable && event->button() == Qt::LeftButton) {
         emit clicked();
-        event->accept(); // イベントを受け入れて伝播を防ぐ
+        event->accept(); // Event accepted to prevent propagation
         return;
     }
     QWidget::mousePressEvent(event);
+}
+
+void ProcessCard::paintEvent(QPaintEvent* event)
+{
+    Q_UNUSED(event);
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    // Geometry for the stepper part
+    int margin = 10; // Left margin from widget edge
+    int lineX = 25;  // Center X of the vertical line/circle
+    int cy = height() / 2; // Center Y
+
+    // Colors
+    QColor activeColor = ColorManager::ACCENT_COLOR;
+    QColor completedColor = ColorManager::ACCENT_COLOR; // Or maybe a different 'done' color
+    QColor inactiveColor = QColor(255, 255, 255, 30); // Dim grey
+    
+    QColor lineColor = inactiveColor;
+    QColor circleFill = Qt::transparent; // Default hollow
+    QColor circleBorder = inactiveColor;
+
+    // Determine colors
+    if (m_isActive) {
+        lineColor = activeColor;
+        circleFill = activeColor;
+        circleBorder = activeColor;
+    } else if (m_isCompleted) {
+        lineColor = completedColor;
+        circleFill = completedColor;
+        circleBorder = completedColor;
+    } else {
+        // Future/Locked
+        lineColor = inactiveColor;
+        circleFill = Qt::transparent; // Hollow for future?
+        circleBorder = inactiveColor;
+    }
+
+    // --- Draw Vertical Lines ---
+    int lineWidth = 2;
+    int radius = 8; // Defined earlier so we can use it for line clipping
+    
+    // Top Line (connects to previous step)
+    if (!m_isFirst) {
+        // Draw top half line
+        // If THIS step is active or completed, the path TO it (top line) should be colored?
+        // Usually: The line between Step A (Done) and Step B (Active) is colored 'Done'.
+        // So, if this step is Active or Completed, the line coming from above is 'Done' colored.
+        QColor topChunkColor = (m_isActive || m_isCompleted) ? completedColor : inactiveColor;
+        
+        QPen pen(topChunkColor);
+        pen.setWidth(lineWidth);
+        painter.setPen(pen);
+        // Stop at circle boundary (radius) to avoid seeing line inside hollow inactive circles
+        painter.drawLine(lineX, 0, lineX, cy - radius);
+    }
+
+    // Bottom Line (connects to next step)
+    if (!m_isLast) {
+        // Draw bottom half line
+        // If THIS step is completed, the line going down proceeds.
+        QColor bottomChunkColor = m_isCompleted ? completedColor : inactiveColor;
+        
+        QPen pen(bottomChunkColor);
+        pen.setWidth(lineWidth);
+        painter.setPen(pen);
+        // Start from circle boundary (radius)
+        painter.drawLine(lineX, cy + radius, lineX, height());
+    }
+
+    // --- Draw Circle/Dot ---
+    // int radius = 8; // Moved up
+    // if (m_isActive) radius = 10; // Removed as per user request
+    
+    painter.setPen(Qt::NoPen);
+    
+    if (m_isActive) {
+        // Active visual: Solid circle only
+        
+        // Main dot
+        painter.setBrush(activeColor);
+        painter.drawEllipse(QPoint(lineX, cy), radius, radius);
+        
+    } else if (m_isCompleted) {
+        // Solid circle
+        painter.setBrush(completedColor);
+        painter.drawEllipse(QPoint(lineX, cy), radius, radius);
+    } else {
+        // Inactive: Hollow ring
+        QPen borderPen(circleBorder);
+        borderPen.setWidth(2);
+        painter.setPen(borderPen);
+        painter.setBrush(Qt::transparent); // or transparent
+        painter.drawEllipse(QPoint(lineX, cy), radius, radius);
+        
+        // Inner dot? No.
+    }
 }
 
 void ProcessCard::enterEvent(QEnterEvent* event) {
@@ -95,39 +209,35 @@ void ProcessCard::updateStyle() {
     QString style;
     QString textStyle;
 
-    // Colors
+    // Text & Background Stylings
+    // We reduced the background prominence as the stepper visual handles active state heavily.
+    // But we still want some feedback on hover or active step box.
+    
     QString bgColor;
     QString borderColor;
     QString textColor;
 
     if (m_isActive) {
-        // Active: Distinct Blue Background from ColorManager
-        QColor accent = ColorManager::ACCENT_COLOR;
-        bgColor = QString("rgba(%1, %2, %3, 102)").arg(accent.red()).arg(accent.green()).arg(accent.blue()); // ~40% opacity
-        borderColor = QString("rgba(%1, %2, %3, 102)").arg(accent.red()).arg(accent.green()).arg(accent.blue());
+        // Active Text Highlight
         textColor = "#FFFFFF";
-    } else if (m_isCompleted) {
-        // Completed: Standard border
-        if (m_isHovered && m_isClickable) {
-            // Hover state: brighter background
-            bgColor = "rgba(255, 255, 255, 0.12)";
-            borderColor = "rgba(255, 255, 255, 0.4)";
-            textColor = "#FFFFFF";
-        } else {
-            bgColor = "rgba(255, 255, 255, 0.05)";
-            borderColor = "rgba(255, 255, 255, 0.3)"; // Visible border
-            textColor = "#CCCCCC";
-        }
-    } else if (m_isLocked) {
-        // Locked/Future: Dimmed but with border
-        bgColor = "transparent";
-        borderColor = "rgba(255, 255, 255, 0.1)"; // Visible border (fainter)
-        textColor = "#666666";
-    } else {
-        // Pending/Accessible but not active: Normal
+        // Subtle background for the whole row?
         bgColor = "rgba(255, 255, 255, 0.05)";
-        borderColor = "rgba(255, 255, 255, 0.2)"; // Slightly clearer border
+        borderColor = "transparent";
+    } else if (m_isCompleted) {
+        // Completed
+        textColor = (m_isHovered && m_isClickable) ? "#FFFFFF" : "#CCCCCC";
+        bgColor = (m_isHovered && m_isClickable) ? "rgba(255, 255, 255, 0.05)" : "transparent";
+        borderColor = "transparent";
+    } else if (m_isLocked) {
+        // Locked
+        textColor = "#666666";
+        bgColor = "transparent";
+        borderColor = "transparent";
+    } else {
+        // Default
         textColor = "#AAAAAA";
+        bgColor = "transparent";
+        borderColor = "transparent";
     }
 
     style = QString(
@@ -138,7 +248,9 @@ void ProcessCard::updateStyle() {
         "}"
     ).arg(bgColor, borderColor).arg(StyleManager::BUTTON_RADIUS);
 
-    textStyle = QString("color: %1;").arg(textColor);
+    textStyle = QString("color: %1; font-weight: %2;")
+        .arg(textColor)
+        .arg(m_isActive ? "bold" : "normal");
 
     this->setStyleSheet(style);
     m_textLabel->setStyleSheet(textStyle);
@@ -156,13 +268,18 @@ void ProcessFlowWidget::setupUI()
 {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(10, 10, 10, 10);
-    mainLayout->setSpacing(8);
+    mainLayout->setSpacing(0); // Zero spacing for continuous line connected
 
     // Create Steps
-    m_cards.push_back(new ProcessCard(1, "1.Import STEP File", this));
-    m_cards.push_back(new ProcessCard(2, "2.Set Boundary Conditions", this));
-    m_cards.push_back(new ProcessCard(3, "3.Simulate", this));
-    m_cards.push_back(new ProcessCard(4, "4.Build Infill Map", this));
+    // We pass isFirst/isLast flags.
+    // 1. Import
+    m_cards.push_back(new ProcessCard(1, "1.Import STEP File", true, false, this));
+    // 2. Boundary
+    m_cards.push_back(new ProcessCard(2, "2.Set Boundary Conditions", false, false, this));
+    // 3. Simulate
+    m_cards.push_back(new ProcessCard(3, "3.Simulate", false, false, this));
+    // 4. Infill
+    m_cards.push_back(new ProcessCard(4, "4.Build Infill Map", false, true, this));
 
     // Connect each card's clicked signal
     for (size_t i = 0; i < m_cards.size(); ++i) {
@@ -179,7 +296,7 @@ void ProcessFlowWidget::setupUI()
     setCurrentStep(ProcessStep::ImportStep);
 
     // Fixed height based on contents
-    int totalHeight = 10 + 10 + (60 * 4) + (8 * 3); // margins + cards + spacing roughly
+    int totalHeight = 10 + 10 + (60 * 4) + (0 * 3); // margins + cards + spacing roughly
     setFixedHeight(totalHeight + 20); // Extra buffer
 }
 
@@ -225,3 +342,4 @@ void ProcessFlowWidget::setStepCompleted(ProcessStep step, bool completed)
         m_cards[index]->setCompleted(completed);
     }
 }
+

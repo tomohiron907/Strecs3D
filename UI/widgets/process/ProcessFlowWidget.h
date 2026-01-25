@@ -19,7 +19,10 @@ enum class ProcessStep {
 class ProcessCard : public QWidget {
     Q_OBJECT
 public:
-    explicit ProcessCard(int stepNumber, const QString& title, QWidget* parent = nullptr);
+    explicit ProcessCard(int stepNumber, const QString& title, bool isFirst, bool isLast, QWidget* parent = nullptr);
+
+    void setFirst(bool first);
+    void setLast(bool last);
 
     void setActive(bool active);
     void setCompleted(bool completed);
@@ -32,6 +35,7 @@ signals:
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
+    void paintEvent(QPaintEvent* event) override;
     void enterEvent(QEnterEvent* event) override;
     void leaveEvent(QEvent* event) override;
 
@@ -45,6 +49,8 @@ private:
     bool m_isHovered = false;
 
     QLabel* m_textLabel = nullptr;
+    bool m_isFirst = false;
+    bool m_isLast = false;
 
     void updateStyle();
 };
