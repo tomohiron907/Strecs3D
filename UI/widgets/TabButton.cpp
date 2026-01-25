@@ -15,6 +15,7 @@ TabButton::TabButton(const QString& text, QWidget* parent)
 
     QFont f = font();
     f.setPixelSize(FONT_SIZE);
+    f.setWeight(QFont::Medium);
     setFont(f);
 
     updateStyle();
@@ -24,6 +25,7 @@ void TabButton::setActive(bool active)
 {
     if (m_active != active) {
         m_active = active;
+        // updateStyle(); // No longer need to resize based on active state if size is same
         update();
     }
 }
@@ -33,7 +35,8 @@ void TabButton::updateStyle()
     QFontMetrics fm(font());
     int textWidth = fm.horizontalAdvance(text());
     int textHeight = fm.height();
-
+    
+    // Fixed size based on text only, no extra space for dot
     setFixedSize(textWidth + HORIZONTAL_PADDING * 2,
                  textHeight + VERTICAL_PADDING * 2);
 
@@ -65,10 +68,16 @@ void TabButton::paintEvent(QPaintEvent* event)
     QColor textColor;
     if (m_active) {
         textColor = m_activeTextColor;
-    } else if (m_hovered) {
-        textColor = m_hoverTextColor;
+        
+        // Draw active border (Pill shape)
+        painter.setPen(QPen(QColor(60, 60, 60), 1)); 
+        painter.setBrush(Qt::NoBrush);
+        QRectF borderRect = rect().adjusted(1, 1, -1, -1);
+        painter.drawRoundedRect(borderRect, borderRect.height()/2.0, borderRect.height()/2.0);
+        
+        // No dot, just text
     } else {
-        textColor = m_inactiveTextColor;
+        textColor = m_hovered ? m_hoverTextColor : m_inactiveTextColor;
     }
 
     painter.setFont(font());

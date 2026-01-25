@@ -22,9 +22,9 @@ protected:
 private:
     void updateStyle();
 
-    static constexpr int HORIZONTAL_PADDING = 20;
-    static constexpr int VERTICAL_PADDING = 12;
-    static constexpr int FONT_SIZE = 15;
+    static constexpr int HORIZONTAL_PADDING = 24;
+    static constexpr int VERTICAL_PADDING = 10;
+    static constexpr int FONT_SIZE = 14;
 
     bool m_active = false;
     bool m_hovered = false;

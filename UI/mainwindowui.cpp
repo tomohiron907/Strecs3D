@@ -96,32 +96,53 @@ void MainWindowUI::createHeaderWidget(QVBoxLayout* outerLayout)
 
     headerLayout->addWidget(logoContainer);
 
-    // Add spacing before tabs
-    headerLayout->addSpacing(30);
+    // Add stretch to push tabs to center
+    headerLayout->addStretch();
 
     // Add tab buttons
     createTabButtons(headerLayout);
 
     headerLayout->addStretch();
+    
+    // Add a dummy spacer to balance the logo container (300px) and ensure true centering
+    QWidget* rightSpacer = new QWidget(centralWidget);
+    rightSpacer->setFixedWidth(LEFT_PANE_MAX_WIDTH);
+    rightSpacer->setAttribute(Qt::WA_TransparentForMouseEvents);
+    headerLayout->addWidget(rightSpacer);
+
     headerLayout->setSpacing(HEADER_SPACING);
-    headerLayout->setContentsMargins(WIDGET_MARGIN, 0, 0, HEADER_BOTTOM_MARGIN);
+    headerLayout->setContentsMargins(WIDGET_MARGIN, 0, WIDGET_MARGIN, HEADER_BOTTOM_MARGIN);
 
     outerLayout->addWidget(headerWidget);
 }
 
 void MainWindowUI::createTabButtons(QHBoxLayout* headerLayout)
 {
-    m_processTab = new TabButton("Process", centralWidget);
-    m_settingsTab = new TabButton("Settings", centralWidget);
-    m_showcaseTab = new TabButton("Showcase", centralWidget);
-    m_guideTab = new TabButton("Guide", centralWidget);
+    // Container for tabs (The pill shape background)
+    QWidget* tabContainer = new QWidget(centralWidget);
+    tabContainer->setObjectName("tabContainer");
+    
+    // Using a slightly lighter background than the main header
+    // Header is #1a1a1a usually. Let's use #272727 for the tab pill.
+    tabContainer->setStyleSheet("QWidget#tabContainer { background-color: #272727; border-radius: 22px; }");
+    
+    QHBoxLayout* containerLayout = new QHBoxLayout(tabContainer);
+    containerLayout->setContentsMargins(6, 4, 6, 4); // Padding around the buttons inside the pill
+    containerLayout->setSpacing(2); // Small spacing between buttons
+
+    m_processTab = new TabButton("Process", tabContainer);
+    m_settingsTab = new TabButton("Settings", tabContainer);
+    m_showcaseTab = new TabButton("Showcase", tabContainer);
+    m_guideTab = new TabButton("Guide", tabContainer);
 
     m_processTab->setActive(true);
 
-    headerLayout->addWidget(m_processTab);
-    headerLayout->addWidget(m_settingsTab);
-    headerLayout->addWidget(m_showcaseTab);
-    headerLayout->addWidget(m_guideTab);
+    containerLayout->addWidget(m_processTab);
+    containerLayout->addWidget(m_settingsTab);
+    containerLayout->addWidget(m_showcaseTab);
+    containerLayout->addWidget(m_guideTab);
+
+    headerLayout->addWidget(tabContainer);
 
     connect(m_processTab, &QPushButton::clicked, this, [this]() {
         switchToTab(0);
