@@ -75,33 +75,57 @@ void SettingsWidget::setupUI()
     QVBoxLayout* slicerLayout = new QVBoxLayout(slicerContainer);
     slicerLayout->setContentsMargins(80, 20, 80, 20);
 
+    // Export to row (same layout as density rows)
+    QHBoxLayout* exportRow = new QHBoxLayout();
+    QString slicerLabelStyle = QString("QLabel { color: #CCCCCC; font-size: %1px; border: none; }")
+        .arg(StyleManager::FONT_SIZE_LARGE);
+    QLabel* exportLabel = new QLabel("Export to", slicerContainer);
+    exportLabel->setStyleSheet(slicerLabelStyle);
+
     m_slicerComboBox = new QComboBox(slicerContainer);
     m_slicerComboBox->addItems({"Bambu", "Cura", "Prusa"});
-    
-    // Style the ComboBox
+
+    // Style the ComboBox (matching density input style)
     m_slicerComboBox->setStyleSheet(
         QString("QComboBox {"
         "  background-color: #333333;"
         "  color: #FFFFFF;"
         "  border: 1px solid #555555;"
         "  border-radius: %1px;"
-        "  padding: 5px;"
-        "  font-size: %2px;"
+        "  padding: %2px %3px;"
+        "  font-size: %4px;"
+        "}"
+        "QComboBox:focus {"
+        "  border-color: #0078D4;"
         "}"
         "QComboBox::drop-down {"
+        "  subcontrol-origin: padding;"
+        "  subcontrol-position: center right;"
+        "  width: 20px;"
         "  border: none;"
         "}"
         "QComboBox::down-arrow {"
-        "  image: url(:/resources/icons/arrow_down.png);"
-        "  width: 12px;"
-        "  height: 12px;"
+        "  image: url(:/resources/icons/arrow_down.svg);"
+        "  width: 10px;"
+        "  height: 10px;"
+        "}"
+        "QComboBox QAbstractItemView {"
+        "  background-color: #333333;"
+        "  color: #FFFFFF;"
+        "  selection-background-color: #0078D4;"
         "}")
         .arg(StyleManager::RADIUS_SMALL)
+        .arg(StyleManager::PADDING_MEDIUM)
+        .arg(StyleManager::FORM_SPACING)
         .arg(StyleManager::FONT_SIZE_LARGE)
     );
-    m_slicerComboBox->setFixedHeight(30);
+    m_slicerComboBox->setFixedWidth(100);
 
-    slicerLayout->addWidget(m_slicerComboBox);
+    exportRow->addWidget(exportLabel);
+    exportRow->addStretch();
+    exportRow->addWidget(m_slicerComboBox);
+
+    slicerLayout->addLayout(exportRow);
     slicerWrapperLayout->addWidget(slicerContainer);
     mainLayout->addWidget(slicerWrapper);
 
