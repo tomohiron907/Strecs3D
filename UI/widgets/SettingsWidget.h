@@ -5,6 +5,7 @@
 
 class QLineEdit;
 class QIntValidator;
+class QMouseEvent;
 
 class SettingsWidget : public QWidget
 {
@@ -24,6 +25,9 @@ private:
     QLineEdit* m_minDensityEdit;
     QLineEdit* m_maxDensityEdit;
     QIntValidator* m_densityValidator;
+
+protected:
+    void mousePressEvent(QMouseEvent* event) override;
 };
 
 #endif // SETTINGSWIDGET_H
