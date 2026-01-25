@@ -21,7 +21,7 @@ public:
     static const QColor BUTTON_EDGE_COLOR;     // ボタン枠線色
     static const QColor BUTTON_DISABLED_COLOR; // 無効状態ボタン色
     static const QColor BUTTON_DISABLED_TEXT_COLOR; // 無効状態テキスト色
-    static const QColor BUTTON_EMPHASIZED_COLOR; // 強調表示ボタン色
+
     static const QColor HEADER_COLOR;         // ヘッダー用色
     
     // Density slider handle colors

@@ -12,7 +12,7 @@ const QColor ColorManager::BUTTON_TEXT_COLOR = QColor(255, 255, 255, 255);   // 
 const QColor ColorManager::BUTTON_EDGE_COLOR = QColor(255, 255, 255, 100); // 枠線色（白半透明） 
 const QColor ColorManager::BUTTON_DISABLED_COLOR = QColor(40, 40, 40, 120);   // 無効状態背景色
 const QColor ColorManager::BUTTON_DISABLED_TEXT_COLOR = QColor(120, 120, 120, 180); // 無効状態テキスト色
-const QColor ColorManager::BUTTON_EMPHASIZED_COLOR = QColor(255, 255, 255, 220); // 強調表示背景色（白）
+
 const QColor ColorManager::HEADER_COLOR = QColor("#1a1a1a");
 const QColor ColorManager::HANDLE_COLOR = QColor(200, 200, 200, 255);           // ハンドル色（黒）
 const QColor ColorManager::X_AXIS_COLOR = QColor(255, 77, 0, 255);               // X軸色（赤）

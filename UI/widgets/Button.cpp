@@ -47,7 +47,7 @@ void Button::initializeDefaultValues()
     m_isEmphasized = false;
     m_disabledColor = ColorManager::BUTTON_DISABLED_COLOR;
     m_disabledTextColor = ColorManager::BUTTON_DISABLED_TEXT_COLOR;
-    m_emphasizedColor = ColorManager::BUTTON_EMPHASIZED_COLOR;
+    m_emphasizedColor = ColorManager::ACCENT_COLOR;
     m_iconSize = s_globalIconSize;
 }
 
@@ -110,8 +110,8 @@ void Button::setEmphasized(bool emphasized)
 {
     m_isEmphasized = emphasized;
     if (m_isEmphasized) {
-        m_backgroundColor = m_emphasizedColor;
-        m_textColor = Qt::black; // 強調表示時は黒文字
+        m_backgroundColor = ColorManager::ACCENT_COLOR;
+        m_textColor = Qt::white; // 強調表示時は白文字
     } else {
         m_backgroundColor = ColorManager::BUTTON_COLOR;
         m_textColor = ColorManager::BUTTON_TEXT_COLOR;
