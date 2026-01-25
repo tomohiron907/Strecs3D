@@ -1,6 +1,7 @@
 #include "SimulationStepWidget.h"
 #include "../../Button.h"
 #include "../../../../utils/StyleManager.h"
+#include "../../../../utils/ColorManager.h"
 #include <QVBoxLayout>
 #include <QProgressBar>
 #include <QLabel>
@@ -34,10 +35,10 @@ SimulationStepWidget::SimulationStepWidget(QWidget* parent) : QWidget(parent) {
             text-align: center;
         }
         QProgressBar::chunk {
-            background-color: #0078D7;
+            background-color: %3;
             border-radius: %2px;
         }
-    )").arg(StyleManager::RADIUS_SMALL).arg(StyleManager::RADIUS_SMALL - 1));
+    )").arg(StyleManager::RADIUS_SMALL).arg(StyleManager::RADIUS_SMALL - 1).arg(ColorManager::ACCENT_COLOR.name()));
 
     layout->addWidget(m_progressBar);
 

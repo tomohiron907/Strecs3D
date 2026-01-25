@@ -1,6 +1,7 @@
 #include "TabButton.h"
 #include <QPainter>
 #include <QFontMetrics>
+#include "../../utils/ColorManager.h"
 
 TabButton::TabButton(const QString& text, QWidget* parent)
     : QPushButton(text, parent)
@@ -20,6 +21,7 @@ TabButton::TabButton(const QString& text, QWidget* parent)
 
     updateStyle();
 }
+
 
 void TabButton::setActive(bool active)
 {
@@ -70,7 +72,7 @@ void TabButton::paintEvent(QPaintEvent* event)
         textColor = m_activeTextColor;
         
         // Draw active border (Pill shape)
-        painter.setPen(QPen(QColor(60, 60, 60), 1)); 
+        painter.setPen(QPen(ColorManager::ACCENT_COLOR, 1)); 
         painter.setBrush(Qt::NoBrush);
         QRectF borderRect = rect().adjusted(1, 1, -1, -1);
         painter.drawRoundedRect(borderRect, borderRect.height()/2.0, borderRect.height()/2.0);
