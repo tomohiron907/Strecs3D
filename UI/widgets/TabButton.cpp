@@ -70,14 +70,7 @@ void TabButton::paintEvent(QPaintEvent* event)
     QColor textColor;
     if (m_active) {
         textColor = m_activeTextColor;
-        
-        // Draw active border (Pill shape)
-        painter.setPen(QPen(ColorManager::ACCENT_COLOR, 1)); 
-        painter.setBrush(Qt::NoBrush);
-        QRectF borderRect = rect().adjusted(1, 1, -1, -1);
-        painter.drawRoundedRect(borderRect, borderRect.height()/2.0, borderRect.height()/2.0);
-        
-        // No dot, just text
+        // Border is now drawn by TabGroup
     } else {
         textColor = m_hovered ? m_hoverTextColor : m_inactiveTextColor;
     }

@@ -136,6 +136,7 @@ add_executable(Strecs3D
   utils/StyleManager.cpp
   UI/widgets/Button.cpp
   UI/widgets/TabButton.cpp
+  UI/widgets/TabGroup.cpp
   UI/widgets/SettingsWidget.cpp
 
 

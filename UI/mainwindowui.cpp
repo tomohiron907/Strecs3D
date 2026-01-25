@@ -14,6 +14,7 @@
 
 #include "widgets/Button.h"
 #include "widgets/TabButton.h"
+#include "widgets/TabGroup.h"
 #include "widgets/SettingsWidget.h"
 #include "../utils/ColorManager.h"
 #include "../utils/StyleManager.h"
@@ -119,44 +120,23 @@ void MainWindowUI::createHeaderWidget(QVBoxLayout* outerLayout)
 
 void MainWindowUI::createTabButtons(QHBoxLayout* headerLayout)
 {
-    // Container for tabs (The pill shape background)
-    QWidget* tabContainer = new QWidget(centralWidget);
-    tabContainer->setObjectName("tabContainer");
-
-    // Using a slightly lighter background than the main header
-    // Header is #1a1a1a usually. Let's use #272727 for the tab pill.
-    tabContainer->setStyleSheet(QString("QWidget#tabContainer { background-color: #272727; border-radius: %1px; }")
-        .arg(StyleManager::TAB_CONTAINER_RADIUS));
+    // Create TabGroup
+    m_tabGroup = new TabGroup(centralWidget);
     
-    QHBoxLayout* containerLayout = new QHBoxLayout(tabContainer);
-    containerLayout->setContentsMargins(6, 4, 6, 4); // Padding around the buttons inside the pill
-    containerLayout->setSpacing(2); // Small spacing between buttons
+    m_processTab = new TabButton("Process", m_tabGroup);
+    m_settingsTab = new TabButton("Settings", m_tabGroup);
+    m_showcaseTab = new TabButton("Showcase", m_tabGroup);
+    m_guideTab = new TabButton("Guide", m_tabGroup);
 
-    m_processTab = new TabButton("Process", tabContainer);
-    m_settingsTab = new TabButton("Settings", tabContainer);
-    m_showcaseTab = new TabButton("Showcase", tabContainer);
-    m_guideTab = new TabButton("Guide", tabContainer);
+    m_tabGroup->addTab(m_processTab);
+    m_tabGroup->addTab(m_settingsTab);
+    m_tabGroup->addTab(m_showcaseTab);
+    m_tabGroup->addTab(m_guideTab);
 
-    m_processTab->setActive(true);
+    headerLayout->addWidget(m_tabGroup);
 
-    containerLayout->addWidget(m_processTab);
-    containerLayout->addWidget(m_settingsTab);
-    containerLayout->addWidget(m_showcaseTab);
-    containerLayout->addWidget(m_guideTab);
-
-    headerLayout->addWidget(tabContainer);
-
-    connect(m_processTab, &QPushButton::clicked, this, [this]() {
-        switchToTab(0);
-    });
-    connect(m_settingsTab, &QPushButton::clicked, this, [this]() {
-        switchToTab(1);
-    });
-    connect(m_showcaseTab, &QPushButton::clicked, this, [this]() {
-        switchToTab(2);
-    });
-    connect(m_guideTab, &QPushButton::clicked, this, [this]() {
-        switchToTab(3);
+    connect(m_tabGroup, &TabGroup::tabSelected, this, [this](int index) {
+        switchToTab(index);
     });
 }
 
@@ -203,11 +183,8 @@ void MainWindowUI::switchToTab(int index)
         return;
     }
 
-    // Update tab button states
-    m_processTab->setActive(index == 0);
-    m_settingsTab->setActive(index == 1);
-    m_showcaseTab->setActive(index == 2);
-    m_guideTab->setActive(index == 3);
+    // Update tab button states via TabGroup
+    m_tabGroup->setActiveIndex(index);
 
     QWidget* currentWidget = m_mainContentStack->widget(currentIndex);
     QWidget* nextWidget = m_mainContentStack->widget(index);

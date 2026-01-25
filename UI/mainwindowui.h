@@ -27,6 +27,7 @@
 
 class MainWindow;
 class TabButton;
+class TabGroup;
 class SettingsWidget;
 
 class MainWindowUI : public QObject {
@@ -121,6 +122,7 @@ private:
     UIState* uiState;
 
     // Tab navigation
+    TabGroup* m_tabGroup;
     TabButton* m_processTab;
     TabButton* m_showcaseTab;
     TabButton* m_guideTab;
