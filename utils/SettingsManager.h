@@ -35,6 +35,13 @@ private:
 
     int m_minDensity = DEFAULT_MIN_DENSITY;
     int m_maxDensity = DEFAULT_MAX_DENSITY;
+    std::string m_slicerType = "Bambu"; // Default to Bambu
 
     bool ensureConfigDirectory();
+
+public:
+    static constexpr const char* DEFAULT_SLICER_TYPE = "Bambu";
+    
+    std::string slicerType() const { return m_slicerType; }
+    void setSlicerType(const std::string& type) { m_slicerType = type; }
 };

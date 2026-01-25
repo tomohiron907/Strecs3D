@@ -50,6 +50,7 @@ bool SettingsManager::save() {
     json j;
     j["density_slider"]["min_density"] = m_minDensity;
     j["density_slider"]["max_density"] = m_maxDensity;
+    j["slicer"]["type"] = m_slicerType;
 
     QString filePath = getSettingsFilePath();
     std::ofstream file(filePath.toStdString());
@@ -85,6 +86,13 @@ bool SettingsManager::load() {
             }
             if (ds.contains("max_density")) {
                 m_maxDensity = ds["max_density"].get<int>();
+            }
+        }
+        
+        if (j.contains("slicer")) {
+            auto& sl = j["slicer"];
+            if (sl.contains("type")) {
+                m_slicerType = sl["type"].get<std::string>();
             }
         }
         return true;

@@ -8,16 +8,29 @@
 #include <QIntValidator>
 #include <QGroupBox>
 #include <QMouseEvent>
+#include <QComboBox>
+#include "../../core/ui/UIState.h"
 
 SettingsWidget::SettingsWidget(QWidget* parent)
     : QWidget(parent)
     , m_minDensityEdit(nullptr)
     , m_maxDensityEdit(nullptr)
     , m_densityValidator(nullptr)
+    , m_slicerComboBox(nullptr)
 {
     setupUI();
     loadSettings();
     setFocusPolicy(Qt::ClickFocus); // Allow the widget to accept focus
+}
+
+void SettingsWidget::setUIState(UIState* uiState)
+{
+    m_uiState = uiState;
+    if (m_uiState) {
+        // Sync initial state if needed, or trigger updates
+        // Currently we push our settings to UIState when loaded or changed
+        loadSettings(); 
+    }
 }
 
 void SettingsWidget::setupUI()
@@ -26,6 +39,72 @@ void SettingsWidget::setupUI()
     mainLayout->setContentsMargins(40, 40, 40, 40);
     mainLayout->setSpacing(20);
     mainLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop); // Center horizontally, stack from top
+
+    mainLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop); // Center horizontally, stack from top
+
+    // --- Slicer Selection Group ---
+    
+    QWidget* slicerWrapper = new QWidget(this);
+    slicerWrapper->setFixedWidth(600);
+    QVBoxLayout* slicerWrapperLayout = new QVBoxLayout(slicerWrapper);
+    slicerWrapperLayout->setContentsMargins(0, 0, 0, 0);
+    slicerWrapperLayout->setSpacing(5);
+
+    QLabel* slicerTitle = new QLabel("Slicer Selection", slicerWrapper);
+    slicerTitle->setStyleSheet(
+        QString("QLabel {"
+        "  color: #FFFFFF;"
+        "  font-size: %1px;"
+        "  font-weight: bold;"
+        "  border: none;"
+        "}")
+        .arg(StyleManager::FONT_SIZE_LARGE)
+    );
+    slicerWrapperLayout->addWidget(slicerTitle);
+
+    QFrame* slicerContainer = new QFrame(slicerWrapper);
+    slicerContainer->setStyleSheet(
+        QString("QFrame {"
+        "  background-color: transparent;"
+        "  border: 1px solid #444444;"
+        "  border-radius: %1px;"
+        "}")
+        .arg(StyleManager::CONTAINER_RADIUS)
+    );
+
+    QVBoxLayout* slicerLayout = new QVBoxLayout(slicerContainer);
+    slicerLayout->setContentsMargins(80, 20, 80, 20);
+
+    m_slicerComboBox = new QComboBox(slicerContainer);
+    m_slicerComboBox->addItems({"Bambu", "Cura", "Prusa"});
+    
+    // Style the ComboBox
+    m_slicerComboBox->setStyleSheet(
+        QString("QComboBox {"
+        "  background-color: #333333;"
+        "  color: #FFFFFF;"
+        "  border: 1px solid #555555;"
+        "  border-radius: %1px;"
+        "  padding: 5px;"
+        "  font-size: %2px;"
+        "}"
+        "QComboBox::drop-down {"
+        "  border: none;"
+        "}"
+        "QComboBox::down-arrow {"
+        "  image: url(:/resources/icons/arrow_down.png);"
+        "  width: 12px;"
+        "  height: 12px;"
+        "}")
+        .arg(StyleManager::RADIUS_SMALL)
+        .arg(StyleManager::FONT_SIZE_LARGE)
+    );
+    m_slicerComboBox->setFixedHeight(30);
+
+    slicerLayout->addWidget(m_slicerComboBox);
+    slicerWrapperLayout->addWidget(slicerContainer);
+    mainLayout->addWidget(slicerWrapper);
+
 
     // --- Density Slider Group ---
     
@@ -156,6 +235,9 @@ void SettingsWidget::setupUI()
     connect(m_maxDensityEdit, &QLineEdit::editingFinished,
             this, &SettingsWidget::onMaxDensityEditingFinished);
 
+    connect(m_slicerComboBox, &QComboBox::currentTextChanged,
+            this, &SettingsWidget::onSlicerTypeChanged);
+
     // Set background
     setStyleSheet("SettingsWidget { background-color: #1a1a1a; }");
 }
@@ -165,6 +247,17 @@ void SettingsWidget::loadSettings()
     SettingsManager& settings = SettingsManager::instance();
     m_minDensityEdit->setText(QString::number(settings.minDensity()));
     m_maxDensityEdit->setText(QString::number(settings.maxDensity()));
+    
+    QString currentSlicer = QString::fromStdString(settings.slicerType());
+    int index = m_slicerComboBox->findText(currentSlicer);
+    if (index != -1) {
+        m_slicerComboBox->setCurrentIndex(index);
+    }
+    
+    // Also push to UIState
+    if (m_uiState) {
+        onSlicerTypeChanged(currentSlicer);
+    }
 }
 
 void SettingsWidget::onMinDensityEditingFinished()
@@ -186,6 +279,25 @@ void SettingsWidget::onMaxDensityEditingFinished()
         SettingsManager& settings = SettingsManager::instance();
         settings.setMaxDensity(value);
         settings.save();
+    }
+}
+
+void SettingsWidget::onSlicerTypeChanged(const QString& text)
+{
+    // Save settings
+    SettingsManager& settings = SettingsManager::instance();
+    settings.setSlicerType(text.toStdString());
+    settings.save();
+
+    // Update UIState
+    if (m_uiState) {
+        if (text == "Bambu") {
+            m_uiState->setProcessingMode(ProcessingMode::BAMBU);
+        } else if (text == "Cura") {
+            m_uiState->setProcessingMode(ProcessingMode::CURA);
+        } else if (text == "Prusa") {
+            m_uiState->setProcessingMode(ProcessingMode::PRUSA);
+        }
     }
 }
 
