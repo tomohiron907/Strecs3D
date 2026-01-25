@@ -130,34 +130,43 @@ void ProcessCard::paintEvent(QPaintEvent* event)
 
     // --- Draw Vertical Lines ---
     int lineWidth = 2;
-    int radius = 8; // Defined earlier so we can use it for line clipping
+    int radius = 8;
     
+    // Calculate clip radius based on state to avoid overlap artifacts with semi-transparent colors
+    // For filled circles (Active/Completed), usually opaque, radius 8 matches the fill edge.
+    // For hollow circles (Inactive), stroke width 2 centered at 8 means ink extends to 9.
+    // We stop the line at 9 to avoid overlapping the stroke.
+    int topClip = radius;
+    int bottomClip = radius;
+    
+    if (!m_isActive && !m_isCompleted) {
+         // This circle is inactive (hollow)
+         topClip = radius + 1;
+         bottomClip = radius + 1;
+    }
+
     // Top Line (connects to previous step)
     if (!m_isFirst) {
         // Draw top half line
-        // If THIS step is active or completed, the path TO it (top line) should be colored?
-        // Usually: The line between Step A (Done) and Step B (Active) is colored 'Done'.
-        // So, if this step is Active or Completed, the line coming from above is 'Done' colored.
         QColor topChunkColor = (m_isActive || m_isCompleted) ? completedColor : inactiveColor;
         
         QPen pen(topChunkColor);
         pen.setWidth(lineWidth);
         painter.setPen(pen);
-        // Stop at circle boundary (radius) to avoid seeing line inside hollow inactive circles
-        painter.drawLine(lineX, 0, lineX, cy - radius);
+        // Stop at circle boundary 
+        painter.drawLine(lineX, 0, lineX, cy - topClip);
     }
 
     // Bottom Line (connects to next step)
     if (!m_isLast) {
         // Draw bottom half line
-        // If THIS step is completed, the line going down proceeds.
         QColor bottomChunkColor = m_isCompleted ? completedColor : inactiveColor;
         
         QPen pen(bottomChunkColor);
         pen.setWidth(lineWidth);
         painter.setPen(pen);
-        // Start from circle boundary (radius)
-        painter.drawLine(lineX, cy + radius, lineX, height());
+        // Start from circle boundary
+        painter.drawLine(lineX, cy + bottomClip, lineX, height());
     }
 
     // --- Draw Circle/Dot ---
@@ -245,6 +254,8 @@ void ProcessCard::updateStyle() {
         "  background-color: %1;"
         "  border: 1px solid %2;"
         "  border-radius: %3px;"
+        "  margin: 0px;"
+        "  padding: 0px;"
         "}"
     ).arg(bgColor, borderColor).arg(StyleManager::BUTTON_RADIUS);
 
@@ -291,13 +302,16 @@ void ProcessFlowWidget::setupUI()
             emit stepClicked(static_cast<ProcessStep>(i));
         });
     }
+    
+    // Add stretch to consume any extra space at the bottom, ensuring cards are packed at top
+    mainLayout->addStretch();
 
     // Initial State
     setCurrentStep(ProcessStep::ImportStep);
 
     // Fixed height based on contents
-    int totalHeight = 10 + 10 + (60 * 4) + (0 * 3); // margins + cards + spacing roughly
-    setFixedHeight(totalHeight + 20); // Extra buffer
+    int totalHeight = 10 + 10 + (60 * 4) + (0 * 3); // margins + cards + spacing
+    setFixedHeight(totalHeight); // Remove extra buffer to prevent gaps
 }
 
 void ProcessFlowWidget::setCurrentStep(ProcessStep step)
