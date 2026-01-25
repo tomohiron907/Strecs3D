@@ -11,7 +11,7 @@
 struct ObjectInfo;
 class MainWindowUI;
 class VtkProcessor;
-class ObjectDisplayOptionsWidget;
+
 class TurntableInteractorStyle;
 class StepPickerStyle;
 
@@ -51,12 +51,7 @@ public:
     void removeScalarBar();
 
     // --- Widget Management ---
-    std::vector<ObjectDisplayOptionsWidget*> fetchMeshDisplayWidgets();
-    void updateWidgetAndConnectSignals(
-        const std::vector<ObjectDisplayOptionsWidget*>& widgets,
-        int& widgetIndex,
-        const std::string& filename,
-        const std::string& filePath);
+
 
     // --- Error Handling ---
     void handleStlFileLoadError(const std::exception& e, QWidget* parent);
@@ -80,5 +75,5 @@ private:
     vtkSmartPointer<StepPickerStyle> stepPickerStyle_;
 
     // Helper methods
-    void connectWidgetSignals(ObjectDisplayOptionsWidget* widget, const std::string& filePath);
+
 };

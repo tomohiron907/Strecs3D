@@ -176,18 +176,14 @@ void VisualizationManager::showTempDividedStl(VtkProcessor* vtkProcessor, QWidge
         auto actors = actorFactory_->createDividedMeshActors(
             stlFiles, vtkProcessor, minStress, maxStress, meshInfos, uiState);
 
-        // Get widgets for divided mesh display options
-        auto widgets = sceneRenderer_->fetchMeshDisplayWidgets();
 
-        // Register actors and setup widgets
-        int widgetIndex = 0;
+
+        // Register actors
         for (size_t i = 0; i < stlFiles.size() && i < actors.size(); ++i) {
             const auto& [path, number] = stlFiles[i];
-            std::string filename = path.filename().string();
 
             registerObject({actors[i], path.string(), true, 1.0});
             sceneRenderer_->addActorToRenderer(actors[i]);
-            sceneRenderer_->updateWidgetAndConnectSignals(widgets, widgetIndex, filename, path.string());
         }
 
         sceneRenderer_->renderObjects(objectList_);

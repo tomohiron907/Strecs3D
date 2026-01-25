@@ -138,8 +138,7 @@ add_executable(Strecs3D
   UI/widgets/TabButton.cpp
   UI/widgets/SettingsWidget.cpp
 
-  UI/widgets/ObjectDisplayOptionsWidget.cpp
-  UI/widgets/DisplayOptionsContainer.cpp
+
   UI/widgets/ObjectListWidget.cpp
   UI/widgets/PropertyWidget.cpp
   UI/widgets/properties/StepPropertyWidget.cpp

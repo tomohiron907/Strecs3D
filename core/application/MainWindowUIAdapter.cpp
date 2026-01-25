@@ -145,11 +145,7 @@ void MainWindowUIAdapter::showProcessingSuccess()
     }
 }
 
-ObjectDisplayOptionsWidget* MainWindowUIAdapter::getDividedMeshWidget(int meshIndex) const
-{
-    // DisplayOptionsContainerが削除されたため、常にnullptrを返す
-    return nullptr;
-}
+
 
 // 3D可視化制御の実装
 void MainWindowUIAdapter::displayVtkFile(const std::string& vtkFile, VtkProcessor* vtkProcessor)

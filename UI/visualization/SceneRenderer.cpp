@@ -4,7 +4,7 @@
 #include "StepPickerStyle.h"
 #include "../../core/processing/VtkProcessor.h"
 #include "../mainwindowui.h"
-#include "../widgets/ObjectDisplayOptionsWidget.h"
+
 #include <QMessageBox>
 #include <QString>
 #include <vtkScalarBarActor.h>
@@ -220,36 +220,7 @@ void SceneRenderer::removeScalarBar() {
     }
 }
 
-std::vector<ObjectDisplayOptionsWidget*> SceneRenderer::fetchMeshDisplayWidgets() {
-    // DisplayOptionsContainerが削除されたため、空のベクターを返す
-    // メッシュの表示機能自体は保持されるが、UIウィジェットとの接続は行わない
-    return {};
-}
 
-void SceneRenderer::updateWidgetAndConnectSignals(
-    const std::vector<ObjectDisplayOptionsWidget*>& widgets,
-    int& widgetIndex,
-    const std::string& filename,
-    const std::string& filePath)
-{
-    if (widgetIndex < widgets.size() && widgets[widgetIndex]) {
-        widgets[widgetIndex]->setFileName(QString::fromStdString(filename));
-        connectWidgetSignals(widgets[widgetIndex], filePath);
-        widgetIndex++;
-    }
-}
-
-void SceneRenderer::connectWidgetSignals(ObjectDisplayOptionsWidget* widget, const std::string& filePath) {
-    connect(widget, &ObjectDisplayOptionsWidget::visibilityToggled,
-            [this, filePath](bool visible) {
-                emit objectVisibilityChanged(filePath, visible);
-            });
-
-    connect(widget, &ObjectDisplayOptionsWidget::opacityChanged,
-            [this, filePath](double opacity) {
-                emit objectOpacityChanged(filePath, opacity);
-            });
-}
 
 void SceneRenderer::handleStlFileLoadError(const std::exception& e, QWidget* parent) {
     std::cerr << "Error loading STL files: " << e.what() << std::endl;

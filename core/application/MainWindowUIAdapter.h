@@ -7,7 +7,7 @@
 #include "../interfaces/IUserInterface.h"
 #include "../../UI/mainwindowui.h"
 
-class ObjectDisplayOptionsWidget;
+
 class VisualizationManager;
 
 class MainWindowUIAdapter : public IUserInterface {
@@ -66,7 +66,7 @@ public:
     void checkHighDensityWarning();
 
 private:
-    ObjectDisplayOptionsWidget* getDividedMeshWidget(int meshIndex) const;
+
     MainWindowUI* ui;
     std::unique_ptr<VisualizationManager> visualizationManager;
 };
