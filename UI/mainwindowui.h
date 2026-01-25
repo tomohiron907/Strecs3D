@@ -122,9 +122,13 @@ private:
 
     // Tab navigation
     TabButton* m_processTab;
+    TabButton* m_showcaseTab;
+    TabButton* m_guideTab;
     TabButton* m_settingsTab;
     QStackedWidget* m_mainContentStack;
     QWidget* m_processContent;
+    QWidget* m_showcaseContent;
+    QWidget* m_guideContent;
     SettingsWidget* m_settingsWidget;
 };
 

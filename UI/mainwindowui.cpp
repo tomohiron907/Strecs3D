@@ -113,17 +113,27 @@ void MainWindowUI::createTabButtons(QHBoxLayout* headerLayout)
 {
     m_processTab = new TabButton("Process", centralWidget);
     m_settingsTab = new TabButton("Settings", centralWidget);
+    m_showcaseTab = new TabButton("Showcase", centralWidget);
+    m_guideTab = new TabButton("Guide", centralWidget);
 
     m_processTab->setActive(true);
 
     headerLayout->addWidget(m_processTab);
     headerLayout->addWidget(m_settingsTab);
+    headerLayout->addWidget(m_showcaseTab);
+    headerLayout->addWidget(m_guideTab);
 
     connect(m_processTab, &QPushButton::clicked, this, [this]() {
         switchToTab(0);
     });
     connect(m_settingsTab, &QPushButton::clicked, this, [this]() {
         switchToTab(1);
+    });
+    connect(m_showcaseTab, &QPushButton::clicked, this, [this]() {
+        switchToTab(2);
+    });
+    connect(m_guideTab, &QPushButton::clicked, this, [this]() {
+        switchToTab(3);
     });
 }
 
@@ -149,6 +159,14 @@ void MainWindowUI::createMainContentStack(QVBoxLayout* outerLayout)
     m_settingsWidget = new SettingsWidget(m_mainContentStack);
     m_mainContentStack->addWidget(m_settingsWidget);
 
+    // Showcase content (Index 2)
+    m_showcaseContent = new QWidget(m_mainContentStack);
+    m_mainContentStack->addWidget(m_showcaseContent);
+
+    // Guide content (Index 3)
+    m_guideContent = new QWidget(m_mainContentStack);
+    m_mainContentStack->addWidget(m_guideContent);
+
     // Start with Process tab
     m_mainContentStack->setCurrentIndex(0);
 
@@ -165,6 +183,8 @@ void MainWindowUI::switchToTab(int index)
     // Update tab button states
     m_processTab->setActive(index == 0);
     m_settingsTab->setActive(index == 1);
+    m_showcaseTab->setActive(index == 2);
+    m_guideTab->setActive(index == 3);
 
     QWidget* currentWidget = m_mainContentStack->widget(currentIndex);
     QWidget* nextWidget = m_mainContentStack->widget(index);
