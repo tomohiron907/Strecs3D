@@ -2,7 +2,7 @@
 #include "../../core/processing/VtkProcessor.h"
 #include "../../core/processing/StepReader.h"
 #include "../../core/ui/UIState.h"
-#include "../ColorManager.h"
+#include "../../utils/ColorManager.h"
 #include <vtkProperty.h>
 #include <vtkPoints.h>
 #include <vtkCellArray.h>

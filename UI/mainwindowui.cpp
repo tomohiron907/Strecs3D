@@ -15,7 +15,7 @@
 #include "widgets/Button.h"
 #include "widgets/TabButton.h"
 #include "widgets/SettingsWidget.h"
-#include "ColorManager.h"
+#include "../utils/ColorManager.h"
 
 MainWindowUI::MainWindowUI(MainWindow* mainWindow)
     : mainWindow(mainWindow)

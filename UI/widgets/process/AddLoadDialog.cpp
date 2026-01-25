@@ -1,5 +1,5 @@
 #include "AddLoadDialog.h"
-#include "../../ColorManager.h"
+#include "../../../utils/ColorManager.h"
 #include "../../visualization/VisualizationManager.h"
 #include "../../../core/processing/StepReader.h"
 #include <QVBoxLayout>

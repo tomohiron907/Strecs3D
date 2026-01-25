@@ -1,7 +1,7 @@
 #include "ConstraintPropertyWidget.h"
 
 #include "../../../core/commands/state/UpdateConstraintConditionCommand.h"
-#include "../../ColorManager.h"
+#include "../../../utils/ColorManager.h"
 #include <QHBoxLayout>
 #include <QSpacerItem>
 #include <QIntValidator>

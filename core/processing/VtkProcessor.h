@@ -45,7 +45,7 @@
 #include <vtkDataSetSurfaceFilter.h>
 #include <vtkDataObject.h>
 
-#include "../../UI/ColorManager.h"
+#include "../../utils/ColorManager.h"
 
 #include <string>
 

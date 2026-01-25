@@ -3,7 +3,7 @@
 #include <QLabel>
 #include <QStyle>
 #include <QMouseEvent>
-#include "../../ColorManager.h"
+#include "../../../utils/ColorManager.h"
 
 // --- ProcessCard Implementation ---
 

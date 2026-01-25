@@ -132,7 +132,7 @@ add_executable(Strecs3D
 
   UI/widgets/DensitySlider.cpp
   UI/widgets/StressRangeWidget.cpp
-  UI/ColorManager.cpp
+  utils/ColorManager.cpp
   UI/widgets/Button.cpp
   UI/widgets/TabButton.cpp
   UI/widgets/SettingsWidget.cpp

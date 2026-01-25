@@ -4,7 +4,7 @@
 #include <QFileInfo>
 #include <QPainter>
 #include <QPen>
-#include "../ColorManager.h"
+#include "../../utils/ColorManager.h"
 
 ObjectDisplayOptionsWidget::ObjectDisplayOptionsWidget(const QString& fileName, QWidget* parent)
     : QWidget(parent), visibleState(true), fileName(fileName)

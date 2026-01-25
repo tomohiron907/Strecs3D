@@ -1,5 +1,5 @@
 #include "SelectBedSurfaceDialog.h"
-#include "../../ColorManager.h"
+#include "../../../utils/ColorManager.h"
 #include "../../visualization/VisualizationManager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>

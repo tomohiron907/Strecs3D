@@ -1,5 +1,5 @@
 #include "StressRangeWidget.h"
-#include "../ColorManager.h"
+#include "../../utils/ColorManager.h"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QDoubleValidator>

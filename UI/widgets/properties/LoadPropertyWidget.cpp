@@ -1,6 +1,6 @@
 #include "LoadPropertyWidget.h"
 #include "../../../core/commands/state/UpdateLoadConditionCommand.h"
-#include "../../ColorManager.h"
+#include "../../../utils/ColorManager.h"
 #include "../../visualization/VisualizationManager.h"
 #include "../../../core/processing/StepReader.h"
 #include <QHBoxLayout>
