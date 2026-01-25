@@ -446,18 +446,18 @@ QString ApplicationController::runSimulation(IUserInterface* ui, const QString& 
         ui->setSimulationRunning(false);
 
         if (!vtuFilePath.empty()) {
-            ui->showInfoMessage("成功", "FEMシミュレーションが正常に完了しました");
+            ui->showInfoMessage("Success", "FEM simulation completed successfully");
             return QString::fromStdString(vtuFilePath);
         } else {
             std::cerr << "Error: FEM simulation failed - VTU file not generated" << std::endl;
-            ui->showCriticalMessage("エラー", "FEMシミュレーションが失敗しました");
+            ui->showCriticalMessage("Error", "FEM simulation failed");
             return QString();
         }
     } catch (const std::exception& e) {
         // エラー時もUI状態をリセット
         ui->setSimulationRunning(false);
         std::cerr << "Error running FEM simulation: " << e.what() << std::endl;
-        ui->showCriticalMessage("エラー", QString("FEMシミュレーションの実行中にエラーが発生しました: ") + e.what());
+        ui->showCriticalMessage("Error", QString("An error occurred during FEM simulation: ") + e.what());
         return QString();
     }
 }
