@@ -27,7 +27,7 @@ void PropertyWidget::setupUI()
             border: none;
             background-color: transparent;
         }
-    )").arg(StyleManager::RADIUS_SMALL));
+    )").arg(StyleManager::CONTAINER_RADIUS));
 
     QVBoxLayout* containerLayout = new QVBoxLayout(containerFrame);
     containerLayout->setContentsMargins(0, 0, 0, 0);

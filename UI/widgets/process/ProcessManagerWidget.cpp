@@ -43,13 +43,14 @@ void ProcessManagerWidget::setupUI()
             border: none;
             background-color: transparent;
         }
-    )").arg(StyleManager::RADIUS_SMALL);
+    )").arg(StyleManager::CONTAINER_RADIUS);
 
     // --- Top Frame (Flow) ---
     QFrame* topFrame = new QFrame(this);
     topFrame->setStyleSheet(frameStyle);
     QVBoxLayout* topLayout = new QVBoxLayout(topFrame);
-    topLayout->setContentsMargins(5, 5, 5, 5); // Small padding for the flow widget
+    topLayout->setContentsMargins(StyleManager::CONTAINER_PADDING, StyleManager::CONTAINER_PADDING,
+                                   StyleManager::CONTAINER_PADDING, StyleManager::CONTAINER_PADDING);
 
     m_flowWidget = new ProcessFlowWidget(topFrame);
     topLayout->addWidget(m_flowWidget);
@@ -60,7 +61,8 @@ void ProcessManagerWidget::setupUI()
     QFrame* bottomFrame = new QFrame(this);
     bottomFrame->setStyleSheet(frameStyle);
     QVBoxLayout* bottomLayout = new QVBoxLayout(bottomFrame);
-    bottomLayout->setContentsMargins(10, 10, 10, 10); // Padding for content
+    bottomLayout->setContentsMargins(StyleManager::CONTAINER_PADDING, StyleManager::CONTAINER_PADDING,
+                                      StyleManager::CONTAINER_PADDING, StyleManager::CONTAINER_PADDING);
 
     m_stepContainer = new QStackedWidget(bottomFrame);
     m_stepContainer->setStyleSheet("background-color: transparent; border: none;"); // Transparent to show frame bg, no border

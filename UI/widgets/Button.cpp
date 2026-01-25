@@ -6,6 +6,7 @@
 #include <QPropertyAnimation>
 #include <QGraphicsOpacityEffect>
 #include "../../utils/ColorManager.h"
+#include "../../utils/StyleManager.h"
 
 // 静的メンバ変数の定義
 QSize Button::s_globalIconSize(20, 20);
@@ -35,7 +36,7 @@ void Button::initializeDefaultValues()
 {
     m_hoverColor = ColorManager::BUTTON_HOVER_COLOR.lighter(120);
     m_pressedColor = ColorManager::BUTTON_PRESSED_COLOR.darker(120);
-    m_borderRadius = DEFAULT_BORDER_RADIUS;
+    m_borderRadius = StyleManager::BUTTON_RADIUS;
     m_paddingHorizontal = DEFAULT_PADDING_HORIZONTAL;
     m_paddingVertical = DEFAULT_PADDING_VERTICAL;
     m_animationEnabled = true;

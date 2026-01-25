@@ -55,7 +55,7 @@ void ObjectListWidget::setupUI()
             border-top-right-radius: %1px;
         }
     )")
-    .arg(StyleManager::RADIUS_SMALL)
+    .arg(StyleManager::CONTAINER_RADIUS)
     .arg(StyleManager::FONT_SIZE_NORMAL)
     .arg(StyleManager::FONT_SIZE_LARGE)
     .arg(StyleManager::PADDING_SMALL)

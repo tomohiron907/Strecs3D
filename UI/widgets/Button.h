@@ -59,8 +59,6 @@ private:
     QColor getTextColor(bool isDisabled = false) const;
     void createColorAnimation(const QColor& startColor, const QColor& endColor, int duration);
     
-    // 定数
-    static constexpr int DEFAULT_BORDER_RADIUS = 3;
     static constexpr int DEFAULT_PADDING_HORIZONTAL = 20;
     static constexpr int DEFAULT_PADDING_VERTICAL = 12;
     static constexpr int DEFAULT_MINIMUM_HEIGHT = 50;

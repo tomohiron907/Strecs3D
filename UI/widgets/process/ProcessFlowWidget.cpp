@@ -136,7 +136,7 @@ void ProcessCard::updateStyle() {
         "  border: 1px solid %2;"
         "  border-radius: %3px;"
         "}"
-    ).arg(bgColor, borderColor).arg(StyleManager::RADIUS_SMALL);
+    ).arg(bgColor, borderColor).arg(StyleManager::BUTTON_RADIUS);
 
     textStyle = QString("color: %1;").arg(textColor);
 
