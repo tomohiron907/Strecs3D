@@ -121,10 +121,10 @@ private:
     UIState* uiState;
 
     // Tab navigation
-    TabButton* m_homeTab;
+    TabButton* m_processTab;
     TabButton* m_settingsTab;
     QStackedWidget* m_mainContentStack;
-    QWidget* m_homeContent;
+    QWidget* m_processContent;
     SettingsWidget* m_settingsWidget;
 };
 

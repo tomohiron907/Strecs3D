@@ -111,15 +111,15 @@ void MainWindowUI::createHeaderWidget(QVBoxLayout* outerLayout)
 
 void MainWindowUI::createTabButtons(QHBoxLayout* headerLayout)
 {
-    m_homeTab = new TabButton("Home", centralWidget);
+    m_processTab = new TabButton("Process", centralWidget);
     m_settingsTab = new TabButton("Settings", centralWidget);
 
-    m_homeTab->setActive(true);
+    m_processTab->setActive(true);
 
-    headerLayout->addWidget(m_homeTab);
+    headerLayout->addWidget(m_processTab);
     headerLayout->addWidget(m_settingsTab);
 
-    connect(m_homeTab, &QPushButton::clicked, this, [this]() {
+    connect(m_processTab, &QPushButton::clicked, this, [this]() {
         switchToTab(0);
     });
     connect(m_settingsTab, &QPushButton::clicked, this, [this]() {
@@ -131,25 +131,25 @@ void MainWindowUI::createMainContentStack(QVBoxLayout* outerLayout)
 {
     m_mainContentStack = new QStackedWidget(centralWidget);
 
-    // Home content (Index 0)
-    m_homeContent = new QWidget(m_mainContentStack);
-    QHBoxLayout* homeLayout = new QHBoxLayout(m_homeContent);
-    homeLayout->setContentsMargins(0, 0, 0, 0);
+    // Process content (Index 0)
+    m_processContent = new QWidget(m_mainContentStack);
+    QHBoxLayout* processLayout = new QHBoxLayout(m_processContent);
+    processLayout->setContentsMargins(0, 0, 0, 0);
 
     createVtkWidget();
-    homeLayout->addWidget(vtkWidget, 1);
+    processLayout->addWidget(vtkWidget, 1);
 
     createButtons();
     createLeftPaneWidget(vtkWidget);
     createRightPaneWidget(vtkWidget);
 
-    m_mainContentStack->addWidget(m_homeContent);
+    m_mainContentStack->addWidget(m_processContent);
 
     // Settings content (Index 1)
     m_settingsWidget = new SettingsWidget(m_mainContentStack);
     m_mainContentStack->addWidget(m_settingsWidget);
 
-    // Start with Home tab
+    // Start with Process tab
     m_mainContentStack->setCurrentIndex(0);
 
     outerLayout->addWidget(m_mainContentStack, 1);
@@ -163,7 +163,7 @@ void MainWindowUI::switchToTab(int index)
     }
 
     // Update tab button states
-    m_homeTab->setActive(index == 0);
+    m_processTab->setActive(index == 0);
     m_settingsTab->setActive(index == 1);
 
     QWidget* currentWidget = m_mainContentStack->widget(currentIndex);
