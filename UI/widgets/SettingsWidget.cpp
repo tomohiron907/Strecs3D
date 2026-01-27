@@ -9,6 +9,7 @@
 #include <QGroupBox>
 #include <QMouseEvent>
 #include <QComboBox>
+#include <QMessageBox>
 
 SettingsWidget::SettingsWidget(QWidget* parent)
     : QWidget(parent)
@@ -256,6 +257,8 @@ void SettingsWidget::loadSettings()
     if (index != -1) {
         m_slicerComboBox->setCurrentIndex(index);
     }
+
+    m_initialLoadComplete = true;
 }
 
 void SettingsWidget::onMinDensityEditingFinished()
@@ -286,6 +289,17 @@ void SettingsWidget::onSlicerTypeChanged(const QString& text)
     SettingsManager& settings = SettingsManager::instance();
     settings.setSlicerType(text.toStdString());
     settings.save();
+
+    // Show restart required message (only after initial load)
+    if (m_initialLoadComplete) {
+        QMessageBox::information(
+            this,
+            tr("Restart Required"),
+            tr("The slicer type has been changed to %1.\n"
+               "Please restart the application to apply this setting.")
+               .arg(text)
+        );
+    }
 }
 
 void SettingsWidget::mousePressEvent(QMouseEvent* event)

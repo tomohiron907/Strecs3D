@@ -43,6 +43,7 @@ private:
     QLineEdit* m_maxDensityEdit;
     QIntValidator* m_densityValidator;
     QComboBox* m_slicerComboBox;
+    bool m_initialLoadComplete = false;
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
