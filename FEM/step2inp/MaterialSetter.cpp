@@ -1,9 +1,11 @@
 #include "MaterialSetter.h"
+#include "../../utils/SettingsManager.h"
 #include <iostream>
 
 MaterialSetter::MaterialSetter() {
-    // Default to PLA
-    setMaterial("PLA");
+    // Get material from settings
+    std::string materialName = SettingsManager::instance().materialType();
+    setMaterial(materialName);
 }
 
 MaterialSetter::~MaterialSetter() {
