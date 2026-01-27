@@ -38,56 +38,66 @@ void SettingsWidget::setupUI()
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(40, 40, 40, 40);
     mainLayout->setSpacing(20);
-    mainLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop); // Center horizontally, stack from top
+    mainLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 
-    mainLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop); // Center horizontally, stack from top
+    mainLayout->addWidget(createSlicerSelectionGroup());
+    mainLayout->addWidget(createDensitySliderGroup());
+    mainLayout->addStretch();
 
-    // --- Slicer Selection Group ---
-    
-    QWidget* slicerWrapper = new QWidget(this);
-    slicerWrapper->setFixedWidth(600);
-    QVBoxLayout* slicerWrapperLayout = new QVBoxLayout(slicerWrapper);
-    slicerWrapperLayout->setContentsMargins(0, 0, 0, 0);
-    slicerWrapperLayout->setSpacing(5);
+    connectSignals();
 
-    QLabel* slicerTitle = new QLabel("Slicer Selection", slicerWrapper);
-    slicerTitle->setStyleSheet(
-        QString("QLabel {"
+    setStyleSheet("SettingsWidget { background-color: #1a1a1a; }");
+}
+
+QString SettingsWidget::getTitleLabelStyle() const
+{
+    return QString("QLabel {"
         "  color: #FFFFFF;"
         "  font-size: %1px;"
         "  font-weight: bold;"
         "  border: none;"
         "}")
-        .arg(StyleManager::FONT_SIZE_LARGE)
-    );
-    slicerWrapperLayout->addWidget(slicerTitle);
+        .arg(StyleManager::FONT_SIZE_LARGE);
+}
 
-    QFrame* slicerContainer = new QFrame(slicerWrapper);
-    slicerContainer->setStyleSheet(
-        QString("QFrame {"
+QString SettingsWidget::getContainerFrameStyle() const
+{
+    return QString("QFrame {"
         "  background-color: transparent;"
         "  border: 1px solid #444444;"
         "  border-radius: %1px;"
         "}")
-        .arg(StyleManager::CONTAINER_RADIUS)
-    );
+        .arg(StyleManager::CONTAINER_RADIUS);
+}
 
-    QVBoxLayout* slicerLayout = new QVBoxLayout(slicerContainer);
-    slicerLayout->setContentsMargins(80, 20, 80, 20);
-
-    // Export to row (same layout as density rows)
-    QHBoxLayout* exportRow = new QHBoxLayout();
-    QString slicerLabelStyle = QString("QLabel { color: #CCCCCC; font-size: %1px; border: none; }")
+QString SettingsWidget::getInputLabelStyle() const
+{
+    return QString("QLabel { color: #CCCCCC; font-size: %1px; border: none; }")
         .arg(StyleManager::FONT_SIZE_LARGE);
-    QLabel* exportLabel = new QLabel("Export to", slicerContainer);
-    exportLabel->setStyleSheet(slicerLabelStyle);
+}
 
-    m_slicerComboBox = new QComboBox(slicerContainer);
-    m_slicerComboBox->addItems({"Bambu", "Cura", "Prusa"});
+QString SettingsWidget::getLineEditStyle() const
+{
+    return QString("QLineEdit {"
+        "  background-color: #333333;"
+        "  color: #FFFFFF;"
+        "  border: 1px solid #555555;"
+        "  border-radius: %1px;"
+        "  padding: %2px %3px;"
+        "  font-size: %4px;"
+        "}"
+        "QLineEdit:focus {"
+        "  border-color: #0078D4;"
+        "}")
+        .arg(StyleManager::RADIUS_SMALL)
+        .arg(StyleManager::PADDING_MEDIUM)
+        .arg(StyleManager::FORM_SPACING)
+        .arg(StyleManager::FONT_SIZE_LARGE);
+}
 
-    // Style the ComboBox (matching density input style)
-    m_slicerComboBox->setStyleSheet(
-        QString("QComboBox {"
+QString SettingsWidget::getComboBoxStyle() const
+{
+    return QString("QComboBox {"
         "  background-color: #333333;"
         "  color: #FFFFFF;"
         "  border: 1px solid #555555;"
@@ -117,153 +127,133 @@ void SettingsWidget::setupUI()
         .arg(StyleManager::RADIUS_SMALL)
         .arg(StyleManager::PADDING_MEDIUM)
         .arg(StyleManager::FORM_SPACING)
-        .arg(StyleManager::FONT_SIZE_LARGE)
-    );
+        .arg(StyleManager::FONT_SIZE_LARGE);
+}
+
+QWidget* SettingsWidget::createSlicerSelectionGroup()
+{
+    QWidget* wrapper = new QWidget(this);
+    wrapper->setFixedWidth(600);
+
+    QVBoxLayout* wrapperLayout = new QVBoxLayout(wrapper);
+    wrapperLayout->setContentsMargins(0, 0, 0, 0);
+    wrapperLayout->setSpacing(5);
+
+    // Title
+    QLabel* title = new QLabel("Slicer Selection", wrapper);
+    title->setStyleSheet(getTitleLabelStyle());
+    wrapperLayout->addWidget(title);
+
+    // Container frame
+    QFrame* container = new QFrame(wrapper);
+    container->setStyleSheet(getContainerFrameStyle());
+
+    QVBoxLayout* containerLayout = new QVBoxLayout(container);
+    containerLayout->setContentsMargins(80, 20, 80, 20);
+
+    // Export to row
+    QHBoxLayout* exportRow = new QHBoxLayout();
+
+    QLabel* exportLabel = new QLabel("Export to", container);
+    exportLabel->setStyleSheet(getInputLabelStyle());
+
+    m_slicerComboBox = new QComboBox(container);
+    m_slicerComboBox->addItems({"Bambu", "Cura", "Prusa"});
+    m_slicerComboBox->setStyleSheet(getComboBoxStyle());
     m_slicerComboBox->setFixedWidth(100);
 
     exportRow->addWidget(exportLabel);
     exportRow->addStretch();
     exportRow->addWidget(m_slicerComboBox);
 
-    slicerLayout->addLayout(exportRow);
-    slicerWrapperLayout->addWidget(slicerContainer);
-    mainLayout->addWidget(slicerWrapper);
+    containerLayout->addLayout(exportRow);
+    wrapperLayout->addWidget(container);
 
+    return wrapper;
+}
 
-    // --- Density Slider Group ---
-    
-    // Wrapper to ensure Title and Frame are aligned and 600px wide
-    QWidget* densityWrapper = new QWidget(this);
-    densityWrapper->setFixedWidth(600);
-    QVBoxLayout* wrapperLayout = new QVBoxLayout(densityWrapper);
+QWidget* SettingsWidget::createDensitySliderGroup()
+{
+    QWidget* wrapper = new QWidget(this);
+    wrapper->setFixedWidth(600);
+
+    QVBoxLayout* wrapperLayout = new QVBoxLayout(wrapper);
     wrapperLayout->setContentsMargins(0, 0, 0, 0);
-    wrapperLayout->setSpacing(5); // Spacing between Title and Frame
+    wrapperLayout->setSpacing(5);
 
-    // Title Label (Outside Frame)
-    QLabel* densityTitle = new QLabel("Density Slider", densityWrapper);
-    densityTitle->setStyleSheet(
-        QString("QLabel {"
-        "  color: #FFFFFF;"
-        "  font-size: %1px;"
-        "  font-weight: bold;"
-        "  border: none;"
-        "}")
-        .arg(StyleManager::FONT_SIZE_LARGE)
-    );
-    wrapperLayout->addWidget(densityTitle);
+    // Title
+    QLabel* title = new QLabel("Density Slider", wrapper);
+    title->setStyleSheet(getTitleLabelStyle());
+    wrapperLayout->addWidget(title);
 
-    // Frame (Container)
-    QFrame* densityContainer = new QFrame(densityWrapper);
-    densityContainer->setStyleSheet(
-        QString("QFrame {"
-        "  background-color: transparent;"
-        "  border: 1px solid #444444;"
-        "  border-radius: %1px;"
-        "}")
-        .arg(StyleManager::CONTAINER_RADIUS)
-    );
+    // Container frame
+    QFrame* container = new QFrame(wrapper);
+    container->setStyleSheet(getContainerFrameStyle());
 
-    QVBoxLayout* densityLayout = new QVBoxLayout(densityContainer);
-    // Increase horizontal margins (80px) to bring label and input closer
-    densityLayout->setContentsMargins(80, 20, 80, 20);
-    densityLayout->setSpacing(15);
-
-    wrapperLayout->addWidget(densityContainer);
+    QVBoxLayout* containerLayout = new QVBoxLayout(container);
+    containerLayout->setContentsMargins(80, 20, 80, 20);
+    containerLayout->setSpacing(15);
 
     // Validator for density values (0-100)
     m_densityValidator = new QIntValidator(0, 100, this);
 
-    // Common stylesheet for labels
-    QString labelStyle = QString("QLabel { color: #CCCCCC; font-size: %1px; border: none; }")
-        .arg(StyleManager::FONT_SIZE_LARGE);
-
-    // Common stylesheet for line edits
-    QString lineEditStyle =
-        QString("QLineEdit {"
-        "  background-color: #333333;"
-        "  color: #FFFFFF;"
-        "  border: 1px solid #555555;"
-        "  border-radius: %1px;"
-        "  padding: %2px %3px;"
-        "  font-size: %4px;"
-        "}"
-        "QLineEdit:focus {"
-        "  border-color: #0078D4;"
-        "}")
-        .arg(StyleManager::RADIUS_SMALL)
-        .arg(StyleManager::PADDING_MEDIUM)
-        .arg(StyleManager::FORM_SPACING)
-        .arg(StyleManager::FONT_SIZE_LARGE);
-
     // Min Density row
-    QHBoxLayout* minDensityRow = new QHBoxLayout();
-    QLabel* minDensityLabel = new QLabel("Minimum Density", this);
-    minDensityLabel->setStyleSheet(labelStyle);
-    // Remove fixed width from label so it takes natural width or expands slightly
-    // but with stretch it will be pushed left.
-
-    m_minDensityEdit = new QLineEdit(this);
-    m_minDensityEdit->setValidator(m_densityValidator);
-    m_minDensityEdit->setStyleSheet(lineEditStyle);
-    m_minDensityEdit->setFixedWidth(100);
-    m_minDensityEdit->setAlignment(Qt::AlignLeft);
-    m_minDensityEdit->setTextMargins(0, 0, 20, 0); // Reserve space for unit
-
-    // Add "%" unit label inside the input
-    QHBoxLayout* minUnitLayout = new QHBoxLayout(m_minDensityEdit);
-    minUnitLayout->setContentsMargins(0, 0, 5, 0);
-    minUnitLayout->addStretch();
-    QLabel* minUnitLabel = new QLabel("%", m_minDensityEdit);
-    minUnitLabel->setStyleSheet("color: #666666; font-weight: bold; border: none; background: transparent;");
-    minUnitLayout->addWidget(minUnitLabel);
-    minUnitLayout->setAlignment(minUnitLabel, Qt::AlignRight);
-
-    minDensityRow->addWidget(minDensityLabel);
-    minDensityRow->addStretch(); // Push Input to the right
-    minDensityRow->addWidget(m_minDensityEdit);
+    m_minDensityEdit = createDensityInput();
+    containerLayout->addLayout(createDensityRow("Minimum Density", m_minDensityEdit));
 
     // Max Density row
-    QHBoxLayout* maxDensityRow = new QHBoxLayout();
-    QLabel* maxDensityLabel = new QLabel("Maximum Density", this);
-    maxDensityLabel->setStyleSheet(labelStyle);
+    m_maxDensityEdit = createDensityInput();
+    containerLayout->addLayout(createDensityRow("Maximum Density", m_maxDensityEdit));
 
-    m_maxDensityEdit = new QLineEdit(this);
-    m_maxDensityEdit->setValidator(m_densityValidator);
-    m_maxDensityEdit->setStyleSheet(lineEditStyle);
-    m_maxDensityEdit->setFixedWidth(100);
-    m_maxDensityEdit->setAlignment(Qt::AlignLeft);
-    m_maxDensityEdit->setTextMargins(0, 0, 20, 0); // Reserve space for unit
+    wrapperLayout->addWidget(container);
+
+    return wrapper;
+}
+
+QLineEdit* SettingsWidget::createDensityInput()
+{
+    QLineEdit* edit = new QLineEdit(this);
+    edit->setValidator(m_densityValidator);
+    edit->setStyleSheet(getLineEditStyle());
+    edit->setFixedWidth(100);
+    edit->setAlignment(Qt::AlignLeft);
+    edit->setTextMargins(0, 0, 20, 0);
 
     // Add "%" unit label inside the input
-    QHBoxLayout* maxUnitLayout = new QHBoxLayout(m_maxDensityEdit);
-    maxUnitLayout->setContentsMargins(0, 0, 5, 0);
-    maxUnitLayout->addStretch();
-    QLabel* maxUnitLabel = new QLabel("%", m_maxDensityEdit);
-    maxUnitLabel->setStyleSheet("color: #666666; font-weight: bold; border: none; background: transparent;");
-    maxUnitLayout->addWidget(maxUnitLabel);
-    maxUnitLayout->setAlignment(maxUnitLabel, Qt::AlignRight);
+    QHBoxLayout* unitLayout = new QHBoxLayout(edit);
+    unitLayout->setContentsMargins(0, 0, 5, 0);
+    unitLayout->addStretch();
 
-    maxDensityRow->addWidget(maxDensityLabel);
-    maxDensityRow->addStretch(); // Push Input to the right
-    maxDensityRow->addWidget(m_maxDensityEdit);
+    QLabel* unitLabel = new QLabel("%", edit);
+    unitLabel->setStyleSheet("color: #666666; font-weight: bold; border: none; background: transparent;");
+    unitLayout->addWidget(unitLabel);
+    unitLayout->setAlignment(unitLabel, Qt::AlignRight);
 
-    densityLayout->addLayout(minDensityRow);
-    densityLayout->addLayout(maxDensityRow);
+    return edit;
+}
 
-    mainLayout->addWidget(densityWrapper);
-    mainLayout->addStretch();
+QHBoxLayout* SettingsWidget::createDensityRow(const QString& labelText, QLineEdit* edit)
+{
+    QHBoxLayout* row = new QHBoxLayout();
 
-    // Connect signals
+    QLabel* label = new QLabel(labelText, this);
+    label->setStyleSheet(getInputLabelStyle());
+
+    row->addWidget(label);
+    row->addStretch();
+    row->addWidget(edit);
+
+    return row;
+}
+
+void SettingsWidget::connectSignals()
+{
     connect(m_minDensityEdit, &QLineEdit::editingFinished,
             this, &SettingsWidget::onMinDensityEditingFinished);
     connect(m_maxDensityEdit, &QLineEdit::editingFinished,
             this, &SettingsWidget::onMaxDensityEditingFinished);
-
     connect(m_slicerComboBox, &QComboBox::currentTextChanged,
             this, &SettingsWidget::onSlicerTypeChanged);
-
-    // Set background
-    setStyleSheet("SettingsWidget { background-color: #1a1a1a; }");
 }
 
 void SettingsWidget::loadSettings()
