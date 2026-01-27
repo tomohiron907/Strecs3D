@@ -190,6 +190,7 @@ add_executable(Strecs3D
   FEM/step2inp/MeshGenerator.cpp
   FEM/step2inp/ConstraintSetter.cpp
   FEM/step2inp/MaterialSetter.cpp
+  FEM/step2inp/MaterialManager.cpp
   FEM/step2inp/LoadConditionSetter.cpp
   FEM/step2inp/InpWriter.cpp
   FEM/simulation_config.cpp

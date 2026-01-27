@@ -3,12 +3,7 @@
 
 #include <string>
 #include <fstream>
-
-struct MaterialProperties {
-    std::string name;
-    double youngs_modulus;
-    double poisson_ratio;
-};
+#include "MaterialManager.h" // Include MaterialManager definitions
 
 class MaterialSetter {
 public:
@@ -16,8 +11,8 @@ public:
     ~MaterialSetter();
 
     // Set material properties
-    void setMaterial(const std::string& name, double youngs_modulus, double poisson_ratio);
-    void setMaterial(const MaterialProperties& material);
+    void setMaterial(const std::string& name); 
+    void setMaterial(const MaterialData& material);
 
     // Write material-related sections to file
     void writeEall(std::ofstream& f) const;
@@ -27,10 +22,10 @@ public:
     void writeSections(std::ofstream& f) const;
 
     // Get material properties
-    const MaterialProperties& getMaterial() const;
+    const MaterialData& getMaterial() const;
 
 private:
-    MaterialProperties material_;
+    MaterialData material_;
 };
 
 #endif // MATERIAL_SETTER_H
