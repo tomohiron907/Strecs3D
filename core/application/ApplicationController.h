@@ -70,7 +70,6 @@ private:
     bool validateFiles(IUserInterface* ui);
     std::vector<int> getStressThresholds(UIState* uiState);
     std::vector<StressDensityMapping> getStressDensityMappings(UIState* uiState);
-    QString getCurrentMode(UIState* uiState);
     
     // ファイル処理のヘルパーメソッド
     bool initializeVtkProcessor(IUserInterface* ui);

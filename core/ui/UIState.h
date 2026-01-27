@@ -18,11 +18,6 @@ struct SelectedObjectInfo {
     QString id = "";
     int index = -1;
 };
-enum class ProcessingMode {
-    BAMBU,
-    CURA,
-    PRUSA
-};
 
 // オブジェクトファイル情報
 struct ObjectFileInfo {
@@ -124,10 +119,6 @@ public:
     void setDensitySliderColors(const std::vector<QColor>& colors);
     std::vector<QColor> getDensitySliderColors() const { return m_densitySliderColors; }
 
-    // Processing Mode（階層外のデータ）
-    void setProcessingMode(ProcessingMode mode);
-    ProcessingMode getProcessingMode() const { return m_processingMode; }
-
     // 選択状態管理
     void setSelectedObject(ObjectType type, const QString& id = "", int index = -1);
     SelectedObjectInfo getSelectedObject() const { return m_selectedObject; }
@@ -165,8 +156,7 @@ signals:
     void stressRangeChanged(double minStress, double maxStress);
     void stressDensityMappingsChanged(const std::vector<StressDensityMapping>& mappings);
     void densitySliderColorsChanged(const std::vector<QColor>& colors);
-    void processingModeChanged(ProcessingMode mode);
-    
+
     // 選択状態変更シグナル
     void selectedObjectChanged(const SelectedObjectInfo& selection);
 
@@ -179,8 +169,7 @@ private:
     double m_maxStress = 1.0;
     std::vector<StressDensityMapping> m_stressDensityMappings;
     std::vector<QColor> m_densitySliderColors;
-    ProcessingMode m_processingMode = ProcessingMode::BAMBU;
-    
+
     // 選択状態
     SelectedObjectInfo m_selectedObject;
 };

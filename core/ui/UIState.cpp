@@ -381,21 +381,6 @@ void UIState::setDensitySliderColors(const std::vector<QColor>& colors)
     qDebug() << "UIState: Density slider colors updated, count:" << colors.size();
 }
 
-void UIState::setProcessingMode(ProcessingMode mode)
-{
-    if (m_processingMode != mode) {
-        m_processingMode = mode;
-        emit processingModeChanged(mode);
-        QString modeStr;
-        switch(mode) {
-            case ProcessingMode::BAMBU: modeStr = "BAMBU"; break;
-            case ProcessingMode::CURA: modeStr = "CURA"; break;
-            case ProcessingMode::PRUSA: modeStr = "PRUSA"; break;
-        }
-        qDebug() << "UIState: Processing mode changed to:" << modeStr;
-    }
-}
-
 // ========== 選択状態管理 ==========
 void UIState::setSelectedObject(ObjectType type, const QString& id, int index)
 {
@@ -429,14 +414,6 @@ void UIState::printDebugInfo() const
     }
 
     qDebug() << "Stress Range:" << m_minStress << "to" << m_maxStress;
-
-    QString modeStr;
-    switch(m_processingMode) {
-        case ProcessingMode::BAMBU: modeStr = "BAMBU"; break;
-        case ProcessingMode::CURA: modeStr = "CURA"; break;
-        case ProcessingMode::PRUSA: modeStr = "PRUSA"; break;
-    }
-    qDebug() << "Processing Mode:" << modeStr;
 
     qDebug() << "Stress Density Mappings (" << m_stressDensityMappings.size() << "entries):";
     for (size_t i = 0; i < m_stressDensityMappings.size(); ++i) {
@@ -488,14 +465,6 @@ QString UIState::getDebugString() const
     }
 
     debug += QString("Stress Range: %1 to %2\n").arg(m_minStress).arg(m_maxStress);
-
-    QString modeStr;
-    switch(m_processingMode) {
-        case ProcessingMode::BAMBU: modeStr = "BAMBU"; break;
-        case ProcessingMode::CURA: modeStr = "CURA"; break;
-        case ProcessingMode::PRUSA: modeStr = "PRUSA"; break;
-    }
-    debug += QString("Processing Mode: %1\n").arg(modeStr);
 
     debug += QString("Stress Density Mappings (%1 entries):\n").arg(m_stressDensityMappings.size());
     for (size_t i = 0; i < m_stressDensityMappings.size(); ++i) {

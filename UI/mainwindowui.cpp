@@ -160,7 +160,6 @@ void MainWindowUI::createMainContentStack(QVBoxLayout* outerLayout)
 
     // Settings content (Index 1)
     m_settingsWidget = new SettingsWidget(m_mainContentStack);
-    m_settingsWidget->setUIState(uiState);
     m_mainContentStack->addWidget(m_settingsWidget);
 
     // Showcase content (Index 2)

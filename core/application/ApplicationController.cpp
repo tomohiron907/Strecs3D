@@ -4,6 +4,7 @@
 #include "../../UI/mainwindowui.h"
 #include "../../utils/fileUtility.h"
 #include "../../utils/tempPathUtility.h"
+#include "../../utils/SettingsManager.h"
 #include "../processing/VtkProcessor.h"
 #include "../processing/StepToStlConverter.h"
 #include "../processing/StepTransformer.h"
@@ -209,10 +210,12 @@ bool ApplicationController::process3mfGeneration(IUserInterface* ui)
     if (!uiState) return false;
 
     auto mappings = getStressDensityMappings(uiState);
-    auto currentMode = getCurrentMode(uiState);
+    // SettingsManagerからスライサータイプを取得
+    std::string currentMode = SettingsManager::instance().slicerType();
+    std::transform(currentMode.begin(), currentMode.end(), currentMode.begin(), ::tolower);
     double maxStress = fileProcessor->getMaxStress();
 
-    if (!fileProcessor->process3mfFile(currentMode.toStdString(), mappings, maxStress, nullptr)) {
+    if (!fileProcessor->process3mfFile(currentMode, mappings, maxStress, nullptr)) {
         ui->showCriticalMessage("Error", "Failed to process 3MF file");
         return false;
     }
@@ -309,19 +312,6 @@ std::vector<StressDensityMapping> ApplicationController::getStressDensityMapping
     if (!uiState) return {};
 
     return uiState->getStressDensityMappings();
-}
-
-QString ApplicationController::getCurrentMode(UIState* uiState)
-{
-    if (!uiState) return "cura";
-
-    ProcessingMode mode = uiState->getProcessingMode();
-    switch(mode) {
-        case ProcessingMode::BAMBU: return "bambu";
-        case ProcessingMode::CURA: return "cura";
-        case ProcessingMode::PRUSA: return "prusa";
-        default: return "cura";
-    }
 }
 
 void ApplicationController::resetDividedMeshWidgets(IUserInterface* ui)

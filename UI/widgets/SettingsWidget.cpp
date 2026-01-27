@@ -9,7 +9,6 @@
 #include <QGroupBox>
 #include <QMouseEvent>
 #include <QComboBox>
-#include "../../core/ui/UIState.h"
 
 SettingsWidget::SettingsWidget(QWidget* parent)
     : QWidget(parent)
@@ -21,16 +20,6 @@ SettingsWidget::SettingsWidget(QWidget* parent)
     setupUI();
     loadSettings();
     setFocusPolicy(Qt::ClickFocus); // Allow the widget to accept focus
-}
-
-void SettingsWidget::setUIState(UIState* uiState)
-{
-    m_uiState = uiState;
-    if (m_uiState) {
-        // Sync initial state if needed, or trigger updates
-        // Currently we push our settings to UIState when loaded or changed
-        loadSettings(); 
-    }
 }
 
 void SettingsWidget::setupUI()
@@ -261,16 +250,11 @@ void SettingsWidget::loadSettings()
     SettingsManager& settings = SettingsManager::instance();
     m_minDensityEdit->setText(QString::number(settings.minDensity()));
     m_maxDensityEdit->setText(QString::number(settings.maxDensity()));
-    
+
     QString currentSlicer = QString::fromStdString(settings.slicerType());
     int index = m_slicerComboBox->findText(currentSlicer);
     if (index != -1) {
         m_slicerComboBox->setCurrentIndex(index);
-    }
-    
-    // Also push to UIState
-    if (m_uiState) {
-        onSlicerTypeChanged(currentSlicer);
     }
 }
 
@@ -298,21 +282,10 @@ void SettingsWidget::onMaxDensityEditingFinished()
 
 void SettingsWidget::onSlicerTypeChanged(const QString& text)
 {
-    // Save settings
+    // Save settings to SettingsManager
     SettingsManager& settings = SettingsManager::instance();
     settings.setSlicerType(text.toStdString());
     settings.save();
-
-    // Update UIState
-    if (m_uiState) {
-        if (text == "Bambu") {
-            m_uiState->setProcessingMode(ProcessingMode::BAMBU);
-        } else if (text == "Cura") {
-            m_uiState->setProcessingMode(ProcessingMode::CURA);
-        } else if (text == "Prusa") {
-            m_uiState->setProcessingMode(ProcessingMode::PRUSA);
-        }
-    }
 }
 
 void SettingsWidget::mousePressEvent(QMouseEvent* event)
