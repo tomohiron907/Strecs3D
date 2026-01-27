@@ -20,6 +20,7 @@ private slots:
     void onMinDensityEditingFinished();
     void onMaxDensityEditingFinished();
     void onSlicerTypeChanged(const QString& text);
+    void onMaterialTypeChanged(const QString& text);
 
 private:
     void setupUI();
@@ -27,6 +28,7 @@ private:
 
     // UI setup helpers
     QWidget* createSlicerSelectionGroup();
+    QWidget* createMaterialSelectionGroup();
     QWidget* createDensitySliderGroup();
     QLineEdit* createDensityInput();
     QHBoxLayout* createDensityRow(const QString& labelText, QLineEdit* edit);
@@ -43,6 +45,7 @@ private:
     QLineEdit* m_maxDensityEdit;
     QIntValidator* m_densityValidator;
     QComboBox* m_slicerComboBox;
+    QComboBox* m_materialComboBox;
     bool m_initialLoadComplete = false;
 
 protected:

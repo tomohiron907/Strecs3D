@@ -17,6 +17,7 @@ SettingsWidget::SettingsWidget(QWidget* parent)
     , m_maxDensityEdit(nullptr)
     , m_densityValidator(nullptr)
     , m_slicerComboBox(nullptr)
+    , m_materialComboBox(nullptr)
 {
     setupUI();
     loadSettings();
@@ -32,6 +33,7 @@ void SettingsWidget::setupUI()
 
     mainLayout->addWidget(createSlicerSelectionGroup());
     mainLayout->addWidget(createDensitySliderGroup());
+    mainLayout->addWidget(createMaterialSelectionGroup());
     mainLayout->addStretch();
 
     connectSignals();
@@ -162,6 +164,48 @@ QWidget* SettingsWidget::createSlicerSelectionGroup()
     return wrapper;
 }
 
+QWidget* SettingsWidget::createMaterialSelectionGroup()
+{
+    QWidget* wrapper = new QWidget(this);
+    wrapper->setFixedWidth(600);
+
+    QVBoxLayout* wrapperLayout = new QVBoxLayout(wrapper);
+    wrapperLayout->setContentsMargins(0, 0, 0, 0);
+    wrapperLayout->setSpacing(5);
+
+    // Title
+    QLabel* title = new QLabel("Material", wrapper);
+    title->setStyleSheet(getTitleLabelStyle());
+    wrapperLayout->addWidget(title);
+
+    // Container frame
+    QFrame* container = new QFrame(wrapper);
+    container->setStyleSheet(getContainerFrameStyle());
+
+    QVBoxLayout* containerLayout = new QVBoxLayout(container);
+    containerLayout->setContentsMargins(80, 20, 80, 20);
+
+    // Material selection row
+    QHBoxLayout* materialRow = new QHBoxLayout();
+
+    QLabel* materialLabel = new QLabel("Material Type", container);
+    materialLabel->setStyleSheet(getInputLabelStyle());
+
+    m_materialComboBox = new QComboBox(container);
+    m_materialComboBox->addItems({"PLA", "ABS"});
+    m_materialComboBox->setStyleSheet(getComboBoxStyle());
+    m_materialComboBox->setFixedWidth(100);
+
+    materialRow->addWidget(materialLabel);
+    materialRow->addStretch();
+    materialRow->addWidget(m_materialComboBox);
+
+    containerLayout->addLayout(materialRow);
+    wrapperLayout->addWidget(container);
+
+    return wrapper;
+}
+
 QWidget* SettingsWidget::createDensitySliderGroup()
 {
     QWidget* wrapper = new QWidget(this);
@@ -244,6 +288,8 @@ void SettingsWidget::connectSignals()
             this, &SettingsWidget::onMaxDensityEditingFinished);
     connect(m_slicerComboBox, &QComboBox::currentTextChanged,
             this, &SettingsWidget::onSlicerTypeChanged);
+    connect(m_materialComboBox, &QComboBox::currentTextChanged,
+            this, &SettingsWidget::onMaterialTypeChanged);
 }
 
 void SettingsWidget::loadSettings()
@@ -253,9 +299,15 @@ void SettingsWidget::loadSettings()
     m_maxDensityEdit->setText(QString::number(settings.maxDensity()));
 
     QString currentSlicer = QString::fromStdString(settings.slicerType());
-    int index = m_slicerComboBox->findText(currentSlicer);
-    if (index != -1) {
-        m_slicerComboBox->setCurrentIndex(index);
+    int slicerIndex = m_slicerComboBox->findText(currentSlicer);
+    if (slicerIndex != -1) {
+        m_slicerComboBox->setCurrentIndex(slicerIndex);
+    }
+
+    QString currentMaterial = QString::fromStdString(settings.materialType());
+    int materialIndex = m_materialComboBox->findText(currentMaterial);
+    if (materialIndex != -1) {
+        m_materialComboBox->setCurrentIndex(materialIndex);
     }
 
     m_initialLoadComplete = true;
@@ -300,6 +352,14 @@ void SettingsWidget::onSlicerTypeChanged(const QString& text)
                .arg(text)
         );
     }
+}
+
+void SettingsWidget::onMaterialTypeChanged(const QString& text)
+{
+    // Save settings to SettingsManager
+    SettingsManager& settings = SettingsManager::instance();
+    settings.setMaterialType(text.toStdString());
+    settings.save();
 }
 
 void SettingsWidget::mousePressEvent(QMouseEvent* event)

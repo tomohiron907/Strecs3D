@@ -41,7 +41,14 @@ private:
 
 public:
     static constexpr const char* DEFAULT_SLICER_TYPE = "Bambu";
-    
+    static constexpr const char* DEFAULT_MATERIAL_TYPE = "PLA";
+
     std::string slicerType() const { return m_slicerType; }
     void setSlicerType(const std::string& type) { m_slicerType = type; }
+
+    std::string materialType() const { return m_materialType; }
+    void setMaterialType(const std::string& type) { m_materialType = type; }
+
+private:
+    std::string m_materialType = "PLA";
 };
