@@ -46,6 +46,7 @@
 #include <vtkDataObject.h>
 
 #include "../../utils/ColorManager.h"
+#include "VolumeFractionCalculator.h"
 
 #include <string>
 
@@ -74,6 +75,7 @@ private:
     vtkSmartPointer<vtkLookupTable> currentLookupTable;
     std::string detectedStressLabel; // 検出されたストレスラベルを保存
     std::vector<MeshInfo> meshInfos; // 分割されたメッシュの情報を保持
+    VolumeFractionCalculator volumeFractionCalculator; // 体積分率計算器
 
 public:
     VtkProcessor(const std::string& vtuFileName);
@@ -112,6 +114,14 @@ public:
     const std::vector<MeshInfo>& getMeshInfos() const { return meshInfos; }
     void clearMeshInfos() { meshInfos.clear(); }
     void addMeshInfo(const MeshInfo& info) { meshInfos.push_back(info); }
+
+    // 体積分率計算（VolumeFractionCalculatorに委譲）
+    bool computeVolumeFractions(int numDivisions = 20);
+
+    // 体積分率Getter（VolumeFractionCalculatorに委譲）
+    const std::vector<double>& getVolumeFractions() const;
+    bool hasVolumeFractions() const;
+    double getTotalVolume() const;
 
 };
 

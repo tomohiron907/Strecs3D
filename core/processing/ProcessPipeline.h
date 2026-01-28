@@ -47,6 +47,10 @@ public:
     std::unique_ptr<VtkProcessor>& getVtkProcessor() { return vtkProcessor; }
     double getMaxStress() const;
 
+    // 体積分率
+    const std::vector<double>& getVolumeFractions() const;
+    bool hasVolumeFractions() const;
+
 private:
     std::unique_ptr<VtkProcessor> vtkProcessor;
     std::string vtkFile;

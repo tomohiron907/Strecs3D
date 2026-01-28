@@ -477,6 +477,20 @@ bool ApplicationController::runFEMPipeline(IUserInterface* ui, UIState* uiState,
         // UIStateにもVTUファイルパスを保存
         uiState->setSimulationResultFilePath(vtuFilePath);
 
+        // Step 4: 解析結果に対して体積分率を計算
+        // VtkProcessorを初期化してデータを読み込む
+        if (fileProcessor->getVtkProcessor()) {
+            fileProcessor->getVtkProcessor()->setVtuFileName(vtuFilePath.toStdString());
+            if (fileProcessor->getVtkProcessor()->LoadAndPrepareData()) {
+                if (!fileProcessor->getVtkProcessor()->computeVolumeFractions()) {
+                    std::cerr << "Warning: Failed to compute volume fractions." << std::endl;
+                    // 計算失敗は致命的エラーではないため処理続行
+                }
+            } else {
+                std::cerr << "Warning: Failed to load VTU data for volume fraction calculation." << std::endl;
+            }
+        }
+
         return true;
     }
 

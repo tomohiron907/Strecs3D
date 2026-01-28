@@ -211,4 +211,16 @@ double ProcessPipeline::getMaxStress() const {
         return vtkProcessor->getMaxStress();
     }
     return 0.0;
+}
+
+const std::vector<double>& ProcessPipeline::getVolumeFractions() const {
+    static const std::vector<double> empty;
+    if (vtkProcessor && vtkProcessor->hasVolumeFractions()) {
+        return vtkProcessor->getVolumeFractions();
+    }
+    return empty;
+}
+
+bool ProcessPipeline::hasVolumeFractions() const {
+    return vtkProcessor && vtkProcessor->hasVolumeFractions();
 } 

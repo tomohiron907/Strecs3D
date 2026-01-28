@@ -160,6 +160,7 @@ add_executable(Strecs3D
   UI/visualization/TurntableInteractorStyle.cpp
   UI/visualization/StepPickerStyle.cpp
   core/processing/VtkProcessor.cpp
+  core/processing/VolumeFractionCalculator.cpp
   core/processing/StepReader.cpp
   core/processing/StepToStlConverter.cpp
   core/processing/StepTransformer.cpp

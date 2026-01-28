@@ -142,6 +142,7 @@ void VtkProcessor::clearPreviousData(){
     stressValues.clear();
     dividedMeshes.clear();
     meshInfos.clear();
+    volumeFractionCalculator.clear();
 }
 
 void VtkProcessor::prepareStressValues(const std::vector<int>& thresholds) {
@@ -440,7 +441,29 @@ std::string VtkProcessor::generateMeshFileName(int index,
 {
     std::ostringstream oss;
     oss << "modifierMesh"
-    << std::setw(2) << std::setfill('0') << index << ".stl";  
+    << std::setw(2) << std::setfill('0') << index << ".stl";
 
     return oss.str();
+}
+
+bool VtkProcessor::computeVolumeFractions(int numDivisions) {
+    return volumeFractionCalculator.compute(
+        vtuData,
+        detectedStressLabel,
+        stressRange[0],
+        stressRange[1],
+        numDivisions
+    );
+}
+
+const std::vector<double>& VtkProcessor::getVolumeFractions() const {
+    return volumeFractionCalculator.getVolumeFractions();
+}
+
+bool VtkProcessor::hasVolumeFractions() const {
+    return volumeFractionCalculator.hasResult();
+}
+
+double VtkProcessor::getTotalVolume() const {
+    return volumeFractionCalculator.getTotalVolume();
 }
