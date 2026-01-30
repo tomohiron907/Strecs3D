@@ -128,12 +128,25 @@ std::vector<int> AdaptiveDensitySlider::stressThresholds() const {
 
 std::vector<QColor> AdaptiveDensitySlider::getRegionColors() const {
     std::vector<QColor> colors;
-    SliderBounds bounds = getSliderBounds();
     std::vector<int> positions = getRegionPositions();
 
     for (int i = 0; i < REGION_COUNT; ++i) {
-        int yCenter = (positions[i] + positions[i+1]) / 2;
-        double t = (double)(yCenter - bounds.top) / (bounds.bottom - bounds.top);
+        // positions[i] = bottom edge (higher Y, lower stress)
+        // positions[i+1] = top edge (lower Y, higher stress)
+        int yBottom = positions[i];
+        int yTop = positions[i+1];
+
+        // Get stress values using non-linear conversion
+        double stressBottom = yToStress(yBottom);
+        double stressTop = yToStress(yTop);
+
+        // Calculate average stress for this region
+        double avgStress = (stressTop + stressBottom) / 2.0;
+
+        // Normalize: t=0 for max stress (red), t=1 for min stress (blue)
+        double t = (m_maxStress - avgStress) / (m_maxStress - m_minStress);
+        t = std::clamp(t, 0.0, 1.0);
+
         QColor regionColor = ColorManager::getGradientColor(t);
         colors.push_back(regionColor);
     }
@@ -510,8 +523,22 @@ void AdaptiveDensitySlider::drawSliderBody(QPainter& painter, const SliderBounds
 void AdaptiveDensitySlider::drawRegions(QPainter& painter, const SliderBounds& bounds) {
     std::vector<int> positions = getRegionPositions();
     for (int i = 0; i < REGION_COUNT; ++i) {
-        int yCenter = (positions[i] + positions[i+1]) / 2;
-        double t = (double)(yCenter - bounds.top) / (bounds.bottom - bounds.top);
+        // positions[i] = bottom edge of region (higher Y value, lower stress)
+        // positions[i+1] = top edge of region (lower Y value, higher stress)
+        int yBottom = positions[i];
+        int yTop = positions[i+1];
+
+        // Get stress values using non-linear conversion from adaptive gradient bar
+        double stressBottom = yToStress(yBottom);
+        double stressTop = yToStress(yTop);
+
+        // Calculate average stress for this region
+        double avgStress = (stressTop + stressBottom) / 2.0;
+
+        // Normalize: t=0 for max stress (red), t=1 for min stress (blue)
+        double t = (m_maxStress - avgStress) / (m_maxStress - m_minStress);
+        t = std::clamp(t, 0.0, 1.0);
+
         QColor regionColor = ColorManager::getGradientColor(t);
         regionColor.setAlpha(190);
         painter.setBrush(regionColor);
