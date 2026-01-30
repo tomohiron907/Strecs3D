@@ -44,10 +44,10 @@ private:
     static constexpr int GRADIENT_WIDTH = 30;
     static constexpr int GRADIENT_GAP = 20;
     static constexpr int LABEL_EXTRA_WIDTH = 28;
-    static constexpr int LABEL_GAP = 8;
+    static constexpr int LABEL_GAP = 16;
     static constexpr int TRIANGLE_SIZE = 13;
     static constexpr int PERCENT_EDIT_GAP = 20;
-    static constexpr int VERTICAL_LABEL_DISTANCE = 60;
+    static constexpr int VERTICAL_LABEL_DISTANCE = 70;
     static constexpr int RIGHT_LABEL_DISTANCE = 70;
     static constexpr int REGION_COUNT = 4;
     static constexpr int HANDLE_COUNT = 3;

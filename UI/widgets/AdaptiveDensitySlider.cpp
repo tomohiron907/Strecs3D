@@ -438,14 +438,18 @@ int AdaptiveDensitySlider::calculateDensityFromStress(double stress) const {
 
 AdaptiveDensitySlider::SliderBounds AdaptiveDensitySlider::getSliderBounds() const {
     int w = width();
-    int x = w / 2;
+    // Calculate total width of both bars (gradient bar + gap + slider)
+    int totalBarsWidth = GRADIENT_WIDTH + GRADIENT_GAP + SLIDER_WIDTH;
+    // Center both bars in the widget
+    int barsLeft = w / 2 - totalBarsWidth / 2;
+
     SliderBounds bounds;
-    bounds.left = x - SLIDER_WIDTH / 2;
-    bounds.right = x + SLIDER_WIDTH / 2;
+    bounds.gradLeft = barsLeft;
+    bounds.gradRight = barsLeft + GRADIENT_WIDTH;
+    bounds.left = barsLeft + GRADIENT_WIDTH + GRADIENT_GAP;
+    bounds.right = bounds.left + SLIDER_WIDTH;
     bounds.top = m_margin;
     bounds.bottom = height() - m_margin;
-    bounds.gradLeft = bounds.left - GRADIENT_GAP - GRADIENT_WIDTH;
-    bounds.gradRight = bounds.gradLeft + GRADIENT_WIDTH;
     return bounds;
 }
 
@@ -496,6 +500,17 @@ void AdaptiveDensitySlider::drawGradientBar(QPainter& painter, const SliderBound
 
         painter.setBrush(regionGradient);
         painter.drawRect(bounds.gradLeft, regionTop, GRADIENT_WIDTH, regionHeight);
+    }
+
+    // Draw tick marks at each boundary to show non-linear divisions
+    // Ticks are drawn on the left side of gradient bar, touching the gradient bar
+    static constexpr int TICK_WIDTH = 6;
+    int tickRight = bounds.gradLeft;
+    int tickLeft = tickRight - TICK_WIDTH;
+    painter.setPen(QPen(QColor(180, 180, 180), 1));
+    for (int i = 0; i <= VOLUME_DIVISIONS; ++i) {
+        int y = m_regionBoundaries[i];
+        painter.drawLine(tickLeft, y, tickRight, y);
     }
 }
 
@@ -583,7 +598,7 @@ void AdaptiveDensitySlider::drawAxisLabels(QPainter& painter, const SliderBounds
     painter.translate(leftLabelX, centerY);
     painter.rotate(-90);
     QRect leftTextRect(-labelHeight / 2, -40, labelHeight, 80);
-    painter.drawText(leftTextRect, Qt::AlignCenter, "von Mises Stress[Pa]");
+    painter.drawText(leftTextRect, Qt::AlignCenter, "Stress[Pa]");
     painter.restore();
 
     painter.save();
