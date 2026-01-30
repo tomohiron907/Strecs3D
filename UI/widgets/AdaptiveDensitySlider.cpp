@@ -61,6 +61,9 @@ void AdaptiveDensitySlider::setStressRange(double minStress, double maxStress) {
     updateRegionBoundaries();
     updateStressDensityMappings();
     update();
+
+    // Emit signal to update UIState with new mappings
+    emit regionPercentsChanged(m_regionPercents);
 }
 
 void AdaptiveDensitySlider::setOriginalStressRange(double minStress, double maxStress) {
@@ -103,7 +106,11 @@ void AdaptiveDensitySlider::setVolumeFractions(const std::vector<double>& fracti
     if (fractions.size() == VOLUME_DIVISIONS) {
         m_volumeFractions = fractions;
         updateRegionBoundaries();
+        updateStressDensityMappings();
         update();
+
+        // Emit signal to update UIState with new mappings
+        emit regionPercentsChanged(m_regionPercents);
     }
 }
 
