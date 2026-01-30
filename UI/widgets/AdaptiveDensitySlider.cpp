@@ -465,12 +465,14 @@ void AdaptiveDensitySlider::drawGradientBar(QPainter& painter, const SliderBound
         if (regionHeight <= 0) continue;
 
         // Stress normalized value
+        // t=0.0 → HIGH_COLOR (red, high stress at top)
+        // t=1.0 → LOW_COLOR (blue, low stress at bottom)
         double tTop = static_cast<double>(i) / VOLUME_DIVISIONS;
         double tBottom = static_cast<double>(i + 1) / VOLUME_DIVISIONS;
 
         QLinearGradient regionGradient(bounds.gradLeft, regionTop, bounds.gradLeft, regionBottom);
-        regionGradient.setColorAt(0.0, ColorManager::getGradientColor(1.0 - tTop));
-        regionGradient.setColorAt(1.0, ColorManager::getGradientColor(1.0 - tBottom));
+        regionGradient.setColorAt(0.0, ColorManager::getGradientColor(tTop));
+        regionGradient.setColorAt(1.0, ColorManager::getGradientColor(tBottom));
 
         painter.setBrush(regionGradient);
         painter.drawRect(bounds.gradLeft, regionTop, GRADIENT_WIDTH, regionHeight);
