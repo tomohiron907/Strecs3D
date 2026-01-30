@@ -1,6 +1,6 @@
 #include "MainWindowUIAdapter.h"
 #include "ApplicationController.h"
-#include "../../UI/widgets/DensitySlider.h"
+#include "../../UI/widgets/AdaptiveDensitySlider.h"
 #include "../../UI/visualization/VisualizationManager.h"
 #include "../processing/VtkProcessor.h"
 #include "../ui/UIState.h"
@@ -321,5 +321,14 @@ void MainWindowUIAdapter::checkHighDensityWarning() {
         msgBox.setText(message);
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.exec();
+    }
+}
+
+void MainWindowUIAdapter::setVolumeFractions(const std::vector<double>& fractions) {
+    if (!ui) return;
+
+    AdaptiveDensitySlider* slider = ui->getRangeSlider();
+    if (slider) {
+        slider->setVolumeFractions(fractions);
     }
 }

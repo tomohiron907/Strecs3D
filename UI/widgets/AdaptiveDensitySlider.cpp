@@ -1,0 +1,560 @@
+#include "AdaptiveDensitySlider.h"
+#include "../../utils/ColorManager.h"
+#include "../../utils/SettingsManager.h"
+#include "../../utils/StyleManager.h"
+#include <QPainter>
+#include <QMouseEvent>
+#include <algorithm>
+#include <QLineEdit>
+#include <QResizeEvent>
+#include <QDoubleValidator>
+#include <cassert>
+#include <cmath>
+
+// ====================
+// Constructor and Size Hints
+// ====================
+
+AdaptiveDensitySlider::AdaptiveDensitySlider(QWidget* parent)
+    : QWidget(parent)
+{
+    m_handles.resize(HANDLE_COUNT, 0);
+    setMinimumWidth(120);
+    setMinimumHeight(220);
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+
+    for (int i = 0; i < REGION_COUNT; ++i) {
+        QLineEdit* edit = new QLineEdit(this);
+        edit->setFixedWidth(40);
+        edit->setAlignment(Qt::AlignCenter);
+        edit->setStyleSheet(QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; border-radius: %4px; selection-background-color: #555555; }")
+            .arg(ColorManager::INPUT_TEXT_COLOR.name())
+            .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
+            .arg(ColorManager::INPUT_BORDER_COLOR.name())
+            .arg(StyleManager::RADIUS_SMALL));
+        edit->setText(QString::number(m_regionPercents[i], 'g', 2));
+        edit->setValidator(new QDoubleValidator(0, 100, 2, edit));
+        connect(edit, &QLineEdit::editingFinished, this, &AdaptiveDensitySlider::onPercentEditChanged);
+        m_percentEdits.push_back(edit);
+    }
+    updateInitialHandles();
+    updateRegionBoundaries();
+    updateStressDensityMappings();
+}
+
+QSize AdaptiveDensitySlider::minimumSizeHint() const {
+    return QSize(60, 220);
+}
+
+QSize AdaptiveDensitySlider::sizeHint() const {
+    return QSize(60, 300);
+}
+
+// ====================
+// Primary Public API
+// ====================
+
+void AdaptiveDensitySlider::setStressRange(double minStress, double maxStress) {
+    m_minStress = minStress;
+    m_maxStress = maxStress;
+    updateInitialHandles();
+    updateRegionBoundaries();
+    updateStressDensityMappings();
+    update();
+}
+
+void AdaptiveDensitySlider::setOriginalStressRange(double minStress, double maxStress) {
+    m_originalMinStress = minStress;
+    m_originalMaxStress = maxStress;
+    setStressRange(minStress, maxStress);
+}
+
+std::vector<StressDensityMapping> AdaptiveDensitySlider::stressDensityMappings() const {
+    return m_stressDensityMappings;
+}
+
+void AdaptiveDensitySlider::setRegionPercents(const std::vector<double>& percents) {
+    if (percents.size() == REGION_COUNT) {
+        m_regionPercents = percents;
+        for (int i = 0; i < REGION_COUNT; ++i) {
+            m_percentEdits[i]->setText(QString::number(m_regionPercents[i], 'g', 2));
+        }
+        updateStressDensityMappings();
+        update();
+        emit regionPercentsChanged(m_regionPercents);
+    }
+}
+
+std::vector<double> AdaptiveDensitySlider::regionPercents() const {
+    return m_regionPercents;
+}
+
+int AdaptiveDensitySlider::countMaxDensityRegions() const {
+    int count = 0;
+    for (double percent : m_regionPercents) {
+        if (static_cast<int>(percent) >= SettingsManager::instance().maxDensity()) {
+            count++;
+        }
+    }
+    return count;
+}
+
+void AdaptiveDensitySlider::setVolumeFractions(const std::vector<double>& fractions) {
+    if (fractions.size() == VOLUME_DIVISIONS) {
+        m_volumeFractions = fractions;
+        updateRegionBoundaries();
+        update();
+    }
+}
+
+// ====================
+// Other Public API
+// ====================
+
+std::vector<int> AdaptiveDensitySlider::handlePositions() const {
+    return m_handles;
+}
+
+std::vector<int> AdaptiveDensitySlider::stressThresholds() const {
+    std::vector<int> thresholds;
+    thresholds.push_back(m_minStress);
+    for (int y : m_handles) {
+        thresholds.push_back(yToStress(y));
+    }
+    thresholds.push_back(m_maxStress);
+    std::sort(thresholds.begin(), thresholds.end());
+    return thresholds;
+}
+
+std::vector<QColor> AdaptiveDensitySlider::getRegionColors() const {
+    std::vector<QColor> colors;
+    SliderBounds bounds = getSliderBounds();
+    std::vector<int> positions = getRegionPositions();
+
+    for (int i = 0; i < REGION_COUNT; ++i) {
+        int yCenter = (positions[i] + positions[i+1]) / 2;
+        double t = (double)(yCenter - bounds.top) / (bounds.bottom - bounds.top);
+        QColor regionColor = ColorManager::getGradientColor(t);
+        colors.push_back(regionColor);
+    }
+
+    return colors;
+}
+
+// ====================
+// Event Handlers
+// ====================
+
+void AdaptiveDensitySlider::paintEvent(QPaintEvent*) {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    SliderBounds bounds = getSliderBounds();
+
+    drawGradientBar(painter, bounds);
+    drawStressLabels(painter, bounds);
+    drawSliderBody(painter, bounds);
+    drawRegions(painter, bounds);
+    drawHandles(painter, bounds);
+    updatePercentEditPositions();
+    drawAxisLabels(painter, bounds);
+}
+
+void AdaptiveDensitySlider::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    updatePercentEditPositions();
+    updateInitialHandles();
+    updateRegionBoundaries();
+    updateStressDensityMappings();
+}
+
+void AdaptiveDensitySlider::mousePressEvent(QMouseEvent* event) {
+    m_draggedHandle = handleAtPosition(event->pos());
+}
+
+void AdaptiveDensitySlider::mouseMoveEvent(QMouseEvent* event) {
+    if (m_draggedHandle >= 0) {
+        int y = std::clamp(event->pos().y(), m_margin, height() - m_margin);
+        if (m_draggedHandle > 0)
+            y = std::max(y, m_handles[m_draggedHandle-1] + m_minDistance);
+        if (m_draggedHandle < (int)m_handles.size()-1)
+            y = std::min(y, m_handles[m_draggedHandle+1] - m_minDistance);
+        m_handles[m_draggedHandle] = y;
+        clampHandles();
+        updateStressDensityMappings();
+        update();
+        emit handlePositionsChanged(m_handles);
+    }
+}
+
+void AdaptiveDensitySlider::mouseReleaseEvent(QMouseEvent*) {
+    m_draggedHandle = -1;
+}
+
+// ====================
+// Slots
+// ====================
+
+void AdaptiveDensitySlider::onPercentEditChanged() {
+    bool changed = false;
+    for (int i = 0; i < REGION_COUNT; ++i) {
+        bool ok = false;
+        double val = m_percentEdits[i]->text().toDouble(&ok);
+        if (ok && m_regionPercents[i] != val) {
+            m_regionPercents[i] = val;
+            changed = true;
+        }
+    }
+    if (changed) {
+        updateStressDensityMappings();
+        emit regionPercentsChanged(m_regionPercents);
+        update();
+    }
+}
+
+// ====================
+// Update and Calculation Helpers
+// ====================
+
+void AdaptiveDensitySlider::updateRegionBoundaries() {
+    SliderBounds bounds = getSliderBounds();
+    int totalHeight = bounds.bottom - bounds.top;
+
+    m_regionBoundaries.clear();
+    m_regionBoundaries.push_back(bounds.top);
+
+    if (m_volumeFractions.size() != VOLUME_DIVISIONS) {
+        // Fallback: linear division
+        for (int i = 1; i < VOLUME_DIVISIONS; ++i) {
+            m_regionBoundaries.push_back(bounds.top + (totalHeight * i) / VOLUME_DIVISIONS);
+        }
+    } else {
+        // Adaptive mode: guarantee minimum height
+        int minTotalHeight = MIN_REGION_HEIGHT * VOLUME_DIVISIONS;
+        int availableHeight = std::max(0, totalHeight - minTotalHeight);
+
+        int cumulativeY = bounds.top;
+        for (int i = 0; i < VOLUME_DIVISIONS - 1; ++i) {
+            // Reverse order: region 0 (top/high stress) = volumeFractions[19]
+            double fraction = m_volumeFractions[VOLUME_DIVISIONS - 1 - i];
+            int regionHeight = MIN_REGION_HEIGHT + static_cast<int>(availableHeight * fraction);
+            cumulativeY += regionHeight;
+            m_regionBoundaries.push_back(cumulativeY);
+        }
+    }
+    m_regionBoundaries.push_back(bounds.bottom);
+}
+
+void AdaptiveDensitySlider::updateStressDensityMappings() {
+    assert(m_handles.size() == HANDLE_COUNT);
+
+    m_stressDensityMappings.clear();
+
+    double stressAtHandle0 = yToStress(m_handles[0]);
+    double stressAtHandle1 = yToStress(m_handles[1]);
+    double stressAtHandle2 = yToStress(m_handles[2]);
+
+    struct RegionStress {
+        double minStress;
+        double maxStress;
+    };
+
+    std::vector<RegionStress> regions = {
+        {m_originalMinStress, stressAtHandle2},
+        {stressAtHandle2, stressAtHandle1},
+        {stressAtHandle1, stressAtHandle0},
+        {stressAtHandle0, m_originalMaxStress}
+    };
+
+    for (int i = 0; i < REGION_COUNT; ++i) {
+        int calculatedDensity = calculateDensityFromStress(regions[i].maxStress);
+        m_regionPercents[i] = calculatedDensity;
+
+        m_stressDensityMappings.push_back({
+            regions[i].minStress,
+            regions[i].maxStress,
+            static_cast<double>(calculatedDensity)
+        });
+    }
+
+    for (int i = 0; i < REGION_COUNT; ++i) {
+        m_percentEdits[i]->setText(QString::number(m_regionPercents[i], 'g', 2));
+    }
+}
+
+void AdaptiveDensitySlider::updateInitialHandles() {
+    SliderBounds bounds = getSliderBounds();
+    int availableHeight = bounds.bottom - bounds.top;
+    int segmentHeight = availableHeight / REGION_COUNT;
+
+    m_handles[0] = bounds.top + segmentHeight;
+    m_handles[1] = bounds.top + 2 * segmentHeight;
+    m_handles[2] = bounds.top + 3 * segmentHeight;
+}
+
+void AdaptiveDensitySlider::updatePercentEditPositions() {
+    SliderBounds bounds = getSliderBounds();
+    std::vector<int> positions = getRegionPositions();
+    for (int i = 0; i < REGION_COUNT; ++i) {
+        int yCenter = (positions[i] + positions[i+1]) / 2;
+        int editX = bounds.right + PERCENT_EDIT_GAP;
+        int editY = yCenter - m_percentEdits[i]->height() / 2;
+        m_percentEdits[i]->move(editX, editY);
+        m_percentEdits[i]->show();
+    }
+}
+
+void AdaptiveDensitySlider::clampHandles() {
+    int top = m_margin;
+    int bottom = height() - m_margin;
+    for (int i = 0; i < (int)m_handles.size(); ++i) {
+        if (i == 0)
+            m_handles[i] = std::clamp(m_handles[i], top, m_handles[i+1] - m_minDistance);
+        else if (i == (int)m_handles.size()-1)
+            m_handles[i] = std::clamp(m_handles[i], m_handles[i-1] + m_minDistance, bottom);
+        else
+            m_handles[i] = std::clamp(m_handles[i], m_handles[i-1] + m_minDistance, m_handles[i+1] - m_minDistance);
+    }
+}
+
+int AdaptiveDensitySlider::handleAtPosition(const QPoint& pos) const {
+    SliderBounds bounds = getSliderBounds();
+    int tolerance = 6;
+
+    for (int i = 0; i < (int)m_handles.size(); ++i) {
+        int y = m_handles[i];
+
+        if (pos.x() >= bounds.gradLeft && pos.x() <= bounds.right && std::abs(pos.y() - y) <= tolerance) {
+            return i;
+        }
+
+        if (pos.x() >= bounds.right && pos.x() <= bounds.right + TRIANGLE_SIZE &&
+            pos.y() >= y - TRIANGLE_SIZE/2 && pos.y() <= y + TRIANGLE_SIZE/2) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+double AdaptiveDensitySlider::yToStress(int y) const {
+    if (m_regionBoundaries.size() != VOLUME_DIVISIONS + 1) {
+        // Fallback: linear
+        SliderBounds bounds = getSliderBounds();
+        double t = static_cast<double>(y - bounds.bottom) / (bounds.top - bounds.bottom);
+        return m_minStress + t * (m_maxStress - m_minStress);
+    }
+
+    // Find which region the y belongs to
+    int regionIndex = 0;
+    for (int i = 0; i < VOLUME_DIVISIONS; ++i) {
+        if (y >= m_regionBoundaries[i] && y <= m_regionBoundaries[i + 1]) {
+            regionIndex = i;
+            break;
+        }
+    }
+
+    // Relative position within the region
+    int regionTop = m_regionBoundaries[regionIndex];
+    int regionBottom = m_regionBoundaries[regionIndex + 1];
+    double localT = (regionBottom > regionTop)
+        ? static_cast<double>(y - regionTop) / (regionBottom - regionTop)
+        : 0.0;
+
+    // Stress range
+    double stressStep = (m_maxStress - m_minStress) / VOLUME_DIVISIONS;
+    double regionStressMax = m_maxStress - regionIndex * stressStep;
+    double regionStressMin = regionStressMax - stressStep;
+
+    return regionStressMax - localT * (regionStressMax - regionStressMin);
+}
+
+int AdaptiveDensitySlider::stressToY(double stress) const {
+    if (m_regionBoundaries.size() != VOLUME_DIVISIONS + 1) {
+        // Fallback: linear
+        SliderBounds bounds = getSliderBounds();
+        double t = (stress - m_minStress) / (m_maxStress - m_minStress);
+        return bounds.bottom + static_cast<int>(t * (bounds.top - bounds.bottom));
+    }
+
+    // Find which region the stress belongs to
+    double stressStep = (m_maxStress - m_minStress) / VOLUME_DIVISIONS;
+    int regionIndex = static_cast<int>((m_maxStress - stress) / stressStep);
+    regionIndex = std::clamp(regionIndex, 0, VOLUME_DIVISIONS - 1);
+
+    double regionStressMax = m_maxStress - regionIndex * stressStep;
+    double regionStressMin = regionStressMax - stressStep;
+
+    int regionTop = m_regionBoundaries[regionIndex];
+    int regionBottom = m_regionBoundaries[regionIndex + 1];
+
+    double localT = (regionStressMax > regionStressMin)
+        ? (regionStressMax - stress) / (regionStressMax - regionStressMin)
+        : 0.0;
+
+    return regionTop + static_cast<int>(localT * (regionBottom - regionTop));
+}
+
+int AdaptiveDensitySlider::calculateDensityFromStress(double stress) const {
+    const double SAFE_FACTOR = 3.0;
+    const double YIELD_STRENGTH = 30.0;
+    const double C = 0.23;
+    const double M = 2.0 / 3.0;
+
+    const int minDensity = SettingsManager::instance().minDensity();
+    const int maxDensity = SettingsManager::instance().maxDensity();
+
+    double stressMPa = stress / 1e6;
+
+    double numerator = SAFE_FACTOR * stressMPa;
+    double denominator = YIELD_STRENGTH * C;
+    double density = std::pow(numerator / denominator, M);
+
+    double densityPercent = density * 100.0;
+
+    int densityInt = static_cast<int>(std::round(densityPercent));
+    densityInt = std::clamp(densityInt, minDensity, maxDensity);
+
+    return densityInt;
+}
+
+AdaptiveDensitySlider::SliderBounds AdaptiveDensitySlider::getSliderBounds() const {
+    int w = width();
+    int x = w / 2;
+    SliderBounds bounds;
+    bounds.left = x - SLIDER_WIDTH / 2;
+    bounds.right = x + SLIDER_WIDTH / 2;
+    bounds.top = m_margin;
+    bounds.bottom = height() - m_margin;
+    bounds.gradLeft = bounds.left - GRADIENT_GAP - GRADIENT_WIDTH;
+    bounds.gradRight = bounds.gradLeft + GRADIENT_WIDTH;
+    return bounds;
+}
+
+std::vector<int> AdaptiveDensitySlider::getRegionPositions() const {
+    SliderBounds bounds = getSliderBounds();
+    std::vector<int> positions = {bounds.bottom};
+    for (auto it = m_handles.rbegin(); it != m_handles.rend(); ++it) {
+        positions.push_back(*it);
+    }
+    positions.push_back(bounds.top);
+    return positions;
+}
+
+// ====================
+// Drawing Helpers
+// ====================
+
+void AdaptiveDensitySlider::drawGradientBar(QPainter& painter, const SliderBounds& bounds) {
+    painter.setPen(Qt::NoPen);
+
+    if (m_regionBoundaries.size() != VOLUME_DIVISIONS + 1) {
+        // Fallback: conventional linear gradient
+        QLinearGradient gradient(bounds.gradLeft, bounds.top, bounds.gradLeft, bounds.bottom);
+        gradient.setColorAt(0.0, ColorManager::HIGH_COLOR);
+        gradient.setColorAt(0.5, ColorManager::MIDDLE_COLOR);
+        gradient.setColorAt(1.0, ColorManager::LOW_COLOR);
+        painter.setBrush(gradient);
+        painter.drawRect(bounds.gradLeft, bounds.top, GRADIENT_WIDTH, bounds.bottom - bounds.top);
+        return;
+    }
+
+    // Draw each region individually
+    for (int i = 0; i < VOLUME_DIVISIONS; ++i) {
+        int regionTop = m_regionBoundaries[i];
+        int regionBottom = m_regionBoundaries[i + 1];
+        int regionHeight = regionBottom - regionTop;
+        if (regionHeight <= 0) continue;
+
+        // Stress normalized value
+        double tTop = static_cast<double>(i) / VOLUME_DIVISIONS;
+        double tBottom = static_cast<double>(i + 1) / VOLUME_DIVISIONS;
+
+        QLinearGradient regionGradient(bounds.gradLeft, regionTop, bounds.gradLeft, regionBottom);
+        regionGradient.setColorAt(0.0, ColorManager::getGradientColor(1.0 - tTop));
+        regionGradient.setColorAt(1.0, ColorManager::getGradientColor(1.0 - tBottom));
+
+        painter.setBrush(regionGradient);
+        painter.drawRect(bounds.gradLeft, regionTop, GRADIENT_WIDTH, regionHeight);
+    }
+}
+
+void AdaptiveDensitySlider::drawStressLabels(QPainter& painter, const SliderBounds& bounds) {
+    painter.setPen(Qt::white);
+    QFont font = painter.font();
+    font.setPointSize(10);
+    painter.setFont(font);
+
+    int labelWidth = GRADIENT_WIDTH + LABEL_EXTRA_WIDTH;
+    int labelX = bounds.gradLeft - labelWidth - LABEL_GAP;
+
+    painter.drawText(labelX, bounds.top - 5, labelWidth, 20, Qt::AlignRight | Qt::AlignVCenter,
+                    QString::number(m_maxStress, 'g', 2));
+
+    painter.drawText(labelX, bounds.bottom - 15, labelWidth, 20, Qt::AlignRight | Qt::AlignVCenter,
+                    QString::number(m_minStress, 'g', 2));
+
+    for (int y : m_handles) {
+        double stress = yToStress(y);
+        painter.drawText(labelX, y - 10, labelWidth, 20, Qt::AlignRight | Qt::AlignVCenter,
+                        QString::number(stress, 'g', 2));
+    }
+}
+
+void AdaptiveDensitySlider::drawSliderBody(QPainter& painter, const SliderBounds& bounds) {
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(60, 60, 60));
+    painter.drawRect(bounds.left, bounds.top, SLIDER_WIDTH, bounds.bottom - bounds.top);
+}
+
+void AdaptiveDensitySlider::drawRegions(QPainter& painter, const SliderBounds& bounds) {
+    std::vector<int> positions = getRegionPositions();
+    for (int i = 0; i < REGION_COUNT; ++i) {
+        int yCenter = (positions[i] + positions[i+1]) / 2;
+        double t = (double)(yCenter - bounds.top) / (bounds.bottom - bounds.top);
+        QColor regionColor = ColorManager::getGradientColor(t);
+        regionColor.setAlpha(190);
+        painter.setBrush(regionColor);
+        painter.drawRect(bounds.left, positions[i], SLIDER_WIDTH, positions[i+1] - positions[i]);
+    }
+}
+
+void AdaptiveDensitySlider::drawHandles(QPainter& painter, const SliderBounds& bounds) {
+    for (int y : m_handles) {
+        painter.setPen(QPen(ColorManager::HANDLE_COLOR, 2));
+        painter.drawLine(bounds.gradLeft, y, bounds.right, y);
+
+        QPolygon triangle;
+        triangle << QPoint(bounds.right, y)
+                 << QPoint(bounds.right + TRIANGLE_SIZE, y - TRIANGLE_SIZE/2)
+                 << QPoint(bounds.right + TRIANGLE_SIZE, y + TRIANGLE_SIZE/2);
+        painter.setBrush(ColorManager::HANDLE_COLOR);
+        painter.setPen(Qt::NoPen);
+        painter.drawPolygon(triangle);
+    }
+}
+
+void AdaptiveDensitySlider::drawAxisLabels(QPainter& painter, const SliderBounds& bounds) {
+    QFont labelFont = painter.font();
+    labelFont.setPointSize(11);
+    labelFont.setBold(true);
+    painter.setFont(labelFont);
+    painter.setPen(Qt::white);
+
+    int centerY = bounds.top + (bounds.bottom - bounds.top) / 2;
+    int labelHeight = bounds.bottom - bounds.top;
+
+    painter.save();
+    int leftLabelX = bounds.gradLeft - VERTICAL_LABEL_DISTANCE;
+    painter.translate(leftLabelX, centerY);
+    painter.rotate(-90);
+    QRect leftTextRect(-labelHeight / 2, -40, labelHeight, 80);
+    painter.drawText(leftTextRect, Qt::AlignCenter, "von Mises Stress[Pa]");
+    painter.restore();
+
+    painter.save();
+    int rightLabelX = bounds.right + RIGHT_LABEL_DISTANCE;
+    painter.translate(rightLabelX, centerY);
+    painter.rotate(-90);
+    QRect rightTextRect(-labelHeight / 2, -40, labelHeight, 80);
+    painter.drawText(rightTextRect, Qt::AlignCenter, "Infill Density [%]");
+    painter.restore();
+}

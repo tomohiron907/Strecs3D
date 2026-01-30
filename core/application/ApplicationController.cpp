@@ -64,6 +64,12 @@ bool ApplicationController::openVtkFile(const std::string& vtkFile, IUserInterfa
                 fileProcessor->getVtkProcessor()->getMinStress(),
                 fileProcessor->getVtkProcessor()->getMaxStress()
             );
+
+            // 体積分率を計算してスライダーに設定
+            if (fileProcessor->getVtkProcessor()->computeVolumeFractions()) {
+                const auto& fractions = fileProcessor->getVtkProcessor()->getVolumeFractions();
+                ui->setVolumeFractions(fractions);
+            }
         }
 
         return true;
@@ -482,7 +488,11 @@ bool ApplicationController::runFEMPipeline(IUserInterface* ui, UIState* uiState,
         if (fileProcessor->getVtkProcessor()) {
             fileProcessor->getVtkProcessor()->setVtuFileName(vtuFilePath.toStdString());
             if (fileProcessor->getVtkProcessor()->LoadAndPrepareData()) {
-                if (!fileProcessor->getVtkProcessor()->computeVolumeFractions()) {
+                if (fileProcessor->getVtkProcessor()->computeVolumeFractions()) {
+                    // 計算成功時、体積分率をUIに設定
+                    const auto& fractions = fileProcessor->getVtkProcessor()->getVolumeFractions();
+                    ui->setVolumeFractions(fractions);
+                } else {
                     std::cerr << "Warning: Failed to compute volume fractions." << std::endl;
                     // 計算失敗は致命的エラーではないため処理続行
                 }

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "core/application/MainWindowUIAdapter.h"
+#include "UI/widgets/AdaptiveDensitySlider.h"
 #include "UI/visualization/VisualizationManager.h"
 #include "UI/platform/WindowUtils.h"
 
@@ -86,8 +87,8 @@ void MainWindow::connectSignals()
     connect(ui->getExport3mfButton(), &QPushButton::clicked, this, &MainWindow::export3mfFile);
 
     // Sliders/Widgets -> MainWindow slots
-    connect(ui->getRangeSlider(), &DensitySlider::handlePositionsChanged, this, &MainWindow::onDensitySliderChanged);
-    connect(ui->getRangeSlider(), &DensitySlider::regionPercentsChanged, this, &MainWindow::onDensitySliderChanged);
+    connect(ui->getRangeSlider(), &AdaptiveDensitySlider::handlePositionsChanged, this, &MainWindow::onDensitySliderChanged);
+    connect(ui->getRangeSlider(), &AdaptiveDensitySlider::regionPercentsChanged, this, &MainWindow::onDensitySliderChanged);
     connect(ui->getStressRangeWidget(), &StressRangeWidget::stressRangeChanged, this, &MainWindow::onStressRangeChanged);
 
     // UIState -> MainWindow slots

@@ -11,7 +11,7 @@
 #include "widgets/process/steps/BoundaryConditionStepWidget.h"
 #include "widgets/process/steps/SimulationStepWidget.h"
 #include "widgets/process/steps/InfillStepWidget.h"
-#include "widgets/DensitySlider.h"
+#include "widgets/AdaptiveDensitySlider.h"
 #include "widgets/StressRangeWidget.h"
 #include "widgets/StressRangeWidget.h"
 #include "widgets/Button.h"
@@ -51,7 +51,7 @@ public:
     Button* getProcessButton() const;
     
     Button* getExport3mfButton() const { return export3mfButton; }
-    DensitySlider* getRangeSlider() const;
+    AdaptiveDensitySlider* getRangeSlider() const;
     StressRangeWidget* getStressRangeWidget() const;
     ObjectListWidget* getObjectListWidget() const { return objectListWidget; }
     PropertyWidget* getPropertyWidget() const { return propertyWidget; }

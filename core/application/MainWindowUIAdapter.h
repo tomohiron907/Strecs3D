@@ -60,6 +60,9 @@ public:
     // UIState管理（UI層の責務）
     void registerDividedMeshes(const std::vector<MeshInfo>& meshInfos) override;
 
+    // Adaptive density slider
+    void setVolumeFractions(const std::vector<double>& fractions) override;
+
     // Adapter specific methods
     MainWindowUI* getMainWindowUI() const { return ui; }
     VisualizationManager* getVisualizationManager() const { return visualizationManager.get(); }

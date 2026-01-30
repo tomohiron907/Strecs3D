@@ -302,7 +302,7 @@ Button* MainWindowUI::getProcessButton() const {
     return nullptr;
 }
 
-DensitySlider* MainWindowUI::getRangeSlider() const {
+AdaptiveDensitySlider* MainWindowUI::getRangeSlider() const {
     if (processManagerWidget && processManagerWidget->getInfillStep())
         return processManagerWidget->getInfillStep()->getDensitySlider();
     return nullptr;

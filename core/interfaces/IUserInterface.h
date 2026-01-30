@@ -67,6 +67,9 @@ public:
     // UIState管理（UI層の責務）
     virtual void registerDividedMeshes(const std::vector<MeshInfo>& meshInfos) = 0;
 
+    // Adaptive density slider
+    virtual void setVolumeFractions(const std::vector<double>& fractions) = 0;
+
 public slots:
     // ApplicationControllerからのシグナルを受信するスロット
     virtual void onVtkFileNameChanged(const QString& fileName) { setVtkFileName(fileName); }
