@@ -27,10 +27,16 @@ public:
     bool exportConfig();
 
 private:
+    // Bambu-specific constants
+    static constexpr float MODIFIER_MESH_Z_OFFSET = -0.4f;
+    
     // Bambu-specific helper methods
     bool setMetaDataForInfillMeshBambu(Lib3MF::PMeshObject Mesh, FileInfo fileInfo, double maxStress);
     bool setMetaDataForInfillMeshBambu(Lib3MF::PMeshObject Mesh, FileInfo fileInfo, double maxStress, const std::vector<StressDensityMapping>& mappings);
     bool setMetaDataForOutlineMeshBambu(Lib3MF::PMeshObject Mesh);
+    
+    // Offset modifier mesh vertices in Z direction
+    bool offsetModifierMeshZ(Lib3MF::PMeshObject mesh, float zOffset);
 };
 
 #endif

@@ -26,6 +26,9 @@ bool BambuLib3mfProcessor::setMetaData(double maxStress, const std::vector<Stres
             std::string meshID_str = match[1].str();
             int meshID = std::stoi(meshID_str);
             
+            // モディファイアメッシュのZ座標をオフセット（Bambuモード専用）
+            offsetModifierMeshZ(currentMesh, MODIFIER_MESH_Z_OFFSET);
+            
             // Find the corresponding MeshInfo by ID
             FileInfo fileInfo;
             fileInfo.id = meshID;
@@ -196,6 +199,16 @@ bool BambuLib3mfProcessor::exportConfig(){
     if (xmlconverter::writeConfigToFile(config, outputFilename)) {
     } else {
         std::cerr << "XMLの書き出しに失敗しました。" << std::endl;
+    }
+    return true;
+}
+
+bool BambuLib3mfProcessor::offsetModifierMeshZ(Lib3MF::PMeshObject mesh, float zOffset) {
+    Lib3MF_uint32 vertexCount = mesh->GetVertexCount();
+    for (Lib3MF_uint32 i = 0; i < vertexCount; ++i) {
+        sPosition pos = mesh->GetVertex(i);
+        pos.m_Coordinates[2] += zOffset;  // Z座標をオフセット
+        mesh->SetVertex(i, pos);
     }
     return true;
 }
