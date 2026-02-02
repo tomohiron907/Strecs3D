@@ -141,12 +141,12 @@ bool ProcessPipeline::processCuraMode(BaseLib3mfProcessor& processor, const std:
 bool ProcessPipeline::processBambuMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings) {
     const auto& meshInfos = vtkProcessor->getMeshInfos();
     processor.setMetaData(maxStress, mappings, meshInfos);
-    const std::string tempFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
+    const std::string tempFile = TempPathUtility::getTempFilePath("result/base.3mf").toStdString();
     if (!processor.save3mf(tempFile)) {
         throw std::runtime_error("Failed to save temporary 3MF file");
     }
     const std::string extractDir = TempPathUtility::getTempSubDirPath("3mf").string();
-    const std::string zipFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
+    const std::string zipFile = TempPathUtility::getTempFilePath("result/base.3mf").toStdString();
     const std::string outputFile = TempPathUtility::getTempFilePath("result/result.3mf").toStdString();
     if (!FileUtility::unzipFile(zipFile, extractDir)) {
         throw std::runtime_error("Failed to extract ZIP file");
@@ -159,7 +159,7 @@ bool ProcessPipeline::processBambuMode(BaseLib3mfProcessor& processor, double ma
 
 bool ProcessPipeline::processPrusaMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings) {
     const std::string extractDir = TempPathUtility::getTempSubDirPath("3mf").string();
-    const std::string zipFile = TempPathUtility::getTempFilePath("result.3mf").toStdString();
+    const std::string zipFile = TempPathUtility::getTempFilePath("result/base.3mf").toStdString();
     const std::string outputFile = TempPathUtility::getTempFilePath("result/result.3mf").toStdString();
     if (!processor.save3mf(zipFile)) {
         throw std::runtime_error("Failed to save 3MF file");
