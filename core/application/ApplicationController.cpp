@@ -136,11 +136,8 @@ bool ApplicationController::processFiles(IUserInterface* ui)
         
         // Step 5: Load and display temporary STL files
         loadAndDisplayTempStlFiles(ui);
-        
-        // Step 6: Cleanup temporary files
-        cleanupTempFiles();
-        
-        // Step 7: Show success message
+
+        // Step 6: Show success message
         showSuccessMessage(ui);
         
         return true;
@@ -252,12 +249,6 @@ void ApplicationController::loadAndDisplayTempStlFiles(IUserInterface* ui)
 
     // 分割メッシュをUIStateのInfillRegionに登録
     registerDividedMeshesToUIState(ui);
-}
-
-void ApplicationController::cleanupTempFiles()
-{
-    std::filesystem::path tempFiledir = TempPathUtility::getTempSubDirPath("div");
-    FileUtility::clearDirectoryContents(tempFiledir);
 }
 
 void ApplicationController::showSuccessMessage(IUserInterface* ui)

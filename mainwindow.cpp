@@ -3,6 +3,7 @@
 #include "UI/widgets/AdaptiveDensitySlider.h"
 #include "UI/visualization/VisualizationManager.h"
 #include "UI/platform/WindowUtils.h"
+#include "utils/tempCleaner.h"
 
 #include "core/commands/file/OpenVtkFileCommand.h"
 #include "core/commands/file/OpenStepFileCommand.h"
@@ -25,6 +26,7 @@
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
+    TempCleaner::cleanupAll();
     initializeComponents();
     setupWindow();
     connectSignals();
@@ -144,7 +146,10 @@ void MainWindow::connectVisualizationSignals()
     }
 }
 
-MainWindow::~MainWindow() = default;
+MainWindow::~MainWindow()
+{
+    TempCleaner::cleanupAll();
+}
 
 void MainWindow::openVTKFile()
 {

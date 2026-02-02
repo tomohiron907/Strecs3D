@@ -171,6 +171,7 @@ add_executable(Strecs3D
   core/processing/3mf/slicers/prusa/PrusaLib3mfProcessor.cpp
   utils/fileUtility.cpp
   utils/tempPathUtility.cpp
+  utils/tempCleaner.cpp
   utils/xmlConverter.cpp
   utils/SettingsManager.cpp
   core/application/ApplicationController.cpp

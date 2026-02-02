@@ -75,7 +75,6 @@ private:
     bool initializeVtkProcessor(IUserInterface* ui);
     bool processMeshDivision(IUserInterface* ui);
     bool process3mfGeneration(IUserInterface* ui);
-    void cleanupTempFiles();
     void showSuccessMessage(IUserInterface* ui);
     void handleProcessingError(const std::exception& e, IUserInterface* ui);
     void resetDividedMeshWidgets(IUserInterface* ui);
