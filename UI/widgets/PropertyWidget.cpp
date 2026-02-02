@@ -17,8 +17,9 @@ void PropertyWidget::setupUI()
 
     // Container Frame to provide the unified rounded border look
     QFrame* containerFrame = new QFrame(this);
+    containerFrame->setObjectName("propertyContainerFrame");
     containerFrame->setStyleSheet(QString(R"(
-        QFrame {
+        #propertyContainerFrame {
             background-color: rgba(26, 26, 26, 180);
             border: 1px solid #444;
             border-radius: %1px;
@@ -33,16 +34,18 @@ void PropertyWidget::setupUI()
     containerLayout->setContentsMargins(0, 0, 0, 0);
     containerLayout->setSpacing(0);
 
-    // Title
+    // Title - match ObjectListWidget header style
     m_titleLabel = new QLabel("Properties", containerFrame);
-    m_titleLabel->setStyleSheet(QString("font-weight: bold; font-size: %1px; padding: %2px; color: #ffffff; border-bottom: 1px solid #444;")
+    m_titleLabel->setStyleSheet(QString("font-weight: bold; font-size: %1px; padding: %2px %3px; color: #ffffff; border-bottom: 1px solid #444; min-height: %4px;")
         .arg(StyleManager::FONT_SIZE_LARGE)
-        .arg(StyleManager::PADDING_MEDIUM));
+        .arg(StyleManager::PADDING_SMALL)
+        .arg(StyleManager::PADDING_MEDIUM)
+        .arg(StyleManager::FONT_SIZE_LARGE + StyleManager::PADDING_SMALL * 2));
     containerLayout->addWidget(m_titleLabel);
 
     // Stacked Widget for content
     m_stackedWidget = new QStackedWidget(containerFrame);
-    m_stackedWidget->setStyleSheet("background-color: transparent;");
+    m_stackedWidget->setStyleSheet("background-color: transparent; border: none;");
     
     // 0: Empty/Info
     m_emptyWidget = new QWidget();
