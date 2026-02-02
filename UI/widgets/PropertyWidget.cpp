@@ -36,11 +36,12 @@ void PropertyWidget::setupUI()
 
     // Title - match ObjectListWidget header style
     m_titleLabel = new QLabel("Properties", containerFrame);
-    m_titleLabel->setStyleSheet(QString("font-weight: bold; font-size: %1px; padding: %2px %3px; color: #ffffff; border-bottom: 1px solid #444; min-height: %4px;")
+    m_titleLabel->setStyleSheet(QString("font-weight: bold; font-size: %1px; padding: %2px %3px %2px %5px; color: #ffffff; border-bottom: 1px solid #444; min-height: %4px;")
         .arg(StyleManager::FONT_SIZE_LARGE)
         .arg(StyleManager::PADDING_SMALL)
         .arg(StyleManager::PADDING_MEDIUM)
-        .arg(StyleManager::FONT_SIZE_LARGE + StyleManager::PADDING_SMALL * 2));
+        .arg(StyleManager::FONT_SIZE_LARGE + StyleManager::PADDING_SMALL * 2)
+        .arg(StyleManager::PADDING_MEDIUM * 1.5));
     containerLayout->addWidget(m_titleLabel);
 
     // Stacked Widget for content

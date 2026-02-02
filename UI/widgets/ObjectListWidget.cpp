@@ -45,7 +45,7 @@ void ObjectListWidget::setupUI()
             font-weight: bold;
             font-size: %3px;
             border: none;
-            padding: %4px %5px;
+            padding: %4px %5px %4px %6px;
             border-bottom: 1px solid #444; /* ヘッダー下の区切り線 */
         }
         QHeaderView {
@@ -59,7 +59,8 @@ void ObjectListWidget::setupUI()
     .arg(StyleManager::FONT_SIZE_NORMAL)
     .arg(StyleManager::FONT_SIZE_LARGE)
     .arg(StyleManager::PADDING_SMALL)
-    .arg(StyleManager::PADDING_MEDIUM));
+    .arg(StyleManager::PADDING_MEDIUM)
+    .arg(StyleManager::PADDING_MEDIUM * 1.5));
 }
 
 void ObjectListWidget::setUIState(UIState* uiState)
