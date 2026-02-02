@@ -23,6 +23,7 @@ public:
     // Adaptive density slider specific
     static constexpr int VOLUME_DIVISIONS = 20;
     static constexpr int MIN_REGION_HEIGHT = 2;
+    static constexpr int MAX_REGION_HEIGHT = 100;
 
     void setVolumeFractions(const std::vector<double>& fractions);
     const std::vector<double>& volumeFractions() const { return m_volumeFractions; }

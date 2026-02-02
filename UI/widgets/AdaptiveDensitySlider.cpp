@@ -248,16 +248,69 @@ void AdaptiveDensitySlider::updateRegionBoundaries() {
             m_regionBoundaries.push_back(bounds.top + (totalHeight * i) / VOLUME_DIVISIONS);
         }
     } else {
-        // Adaptive mode: guarantee minimum height
-        int minTotalHeight = MIN_REGION_HEIGHT * VOLUME_DIVISIONS;
+        // Calculate effective min/max based on total height
+        // If totalHeight is too small, we need to reduce minHeight
+        // If totalHeight is too large, we need to increase maxHeight
+        int effectiveMinHeight = MIN_REGION_HEIGHT;
+        int effectiveMaxHeight = MAX_REGION_HEIGHT;
+
+        int minPossibleTotal = MIN_REGION_HEIGHT * VOLUME_DIVISIONS;
+        int maxPossibleTotal = MAX_REGION_HEIGHT * VOLUME_DIVISIONS;
+
+        if (totalHeight < minPossibleTotal) {
+            // Total height is too small, reduce min height
+            effectiveMinHeight = std::max(1, totalHeight / VOLUME_DIVISIONS);
+        } else if (totalHeight > maxPossibleTotal) {
+            // Total height is too large, increase max height
+            effectiveMaxHeight = (totalHeight + VOLUME_DIVISIONS - 1) / VOLUME_DIVISIONS;
+        }
+
+        // First pass: calculate ideal heights based on volume fractions
+        std::vector<int> regionHeights(VOLUME_DIVISIONS);
+        int minTotalHeight = effectiveMinHeight * VOLUME_DIVISIONS;
         int availableHeight = std::max(0, totalHeight - minTotalHeight);
 
-        int cumulativeY = bounds.top;
-        for (int i = 0; i < VOLUME_DIVISIONS - 1; ++i) {
+        for (int i = 0; i < VOLUME_DIVISIONS; ++i) {
             // Reverse order: region 0 (top/high stress) = volumeFractions[19]
             double fraction = m_volumeFractions[VOLUME_DIVISIONS - 1 - i];
-            int regionHeight = MIN_REGION_HEIGHT + static_cast<int>(availableHeight * fraction);
-            cumulativeY += regionHeight;
+            int idealHeight = effectiveMinHeight + static_cast<int>(availableHeight * fraction);
+            // Clamp to effective min/max constraints
+            regionHeights[i] = std::clamp(idealHeight, effectiveMinHeight, effectiveMaxHeight);
+        }
+
+        // Second pass: adjust to fit total height exactly
+        int currentTotal = 0;
+        for (int h : regionHeights) {
+            currentTotal += h;
+        }
+
+        int difference = totalHeight - currentTotal;
+
+        // Distribute difference - prioritize regions that haven't hit limits
+        while (difference != 0) {
+            bool adjusted = false;
+            int adjustPerRegion = (difference > 0) ? 1 : -1;
+
+            for (int i = 0; i < VOLUME_DIVISIONS && difference != 0; ++i) {
+                int newHeight = regionHeights[i] + adjustPerRegion;
+                // For final adjustment, allow going beyond soft limits if necessary
+                if (newHeight >= 1) {  // Only enforce absolute minimum of 1px
+                    regionHeights[i] = newHeight;
+                    difference -= adjustPerRegion;
+                    adjusted = true;
+                }
+            }
+
+            // Safety: if no adjustment was possible, break to avoid infinite loop
+            if (!adjusted) {
+                break;
+            }
+        }
+
+        // Build boundaries from heights
+        int cumulativeY = bounds.top;
+        for (int i = 0; i < VOLUME_DIVISIONS - 1; ++i) {
+            cumulativeY += regionHeights[i];
             m_regionBoundaries.push_back(cumulativeY);
         }
     }
