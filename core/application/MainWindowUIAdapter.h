@@ -63,6 +63,9 @@ public:
     // Adaptive density slider
     void setVolumeFractions(const std::vector<double>& fractions) override;
 
+    // Volume fraction calculator for property widget graphs
+    void setVolumeFractionCalculator(const VolumeFractionCalculator* calculator) override;
+
     // Adapter specific methods
     MainWindowUI* getMainWindowUI() const { return ui; }
     VisualizationManager* getVisualizationManager() const { return visualizationManager.get(); }

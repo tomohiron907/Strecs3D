@@ -344,8 +344,12 @@ void MainWindowUI::createRightPaneWidget(QWidget* vtkParent)
     rightPaneWidget->setFixedWidth(RIGHT_PANE_WIDTH);
     
     // シグナル接続
-    connect(objectListWidget, &ObjectListWidget::objectSelected, 
+    connect(objectListWidget, &ObjectListWidget::objectSelected,
             propertyWidget, &PropertyWidget::onObjectSelected);
+
+    // ステップ変更をPropertyWidgetに通知
+    connect(processManagerWidget, &ProcessManagerWidget::stepChanged,
+            propertyWidget, &PropertyWidget::setCurrentStep);
 }
 
 void MainWindowUI::createVtkWidget()

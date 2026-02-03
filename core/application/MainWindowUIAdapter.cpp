@@ -332,3 +332,12 @@ void MainWindowUIAdapter::setVolumeFractions(const std::vector<double>& fraction
         slider->setVolumeFractions(fractions);
     }
 }
+
+void MainWindowUIAdapter::setVolumeFractionCalculator(const VolumeFractionCalculator* calculator) {
+    if (!ui) return;
+
+    auto* propertyWidget = ui->getPropertyWidget();
+    if (propertyWidget) {
+        propertyWidget->setVolumeFractionCalculator(calculator);
+    }
+}

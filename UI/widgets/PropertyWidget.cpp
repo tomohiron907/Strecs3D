@@ -1,5 +1,7 @@
 #include "PropertyWidget.h"
 #include "../../utils/StyleManager.h"
+#include "properties/StressDensityCurveWidget.h"
+#include "properties/VolumeFractionChartWidget.h"
 #include <QFrame>
 #include <QDebug>
 
@@ -47,7 +49,7 @@ void PropertyWidget::setupUI()
     // Stacked Widget for content
     m_stackedWidget = new QStackedWidget(containerFrame);
     m_stackedWidget->setStyleSheet("background-color: transparent; border: none;");
-    
+
     // 0: Empty/Info
     m_emptyWidget = new QWidget();
     QVBoxLayout* emptyLayout = new QVBoxLayout(m_emptyWidget);
@@ -56,19 +58,19 @@ void PropertyWidget::setupUI()
     infoLabel->setStyleSheet("color: #888;");
     emptyLayout->addWidget(infoLabel);
     m_stackedWidget->addWidget(m_emptyWidget);
-    
+
     // 1: Step Properties
     m_stepWidget = new StepPropertyWidget();
     m_stackedWidget->addWidget(m_stepWidget);
-    
+
     // 2: Constraint Properties
     m_constraintWidget = new ConstraintPropertyWidget();
     m_stackedWidget->addWidget(m_constraintWidget);
-    
+
     // 3: Load Properties
     m_loadWidget = new LoadPropertyWidget();
     m_stackedWidget->addWidget(m_loadWidget);
-    
+
     // 4: Simulation (Placeholders for now)
     m_simulationWidget = new QWidget(); // TODO: Implement specific widget
     QVBoxLayout* simLayout = new QVBoxLayout(m_simulationWidget);
@@ -80,6 +82,29 @@ void PropertyWidget::setupUI()
     QVBoxLayout* infillLayout = new QVBoxLayout(m_infillWidget);
     infillLayout->addWidget(new QLabel("Infill Region Properties"));
     m_stackedWidget->addWidget(m_infillWidget);
+
+    // 6: Infill Default View (graphs)
+    m_infillDefaultWidget = new QWidget();
+    QVBoxLayout* infillDefaultLayout = new QVBoxLayout(m_infillDefaultWidget);
+    infillDefaultLayout->setContentsMargins(5, 5, 5, 5);
+    infillDefaultLayout->setSpacing(5);
+
+    m_stressDensityCurveWidget = new StressDensityCurveWidget();
+    m_volumeFractionChartWidget = new VolumeFractionChartWidget();
+
+    QLabel* curveLabel = new QLabel("Stress - Density Curve");
+    curveLabel->setAlignment(Qt::AlignCenter);
+    curveLabel->setStyleSheet("color: #aaa; font-size: 11px;");
+    infillDefaultLayout->addWidget(curveLabel);
+    infillDefaultLayout->addWidget(m_stressDensityCurveWidget, 1);
+
+    QLabel* chartLabel = new QLabel("Volume Fraction Distribution");
+    chartLabel->setAlignment(Qt::AlignCenter);
+    chartLabel->setStyleSheet("color: #aaa; font-size: 11px;");
+    infillDefaultLayout->addWidget(chartLabel);
+    infillDefaultLayout->addWidget(m_volumeFractionChartWidget, 1);
+
+    m_stackedWidget->addWidget(m_infillDefaultWidget);
 
     containerLayout->addWidget(m_stackedWidget);
 
@@ -110,10 +135,33 @@ void PropertyWidget::setVisualizationManager(VisualizationManager* vizManager)
     }
 }
 
+void PropertyWidget::setVolumeFractionCalculator(const VolumeFractionCalculator* calculator)
+{
+    if (m_volumeFractionChartWidget) {
+        m_volumeFractionChartWidget->setVolumeFractionCalculator(calculator);
+    }
+}
+
+void PropertyWidget::setCurrentStep(ProcessStep step)
+{
+    m_currentStep = step;
+    updateDefaultView();
+}
+
+void PropertyWidget::updateDefaultView()
+{
+    // If we're on InfillMap step and showing the empty/default widget, switch to graph view
+    if (m_currentStep == ProcessStep::InfillMap &&
+        m_stackedWidget->currentWidget() == m_emptyWidget) {
+        m_titleLabel->setText("Infill Analysis");
+        m_stackedWidget->setCurrentWidget(m_infillDefaultWidget);
+    }
+}
+
 void PropertyWidget::onObjectSelected(ObjectType type, const QString& id, int index)
 {
     if (!m_uiState) return;
-    
+
     switch (type) {
         case ObjectType::ITEM_STEP:
         case ObjectType::ROOT_STEP: {
@@ -150,8 +198,13 @@ void PropertyWidget::onObjectSelected(ObjectType type, const QString& id, int in
         case ObjectType::ROOT_BC_LOADS:
         case ObjectType::ROOT_INFILL:
         default:
-            m_titleLabel->setText("Properties");
-            m_stackedWidget->setCurrentWidget(m_emptyWidget);
+            if (m_currentStep == ProcessStep::InfillMap) {
+                m_titleLabel->setText("Infill Analysis");
+                m_stackedWidget->setCurrentWidget(m_infillDefaultWidget);
+            } else {
+                m_titleLabel->setText("Properties");
+                m_stackedWidget->setCurrentWidget(m_emptyWidget);
+            }
             break;
     }
 }

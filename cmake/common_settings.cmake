@@ -146,6 +146,8 @@ add_executable(Strecs3D
   UI/widgets/properties/StepPropertyWidget.cpp
   UI/widgets/properties/ConstraintPropertyWidget.cpp
   UI/widgets/properties/LoadPropertyWidget.cpp
+  UI/widgets/properties/StressDensityCurveWidget.cpp
+  UI/widgets/properties/VolumeFractionChartWidget.cpp
   UI/widgets/process/ProcessFlowWidget.cpp
   UI/widgets/process/ProcessManagerWidget.cpp
   UI/widgets/process/RollbackConfirmationDialog.cpp

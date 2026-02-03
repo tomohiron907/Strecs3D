@@ -115,6 +115,9 @@ public:
     void clearMeshInfos() { meshInfos.clear(); }
     void addMeshInfo(const MeshInfo& info) { meshInfos.push_back(info); }
 
+    // VolumeFractionCalculatorへのアクセス
+    const VolumeFractionCalculator& getVolumeFractionCalculator() const { return volumeFractionCalculator; }
+
     // 体積分率計算（VolumeFractionCalculatorに委譲）
     bool computeVolumeFractions(int numDivisions = 20);
 

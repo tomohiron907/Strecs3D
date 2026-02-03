@@ -69,6 +69,8 @@ bool ApplicationController::openVtkFile(const std::string& vtkFile, IUserInterfa
             if (fileProcessor->getVtkProcessor()->computeVolumeFractions()) {
                 const auto& fractions = fileProcessor->getVtkProcessor()->getVolumeFractions();
                 ui->setVolumeFractions(fractions);
+                ui->setVolumeFractionCalculator(
+                    &fileProcessor->getVtkProcessor()->getVolumeFractionCalculator());
             }
         }
 
@@ -483,6 +485,8 @@ bool ApplicationController::runFEMPipeline(IUserInterface* ui, UIState* uiState,
                     // 計算成功時、体積分率をUIに設定
                     const auto& fractions = fileProcessor->getVtkProcessor()->getVolumeFractions();
                     ui->setVolumeFractions(fractions);
+                    ui->setVolumeFractionCalculator(
+                        &fileProcessor->getVtkProcessor()->getVolumeFractionCalculator());
                 } else {
                     std::cerr << "Warning: Failed to compute volume fractions." << std::endl;
                     // 計算失敗は致命的エラーではないため処理続行
