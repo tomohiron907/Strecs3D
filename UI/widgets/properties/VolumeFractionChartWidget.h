@@ -2,8 +2,7 @@
 #define VOLUMEFRACTIONCHARTWIDGET_H
 
 #include <QWidget>
-
-class VolumeFractionCalculator;
+#include <vector>
 
 class VolumeFractionChartWidget : public QWidget {
     Q_OBJECT
@@ -11,13 +10,13 @@ class VolumeFractionChartWidget : public QWidget {
 public:
     explicit VolumeFractionChartWidget(QWidget* parent = nullptr);
 
-    void setVolumeFractionCalculator(const VolumeFractionCalculator* calculator);
+    void setVolumeFractions(const std::vector<double>& fractions);
 
 protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
-    const VolumeFractionCalculator* m_calculator = nullptr;
+    std::vector<double> m_volumeFractions;
 };
 
 #endif // VOLUMEFRACTIONCHARTWIDGET_H

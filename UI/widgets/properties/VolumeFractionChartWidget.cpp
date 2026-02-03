@@ -1,5 +1,4 @@
 #include "VolumeFractionChartWidget.h"
-#include "../../../core/processing/VolumeFractionCalculator.h"
 #include <QPainter>
 #include <algorithm>
 
@@ -10,9 +9,9 @@ VolumeFractionChartWidget::VolumeFractionChartWidget(QWidget* parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
-void VolumeFractionChartWidget::setVolumeFractionCalculator(const VolumeFractionCalculator* calculator)
+void VolumeFractionChartWidget::setVolumeFractions(const std::vector<double>& fractions)
 {
-    m_calculator = calculator;
+    m_volumeFractions = fractions;
     update();
 }
 
@@ -40,11 +39,7 @@ void VolumeFractionChartWidget::paintEvent(QPaintEvent* /*event*/)
     QColor barColor(100, 180, 255);
     QColor textColor(160, 160, 160);
 
-    // Get data
-    std::vector<double> fractions;
-    if (m_calculator && m_calculator->hasResult()) {
-        fractions = m_calculator->getVolumeFractions();
-    }
+    const auto& fractions = m_volumeFractions;
 
     int numBins = fractions.empty() ? 20 : static_cast<int>(fractions.size());
     double maxFraction = 1.0;

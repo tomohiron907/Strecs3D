@@ -15,7 +15,6 @@
 class VisualizationManager;
 class StressDensityCurveWidget;
 class VolumeFractionChartWidget;
-class VolumeFractionCalculator;
 
 class PropertyWidget : public QWidget {
     Q_OBJECT
@@ -29,8 +28,8 @@ public:
     // Set VisualizationManager for LoadPropertyWidget
     void setVisualizationManager(VisualizationManager* vizManager);
 
-    // Set VolumeFractionCalculator for the chart widget
-    void setVolumeFractionCalculator(const VolumeFractionCalculator* calculator);
+    // Set volume fractions for the chart widget
+    void setVolumeFractions(const std::vector<double>& fractions);
 
 public slots:
     void onObjectSelected(ObjectType type, const QString& id, int index);

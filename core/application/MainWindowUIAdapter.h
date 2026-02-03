@@ -60,11 +60,8 @@ public:
     // UIState管理（UI層の責務）
     void registerDividedMeshes(const std::vector<MeshInfo>& meshInfos) override;
 
-    // Adaptive density slider
+    // Adaptive density slider + property widget volume fraction chart
     void setVolumeFractions(const std::vector<double>& fractions) override;
-
-    // Volume fraction calculator for property widget graphs
-    void setVolumeFractionCalculator(const VolumeFractionCalculator* calculator) override;
 
     // Adapter specific methods
     MainWindowUI* getMainWindowUI() const { return ui; }

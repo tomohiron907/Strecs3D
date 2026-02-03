@@ -135,10 +135,10 @@ void PropertyWidget::setVisualizationManager(VisualizationManager* vizManager)
     }
 }
 
-void PropertyWidget::setVolumeFractionCalculator(const VolumeFractionCalculator* calculator)
+void PropertyWidget::setVolumeFractions(const std::vector<double>& fractions)
 {
     if (m_volumeFractionChartWidget) {
-        m_volumeFractionChartWidget->setVolumeFractionCalculator(calculator);
+        m_volumeFractionChartWidget->setVolumeFractions(fractions);
     }
 }
 
@@ -150,11 +150,18 @@ void PropertyWidget::setCurrentStep(ProcessStep step)
 
 void PropertyWidget::updateDefaultView()
 {
-    // If we're on InfillMap step and showing the empty/default widget, switch to graph view
-    if (m_currentStep == ProcessStep::InfillMap &&
-        m_stackedWidget->currentWidget() == m_emptyWidget) {
-        m_titleLabel->setText("Infill Analysis");
-        m_stackedWidget->setCurrentWidget(m_infillDefaultWidget);
+    if (m_currentStep == ProcessStep::InfillMap) {
+        // InfillMap step: show graph view as default
+        if (m_stackedWidget->currentWidget() == m_emptyWidget) {
+            m_titleLabel->setText("Infill Analysis");
+            m_stackedWidget->setCurrentWidget(m_infillDefaultWidget);
+        }
+    } else {
+        // Other steps: revert to empty widget if graph view is showing
+        if (m_stackedWidget->currentWidget() == m_infillDefaultWidget) {
+            m_titleLabel->setText("Properties");
+            m_stackedWidget->setCurrentWidget(m_emptyWidget);
+        }
     }
 }
 

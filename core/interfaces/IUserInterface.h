@@ -7,7 +7,6 @@
 
 struct StressDensityMapping;
 class VtkProcessor;
-class VolumeFractionCalculator;
 
 // MeshInfo の完全な定義が必要
 #include "../processing/VtkProcessor.h"
@@ -68,11 +67,8 @@ public:
     // UIState管理（UI層の責務）
     virtual void registerDividedMeshes(const std::vector<MeshInfo>& meshInfos) = 0;
 
-    // Adaptive density slider
+    // Adaptive density slider + property widget volume fraction chart
     virtual void setVolumeFractions(const std::vector<double>& fractions) = 0;
-
-    // Volume fraction calculator for property widget graphs
-    virtual void setVolumeFractionCalculator(const VolumeFractionCalculator* calculator) = 0;
 
 public slots:
     // ApplicationControllerからのシグナルを受信するスロット
