@@ -1,5 +1,6 @@
 #include "StressDensityCurveWidget.h"
 #include "../../../utils/SettingsManager.h"
+#include "../../../utils/ColorManager.h"
 #include <QPainter>
 #include <QPainterPath>
 #include <cmath>
@@ -45,7 +46,7 @@ void StressDensityCurveWidget::paintEvent(QPaintEvent* /*event*/)
     // Grid and axes colors
     QColor axisColor(180, 180, 180);
     QColor gridColor(60, 60, 60);
-    QColor curveColor(100, 180, 255);
+    QColor curveColor = ColorManager::ACCENT_COLOR;
     QColor textColor(160, 160, 160);
     QColor clampColor(255, 160, 80);
 
@@ -118,24 +119,34 @@ void StressDensityCurveWidget::paintEvent(QPaintEvent* /*event*/)
     painter.drawLine(plotArea.left(), yMin, plotArea.right(), yMin);
     painter.drawLine(plotArea.left(), yMax, plotArea.right(), yMax);
 
-    // Draw curve
-    QPainterPath path;
-    const int numPoints = plotArea.width();
-    bool first = true;
+    // Draw curve using cubic Bezier segments for smoothness
+    const int numSamples = 64;
+    struct Pt { double x, y; };
+    std::vector<Pt> pts(numSamples + 1);
 
-    for (int px = 0; px <= numPoints; ++px) {
-        double stressMPa = STRESS_MAX_MPA * px / numPoints;
+    for (int i = 0; i <= numSamples; ++i) {
+        double stressMPa = STRESS_MAX_MPA * i / numSamples;
         double density = calculateDensityPercent(stressMPa);
+        pts[i].x = plotArea.left() + plotArea.width() * (stressMPa / STRESS_MAX_MPA);
+        pts[i].y = plotArea.bottom() - plotArea.height() * (density / 100.0);
+    }
 
-        int x = plotArea.left() + px;
-        int y = plotArea.bottom() - static_cast<int>(plotArea.height() * density / 100.0);
+    QPainterPath path;
+    path.moveTo(pts[0].x, pts[0].y);
 
-        if (first) {
-            path.moveTo(x, y);
-            first = false;
-        } else {
-            path.lineTo(x, y);
-        }
+    for (size_t i = 0; i < pts.size() - 1; ++i) {
+        // Catmull-Rom to cubic Bezier control points
+        const Pt& p0 = pts[i > 0 ? i - 1 : 0];
+        const Pt& p1 = pts[i];
+        const Pt& p2 = pts[i + 1];
+        const Pt& p3 = pts[i + 1 < pts.size() - 1 ? i + 2 : pts.size() - 1];
+
+        double cp1x = p1.x + (p2.x - p0.x) / 6.0;
+        double cp1y = p1.y + (p2.y - p0.y) / 6.0;
+        double cp2x = p2.x - (p3.x - p1.x) / 6.0;
+        double cp2y = p2.y - (p3.y - p1.y) / 6.0;
+
+        path.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
     }
 
     painter.setPen(QPen(curveColor, 2));

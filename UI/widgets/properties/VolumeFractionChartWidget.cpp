@@ -1,4 +1,5 @@
 #include "VolumeFractionChartWidget.h"
+#include "../../../utils/ColorManager.h"
 #include <QPainter>
 #include <algorithm>
 
@@ -36,7 +37,7 @@ void VolumeFractionChartWidget::paintEvent(QPaintEvent* /*event*/)
 
     QColor axisColor(180, 180, 180);
     QColor gridColor(60, 60, 60);
-    QColor barColor(100, 180, 255);
+    QColor barColor = ColorManager::ACCENT_COLOR;
     QColor textColor(160, 160, 160);
 
     const auto& fractions = m_volumeFractions;
