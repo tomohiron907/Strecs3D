@@ -6,6 +6,7 @@
 VolumeFractionChartWidget::VolumeFractionChartWidget(QWidget* parent)
     : QWidget(parent)
 {
+    setAttribute(Qt::WA_TranslucentBackground);
     setMinimumHeight(150);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
@@ -31,9 +32,6 @@ void VolumeFractionChartWidget::paintEvent(QPaintEvent* /*event*/)
                    height() - margin_top - margin_bottom);
 
     if (plotArea.width() <= 0 || plotArea.height() <= 0) return;
-
-    // Background
-    painter.fillRect(rect(), QColor(26, 26, 26));
 
     QColor axisColor(180, 180, 180);
     QColor gridColor(60, 60, 60);

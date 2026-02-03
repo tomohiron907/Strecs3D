@@ -8,6 +8,7 @@
 StressDensityCurveWidget::StressDensityCurveWidget(QWidget* parent)
     : QWidget(parent)
 {
+    setAttribute(Qt::WA_TranslucentBackground);
     setMinimumHeight(150);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
@@ -39,9 +40,6 @@ void StressDensityCurveWidget::paintEvent(QPaintEvent* /*event*/)
                    height() - margin_top - margin_bottom);
 
     if (plotArea.width() <= 0 || plotArea.height() <= 0) return;
-
-    // Background
-    painter.fillRect(rect(), QColor(26, 26, 26));
 
     // Grid and axes colors
     QColor axisColor(180, 180, 180);
