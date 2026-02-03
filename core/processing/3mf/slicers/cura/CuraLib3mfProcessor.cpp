@@ -1,4 +1,5 @@
 #include "CuraLib3mfProcessor.h"
+#include "../../../../../utils/SettingsManager.h"
 #include <iostream>
 #include <regex>
 #include <map>
@@ -67,7 +68,7 @@ bool CuraLib3mfProcessor::setMetaDataForInfillMesh(Lib3MF::PMeshObject Mesh, Fil
     metadataGroup->AddMetaData(cura_uri, "drop_to_buildplate", "False", "xs:boolean", false);
     metadataGroup->AddMetaData(cura_uri, "infill_mesh", "True", "xs:boolean", false);
     metadataGroup->AddMetaData(cura_uri, "infill_sparse_density", density_str, "xs:integer", false);
-    metadataGroup->AddMetaData(cura_uri, "infill_pattern", "gyroid", "xs:string", false);
+    metadataGroup->AddMetaData(cura_uri, "infill_pattern", SettingsManager::instance().infillPattern(), "xs:string", false);
     metadataGroup->AddMetaData(cura_uri, "wall_line_count", "0","xs:integer", false );
     metadataGroup->AddMetaData(cura_uri, "wall_thickness", "0", "xs:integer", false);
     metadataGroup->AddMetaData(cura_uri, "bottom_layers", "0", "xs:integer", false);

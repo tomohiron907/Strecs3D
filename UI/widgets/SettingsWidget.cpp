@@ -247,7 +247,7 @@ QWidget* SettingsWidget::createDensitySliderGroup()
     patternLabel->setStyleSheet(getInputLabelStyle());
 
     m_infillPatternComboBox = new QComboBox(container);
-    m_infillPatternComboBox->addItems({"gyroid", "grid", "cubic", "rectilinear", "line"});
+    m_infillPatternComboBox->addItems({"gyroid", "grid", "cubic"});
     m_infillPatternComboBox->setStyleSheet(getComboBoxStyle());
     m_infillPatternComboBox->setFixedWidth(100);
 

@@ -1,5 +1,6 @@
 #include "BambuLib3mfProcessor.h"
 #include "../../../../../utils/tempPathUtility.h"
+#include "../../../../../utils/SettingsManager.h"
 #include <iostream>
 #include <regex>
 #include <map>
@@ -101,7 +102,7 @@ bool BambuLib3mfProcessor::setMetaDataForInfillMeshBambu(Lib3MF::PMeshObject Mes
     part.metadata.push_back({"sparse_infill_anchor", "5"});
     part.metadata.push_back({"sparse_infill_anchor_max", "5"});
     part.metadata.push_back({"sparse_infill_density", density_str});
-    part.metadata.push_back({"sparse_infill_pattern", "gyroid"});
+    part.metadata.push_back({"sparse_infill_pattern", SettingsManager::instance().infillPattern()});
     part.mesh_stat = {0, 0, 0, 0, 0};
     object.parts.push_back(part);
     return true;
