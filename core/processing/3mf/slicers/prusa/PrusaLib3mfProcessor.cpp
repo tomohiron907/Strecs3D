@@ -74,8 +74,9 @@ std::string PrusaLib3mfProcessor::setMetaDataForInfillMeshXML(const ModelObjectI
     if (meshInfo) {
         double fillDensity = calculateFillDensity(*meshInfo, mappings, maxStress);
         int fillPercent = static_cast<int>(fillDensity);
-        xml << "   <metadata type=\"volume\" key=\"fill_density\" value=\"" 
+        xml << "   <metadata type=\"volume\" key=\"fill_density\" value=\""
             << fillPercent << "%\"/>\n";
+        xml << "   <metadata type=\"volume\" key=\"fill_pattern\" value=\"gyroid\"/>\n";
     }
     
     xml << "   <mesh edges_fixed=\"0\" degenerate_facets=\"0\" facets_removed=\"0\" facets_reversed=\"0\" backwards_edges=\"0\"/>\n";
