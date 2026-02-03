@@ -42,6 +42,7 @@ private:
 public:
     static constexpr const char* DEFAULT_SLICER_TYPE = "Bambu";
     static constexpr const char* DEFAULT_MATERIAL_TYPE = "PLA";
+    static constexpr const char* DEFAULT_INFILL_PATTERN = "gyroid";
 
     std::string slicerType() const { return m_slicerType; }
     void setSlicerType(const std::string& type) { m_slicerType = type; }
@@ -49,6 +50,10 @@ public:
     std::string materialType() const { return m_materialType; }
     void setMaterialType(const std::string& type) { m_materialType = type; }
 
+    std::string infillPattern() const { return m_infillPattern; }
+    void setInfillPattern(const std::string& pattern) { m_infillPattern = pattern; }
+
 private:
     std::string m_materialType = "PLA";
+    std::string m_infillPattern = "gyroid";
 };

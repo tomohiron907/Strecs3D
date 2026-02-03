@@ -18,6 +18,7 @@ SettingsWidget::SettingsWidget(QWidget* parent)
     , m_densityValidator(nullptr)
     , m_slicerComboBox(nullptr)
     , m_materialComboBox(nullptr)
+    , m_infillPatternComboBox(nullptr)
 {
     setupUI();
     loadSettings();
@@ -216,7 +217,7 @@ QWidget* SettingsWidget::createDensitySliderGroup()
     wrapperLayout->setSpacing(5);
 
     // Title
-    QLabel* title = new QLabel("Density Slider", wrapper);
+    QLabel* title = new QLabel("Infill", wrapper);
     title->setStyleSheet(getTitleLabelStyle());
     wrapperLayout->addWidget(title);
 
@@ -238,6 +239,23 @@ QWidget* SettingsWidget::createDensitySliderGroup()
     // Max Density row
     m_maxDensityEdit = createDensityInput();
     containerLayout->addLayout(createDensityRow("Maximum Density", m_maxDensityEdit));
+
+    // Infill Pattern row
+    QHBoxLayout* patternRow = new QHBoxLayout();
+
+    QLabel* patternLabel = new QLabel("Infill Pattern", container);
+    patternLabel->setStyleSheet(getInputLabelStyle());
+
+    m_infillPatternComboBox = new QComboBox(container);
+    m_infillPatternComboBox->addItems({"gyroid", "grid", "cubic", "rectilinear", "line"});
+    m_infillPatternComboBox->setStyleSheet(getComboBoxStyle());
+    m_infillPatternComboBox->setFixedWidth(100);
+
+    patternRow->addWidget(patternLabel);
+    patternRow->addStretch();
+    patternRow->addWidget(m_infillPatternComboBox);
+
+    containerLayout->addLayout(patternRow);
 
     wrapperLayout->addWidget(container);
 
@@ -290,6 +308,8 @@ void SettingsWidget::connectSignals()
             this, &SettingsWidget::onSlicerTypeChanged);
     connect(m_materialComboBox, &QComboBox::currentTextChanged,
             this, &SettingsWidget::onMaterialTypeChanged);
+    connect(m_infillPatternComboBox, &QComboBox::currentTextChanged,
+            this, &SettingsWidget::onInfillPatternChanged);
 }
 
 void SettingsWidget::loadSettings()
@@ -308,6 +328,12 @@ void SettingsWidget::loadSettings()
     int materialIndex = m_materialComboBox->findText(currentMaterial);
     if (materialIndex != -1) {
         m_materialComboBox->setCurrentIndex(materialIndex);
+    }
+
+    QString currentPattern = QString::fromStdString(settings.infillPattern());
+    int patternIndex = m_infillPatternComboBox->findText(currentPattern);
+    if (patternIndex != -1) {
+        m_infillPatternComboBox->setCurrentIndex(patternIndex);
     }
 
     m_initialLoadComplete = true;
@@ -359,6 +385,13 @@ void SettingsWidget::onMaterialTypeChanged(const QString& text)
     // Save settings to SettingsManager
     SettingsManager& settings = SettingsManager::instance();
     settings.setMaterialType(text.toStdString());
+    settings.save();
+}
+
+void SettingsWidget::onInfillPatternChanged(const QString& text)
+{
+    SettingsManager& settings = SettingsManager::instance();
+    settings.setInfillPattern(text.toStdString());
     settings.save();
 }
 

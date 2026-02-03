@@ -48,8 +48,9 @@ bool SettingsManager::save() {
     }
 
     json j;
-    j["density_slider"]["min_density"] = m_minDensity;
-    j["density_slider"]["max_density"] = m_maxDensity;
+    j["infill"]["min_density"] = m_minDensity;
+    j["infill"]["max_density"] = m_maxDensity;
+    j["infill"]["pattern"] = m_infillPattern;
     j["slicer"]["type"] = m_slicerType;
     j["material"]["type"] = m_materialType;
 
@@ -80,7 +81,19 @@ bool SettingsManager::load() {
         json j = json::parse(file);
         file.close();
 
-        if (j.contains("density_slider")) {
+        if (j.contains("infill")) {
+            auto& inf = j["infill"];
+            if (inf.contains("min_density")) {
+                m_minDensity = inf["min_density"].get<int>();
+            }
+            if (inf.contains("max_density")) {
+                m_maxDensity = inf["max_density"].get<int>();
+            }
+            if (inf.contains("pattern")) {
+                m_infillPattern = inf["pattern"].get<std::string>();
+            }
+        } else if (j.contains("density_slider")) {
+            // Backward compatibility: read old key
             auto& ds = j["density_slider"];
             if (ds.contains("min_density")) {
                 m_minDensity = ds["min_density"].get<int>();

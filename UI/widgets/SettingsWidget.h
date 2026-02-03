@@ -21,6 +21,7 @@ private slots:
     void onMaxDensityEditingFinished();
     void onSlicerTypeChanged(const QString& text);
     void onMaterialTypeChanged(const QString& text);
+    void onInfillPatternChanged(const QString& text);
 
 private:
     void setupUI();
@@ -46,6 +47,7 @@ private:
     QIntValidator* m_densityValidator;
     QComboBox* m_slicerComboBox;
     QComboBox* m_materialComboBox;
+    QComboBox* m_infillPatternComboBox;
     bool m_initialLoadComplete = false;
 
 protected:
