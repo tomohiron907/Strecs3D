@@ -28,8 +28,9 @@ public:
     // Set VisualizationManager for LoadPropertyWidget
     void setVisualizationManager(VisualizationManager* vizManager);
 
-    // Set volume fractions for the chart widget
+    // Set volume fractions and stress range for the chart widget
     void setVolumeFractions(const std::vector<double>& fractions);
+    void setStressRange(double minStress, double maxStress);
 
 public slots:
     void onObjectSelected(ObjectType type, const QString& id, int index);

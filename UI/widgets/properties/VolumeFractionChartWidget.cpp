@@ -17,6 +17,13 @@ void VolumeFractionChartWidget::setVolumeFractions(const std::vector<double>& fr
     update();
 }
 
+void VolumeFractionChartWidget::setStressRange(double minStress, double maxStress)
+{
+    m_stressMin = minStress;
+    m_stressMax = maxStress;
+    update();
+}
+
 void VolumeFractionChartWidget::paintEvent(QPaintEvent* /*event*/)
 {
     QPainter painter(this);
@@ -78,13 +85,28 @@ void VolumeFractionChartWidget::paintEvent(QPaintEvent* /*event*/)
         painter.drawText(labelRect, Qt::AlignRight | Qt::AlignVCenter, label);
     }
 
-    // X axis labels (every 5 bins)
-    for (int i = 0; i < numBins; i += 5) {
-        double barWidth = static_cast<double>(plotArea.width()) / numBins;
-        int x = plotArea.left() + static_cast<int>(barWidth * (i + 0.5));
-        QString label = QString::number(i);
-        QRect labelRect(x - 15, plotArea.bottom() + 3, 30, 15);
-        painter.drawText(labelRect, Qt::AlignCenter, label);
+    // X axis labels — min, mid, max only, inset to avoid clipping
+    double stressRange = m_stressMax - m_stressMin;
+    bool hasStress = stressRange > 0.0;
+    const int labelW = 60;
+    const int labelY = plotArea.bottom() + 3;
+    struct TickInfo { double frac; int offset; Qt::Alignment align; };
+    TickInfo ticks[] = {
+        {0.0,  0,            Qt::AlignLeft},
+        {0.5,  -labelW / 2,  Qt::AlignHCenter},
+        {1.0,  -labelW,      Qt::AlignRight},
+    };
+    for (const auto& tick : ticks) {
+        int x = plotArea.left() + static_cast<int>(plotArea.width() * tick.frac);
+        QString label;
+        if (hasStress) {
+            double stressPa = m_stressMin + stressRange * tick.frac;
+            label = QString::number(stressPa, 'g', 2);
+        } else {
+            label = QString::number(static_cast<int>(numBins * tick.frac));
+        }
+        QRect labelRect(x + tick.offset, labelY, labelW, 15);
+        painter.drawText(labelRect, tick.align | Qt::AlignVCenter, label);
     }
 
     // Axis titles
@@ -93,8 +115,9 @@ void VolumeFractionChartWidget::paintEvent(QPaintEvent* /*event*/)
     painter.setFont(titleFont);
     painter.setPen(textColor);
 
+    QString xTitle = hasStress ? "Stress (Pa)" : "Bin";
     QRect xTitleRect(plotArea.left(), plotArea.bottom() + 18, plotArea.width(), 15);
-    painter.drawText(xTitleRect, Qt::AlignCenter, "Bin");
+    painter.drawText(xTitleRect, Qt::AlignCenter, xTitle);
 
     painter.save();
     painter.translate(12, plotArea.center().y());

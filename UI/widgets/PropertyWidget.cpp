@@ -142,6 +142,13 @@ void PropertyWidget::setVolumeFractions(const std::vector<double>& fractions)
     }
 }
 
+void PropertyWidget::setStressRange(double minStress, double maxStress)
+{
+    if (m_volumeFractionChartWidget) {
+        m_volumeFractionChartWidget->setStressRange(minStress, maxStress);
+    }
+}
+
 void PropertyWidget::setCurrentStep(ProcessStep step)
 {
     m_currentStep = step;

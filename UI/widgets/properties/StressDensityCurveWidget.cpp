@@ -72,13 +72,22 @@ void StressDensityCurveWidget::paintEvent(QPaintEvent* /*event*/)
     painter.setFont(labelFont);
     painter.setPen(textColor);
 
-    // X axis labels
-    for (int i = 0; i <= 4; ++i) {
-        double stress = STRESS_MAX_MPA * i / 4.0;
-        int x = plotArea.left() + static_cast<int>(plotArea.width() * i / 4.0);
-        QString label = QString::number(stress, 'f', 1);
-        QRect labelRect(x - 20, plotArea.bottom() + 3, 40, 15);
-        painter.drawText(labelRect, Qt::AlignCenter, label);
+    // X axis labels — min, mid, max in Pa with scientific notation
+    const double stressMaxPa = STRESS_MAX_MPA * 1e6;
+    const int labelW = 60;
+    const int labelY = plotArea.bottom() + 3;
+    struct TickInfo { double frac; int offset; Qt::Alignment align; };
+    TickInfo ticks[] = {
+        {0.0,  0,            Qt::AlignLeft},
+        {0.5,  -labelW / 2,  Qt::AlignHCenter},
+        {1.0,  -labelW,      Qt::AlignRight},
+    };
+    for (const auto& tick : ticks) {
+        double stressPa = stressMaxPa * tick.frac;
+        int x = plotArea.left() + static_cast<int>(plotArea.width() * tick.frac);
+        QString label = QString::number(stressPa, 'g', 2);
+        QRect labelRect(x + tick.offset, labelY, labelW, 15);
+        painter.drawText(labelRect, tick.align | Qt::AlignVCenter, label);
     }
 
     // Y axis labels
@@ -97,7 +106,7 @@ void StressDensityCurveWidget::paintEvent(QPaintEvent* /*event*/)
 
     // X axis title
     QRect xTitleRect(plotArea.left(), plotArea.bottom() + 18, plotArea.width(), 15);
-    painter.drawText(xTitleRect, Qt::AlignCenter, "Stress (MPa)");
+    painter.drawText(xTitleRect, Qt::AlignCenter, "Stress (Pa)");
 
     // Y axis title (rotated)
     painter.save();

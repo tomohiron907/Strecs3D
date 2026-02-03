@@ -97,6 +97,12 @@ void MainWindowUIAdapter::initializeStressConfiguration(double minStress, double
             uiState->setStressDensityMappings(mappings);
         }
     }
+
+    // PropertyWidgetの棒グラフにストレス範囲を設定
+    auto* propertyWidget = ui->getPropertyWidget();
+    if (propertyWidget) {
+        propertyWidget->setStressRange(minStress, maxStress);
+    }
 }
 
 void MainWindowUIAdapter::showWarningMessage(const QString& title, const QString& message)
