@@ -22,6 +22,9 @@
     #ifndef PATH_MAX
     #define PATH_MAX MAX_PATH
     #endif
+    // Windows用にpopen/pcloseのマクロを定義
+    #define popen _popen
+    #define pclose _pclose
 #endif
 // ----------------------------------------------------
 
