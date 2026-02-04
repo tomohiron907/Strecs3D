@@ -18,7 +18,8 @@ double StressDensityCurveWidget::calculateDensityPercent(double stressMPa) const
     int minDensity = SettingsManager::instance().minDensity();
     int maxDensity = SettingsManager::instance().maxDensity();
 
-    double numerator = SAFE_FACTOR * stressMPa;
+    const double safeFactor = SettingsManager::instance().safetyFactor();
+    double numerator = safeFactor * stressMPa;
     double denominator = YIELD_STRENGTH * C;
     double density = std::pow(numerator / denominator, M) * 100.0;
 

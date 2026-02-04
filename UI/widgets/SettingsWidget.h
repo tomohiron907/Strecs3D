@@ -7,6 +7,7 @@ class QLineEdit;
 class QIntValidator;
 class QMouseEvent;
 class QComboBox;
+class QDoubleValidator;
 class QHBoxLayout;
 
 class SettingsWidget : public QWidget
@@ -22,6 +23,7 @@ private slots:
     void onSlicerTypeChanged(const QString& text);
     void onMaterialTypeChanged(const QString& text);
     void onInfillPatternChanged(const QString& text);
+    void onSafetyFactorEditingFinished();
 
 private:
     void setupUI();
@@ -31,6 +33,7 @@ private:
     QWidget* createSlicerSelectionGroup();
     QWidget* createMaterialSelectionGroup();
     QWidget* createDensitySliderGroup();
+    QWidget* createSafetyGroup();
     QLineEdit* createDensityInput();
     QHBoxLayout* createDensityRow(const QString& labelText, QLineEdit* edit);
     void connectSignals();
@@ -48,6 +51,8 @@ private:
     QComboBox* m_slicerComboBox;
     QComboBox* m_materialComboBox;
     QComboBox* m_infillPatternComboBox;
+    QLineEdit* m_safetyFactorEdit;
+    QDoubleValidator* m_safetyFactorValidator;
     bool m_initialLoadComplete = false;
 
 protected:

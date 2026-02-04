@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QIntValidator>
+#include <QDoubleValidator>
 #include <QGroupBox>
 #include <QMouseEvent>
 #include <QComboBox>
@@ -19,6 +20,8 @@ SettingsWidget::SettingsWidget(QWidget* parent)
     , m_slicerComboBox(nullptr)
     , m_materialComboBox(nullptr)
     , m_infillPatternComboBox(nullptr)
+    , m_safetyFactorEdit(nullptr)
+    , m_safetyFactorValidator(nullptr)
 {
     setupUI();
     loadSettings();
@@ -35,6 +38,7 @@ void SettingsWidget::setupUI()
     mainLayout->addWidget(createSlicerSelectionGroup());
     mainLayout->addWidget(createDensitySliderGroup());
     mainLayout->addWidget(createMaterialSelectionGroup());
+    mainLayout->addWidget(createSafetyGroup());
     mainLayout->addStretch();
 
     connectSignals();
@@ -310,6 +314,8 @@ void SettingsWidget::connectSignals()
             this, &SettingsWidget::onMaterialTypeChanged);
     connect(m_infillPatternComboBox, &QComboBox::currentTextChanged,
             this, &SettingsWidget::onInfillPatternChanged);
+    connect(m_safetyFactorEdit, &QLineEdit::editingFinished,
+            this, &SettingsWidget::onSafetyFactorEditingFinished);
 }
 
 void SettingsWidget::loadSettings()
@@ -335,6 +341,8 @@ void SettingsWidget::loadSettings()
     if (patternIndex != -1) {
         m_infillPatternComboBox->setCurrentIndex(patternIndex);
     }
+
+    m_safetyFactorEdit->setText(QString::number(settings.safetyFactor()));
 
     m_initialLoadComplete = true;
 }
@@ -393,6 +401,55 @@ void SettingsWidget::onInfillPatternChanged(const QString& text)
     SettingsManager& settings = SettingsManager::instance();
     settings.setInfillPattern(text.toStdString());
     settings.save();
+}
+
+QWidget* SettingsWidget::createSafetyGroup()
+{
+    QWidget* wrapper = new QWidget(this);
+    wrapper->setFixedWidth(600);
+
+    QVBoxLayout* wrapperLayout = new QVBoxLayout(wrapper);
+    wrapperLayout->setContentsMargins(0, 0, 0, 0);
+    wrapperLayout->setSpacing(5);
+
+    // Title
+    QLabel* title = new QLabel("Safety", wrapper);
+    title->setStyleSheet(getTitleLabelStyle());
+    wrapperLayout->addWidget(title);
+
+    // Container frame
+    QFrame* container = new QFrame(wrapper);
+    container->setStyleSheet(getContainerFrameStyle());
+
+    QVBoxLayout* containerLayout = new QVBoxLayout(container);
+    containerLayout->setContentsMargins(80, 20, 80, 20);
+
+    // Validator for safety factor (0.1 - 100.0, 1 decimal)
+    m_safetyFactorValidator = new QDoubleValidator(0.1, 100.0, 1, this);
+
+    // Safety Factor input
+    m_safetyFactorEdit = new QLineEdit(this);
+    m_safetyFactorEdit->setValidator(m_safetyFactorValidator);
+    m_safetyFactorEdit->setStyleSheet(getLineEditStyle());
+    m_safetyFactorEdit->setFixedWidth(100);
+    m_safetyFactorEdit->setAlignment(Qt::AlignLeft);
+
+    containerLayout->addLayout(createDensityRow("Safety Factor", m_safetyFactorEdit));
+
+    wrapperLayout->addWidget(container);
+
+    return wrapper;
+}
+
+void SettingsWidget::onSafetyFactorEditingFinished()
+{
+    bool ok;
+    double value = m_safetyFactorEdit->text().toDouble(&ok);
+    if (ok && value > 0.0) {
+        SettingsManager& settings = SettingsManager::instance();
+        settings.setSafetyFactor(value);
+        settings.save();
+    }
 }
 
 void SettingsWidget::mousePressEvent(QMouseEvent* event)

@@ -467,7 +467,7 @@ int AdaptiveDensitySlider::stressToY(double stress) const {
 }
 
 int AdaptiveDensitySlider::calculateDensityFromStress(double stress) const {
-    const double SAFE_FACTOR = 3.0;
+    const double SAFE_FACTOR = SettingsManager::instance().safetyFactor();
     const double YIELD_STRENGTH = 30.0;
     const double C = 0.23;
     const double M = 2.0 / 3.0;

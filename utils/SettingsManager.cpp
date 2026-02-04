@@ -42,6 +42,10 @@ void SettingsManager::setMaxDensity(int value) {
     m_maxDensity = value;
 }
 
+void SettingsManager::setSafetyFactor(double value) {
+    m_safetyFactor = value;
+}
+
 bool SettingsManager::save() {
     if (!ensureConfigDirectory()) {
         return false;
@@ -53,6 +57,7 @@ bool SettingsManager::save() {
     j["infill"]["pattern"] = m_infillPattern;
     j["slicer"]["type"] = m_slicerType;
     j["material"]["type"] = m_materialType;
+    j["safety"]["factor"] = m_safetyFactor;
 
     QString filePath = getSettingsFilePath();
     std::ofstream file(filePath.toStdString());
@@ -114,6 +119,13 @@ bool SettingsManager::load() {
             auto& mat = j["material"];
             if (mat.contains("type")) {
                 m_materialType = mat["type"].get<std::string>();
+            }
+        }
+
+        if (j.contains("safety")) {
+            auto& sf = j["safety"];
+            if (sf.contains("factor")) {
+                m_safetyFactor = sf["factor"].get<double>();
             }
         }
         return true;
