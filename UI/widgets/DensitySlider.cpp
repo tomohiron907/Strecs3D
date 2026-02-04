@@ -462,7 +462,7 @@ void DensitySlider::drawAxisLabels(QPainter& painter, const SliderBounds& bounds
     painter.translate(leftLabelX, centerY);
     painter.rotate(-90);
     QRect leftTextRect(-labelHeight / 2, -40, labelHeight, 80);
-    painter.drawText(leftTextRect, Qt::AlignCenter, "von Mises Stress[Pa]");
+    painter.drawText(leftTextRect, Qt::AlignCenter, "Stress[Pa]");
     painter.restore();
 
     // 右側ラベル: Infill Density [%]

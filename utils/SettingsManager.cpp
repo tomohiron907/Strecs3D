@@ -46,6 +46,10 @@ void SettingsManager::setSafetyFactor(double value) {
     m_safetyFactor = value;
 }
 
+void SettingsManager::setZStressFactor(double value) {
+    m_zStressFactor = value;
+}
+
 bool SettingsManager::save() {
     if (!ensureConfigDirectory()) {
         return false;
@@ -58,6 +62,7 @@ bool SettingsManager::save() {
     j["slicer"]["type"] = m_slicerType;
     j["material"]["type"] = m_materialType;
     j["safety"]["factor"] = m_safetyFactor;
+    j["safety"]["z_stress_factor"] = m_zStressFactor;
 
     QString filePath = getSettingsFilePath();
     std::ofstream file(filePath.toStdString());
@@ -126,6 +131,9 @@ bool SettingsManager::load() {
             auto& sf = j["safety"];
             if (sf.contains("factor")) {
                 m_safetyFactor = sf["factor"].get<double>();
+            }
+            if (sf.contains("z_stress_factor")) {
+                m_zStressFactor = sf["z_stress_factor"].get<double>();
             }
         }
         return true;

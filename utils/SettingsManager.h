@@ -7,6 +7,7 @@ public:
     static constexpr int DEFAULT_MIN_DENSITY = 5;
     static constexpr int DEFAULT_MAX_DENSITY = 90;
     static constexpr double DEFAULT_SAFETY_FACTOR = 3.0;
+    static constexpr double DEFAULT_Z_STRESS_FACTOR = 2.0;
 
     // シングルトンインスタンスの取得
     static SettingsManager& instance();
@@ -19,11 +20,13 @@ public:
     int minDensity() const { return m_minDensity; }
     int maxDensity() const { return m_maxDensity; }
     double safetyFactor() const { return m_safetyFactor; }
+    double zStressFactor() const { return m_zStressFactor; }
 
     // 設定値のセッター
     void setMinDensity(int value);
     void setMaxDensity(int value);
     void setSafetyFactor(double value);
+    void setZStressFactor(double value);
 
     // 設定の保存・読み込み
     bool save();
@@ -39,6 +42,7 @@ private:
     int m_minDensity = DEFAULT_MIN_DENSITY;
     int m_maxDensity = DEFAULT_MAX_DENSITY;
     double m_safetyFactor = DEFAULT_SAFETY_FACTOR;
+    double m_zStressFactor = DEFAULT_Z_STRESS_FACTOR;
     std::string m_slicerType = "Bambu"; // Default to Bambu
 
     bool ensureConfigDirectory();

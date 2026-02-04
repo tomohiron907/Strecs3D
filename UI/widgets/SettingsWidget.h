@@ -24,6 +24,7 @@ private slots:
     void onMaterialTypeChanged(const QString& text);
     void onInfillPatternChanged(const QString& text);
     void onSafetyFactorEditingFinished();
+    void onZStressFactorEditingFinished();
 
 private:
     void setupUI();
@@ -53,6 +54,8 @@ private:
     QComboBox* m_infillPatternComboBox;
     QLineEdit* m_safetyFactorEdit;
     QDoubleValidator* m_safetyFactorValidator;
+    QLineEdit* m_zStressFactorEdit;
+    QDoubleValidator* m_zStressFactorValidator;
     bool m_initialLoadComplete = false;
 
 protected:

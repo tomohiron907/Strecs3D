@@ -22,6 +22,8 @@ SettingsWidget::SettingsWidget(QWidget* parent)
     , m_infillPatternComboBox(nullptr)
     , m_safetyFactorEdit(nullptr)
     , m_safetyFactorValidator(nullptr)
+    , m_zStressFactorEdit(nullptr)
+    , m_zStressFactorValidator(nullptr)
 {
     setupUI();
     loadSettings();
@@ -316,6 +318,8 @@ void SettingsWidget::connectSignals()
             this, &SettingsWidget::onInfillPatternChanged);
     connect(m_safetyFactorEdit, &QLineEdit::editingFinished,
             this, &SettingsWidget::onSafetyFactorEditingFinished);
+    connect(m_zStressFactorEdit, &QLineEdit::editingFinished,
+            this, &SettingsWidget::onZStressFactorEditingFinished);
 }
 
 void SettingsWidget::loadSettings()
@@ -343,6 +347,7 @@ void SettingsWidget::loadSettings()
     }
 
     m_safetyFactorEdit->setText(QString::number(settings.safetyFactor()));
+    m_zStressFactorEdit->setText(QString::number(settings.zStressFactor()));
 
     m_initialLoadComplete = true;
 }
@@ -436,6 +441,17 @@ QWidget* SettingsWidget::createSafetyGroup()
 
     containerLayout->addLayout(createDensityRow("Safety Factor", m_safetyFactorEdit));
 
+    // Z Stress Factor input
+    m_zStressFactorValidator = new QDoubleValidator(1.0, 10.0, 1, this);
+
+    m_zStressFactorEdit = new QLineEdit(this);
+    m_zStressFactorEdit->setValidator(m_zStressFactorValidator);
+    m_zStressFactorEdit->setStyleSheet(getLineEditStyle());
+    m_zStressFactorEdit->setFixedWidth(100);
+    m_zStressFactorEdit->setAlignment(Qt::AlignLeft);
+
+    containerLayout->addLayout(createDensityRow("Delamination Risk Multiplier", m_zStressFactorEdit));
+
     wrapperLayout->addWidget(container);
 
     return wrapper;
@@ -448,6 +464,17 @@ void SettingsWidget::onSafetyFactorEditingFinished()
     if (ok && value > 0.0) {
         SettingsManager& settings = SettingsManager::instance();
         settings.setSafetyFactor(value);
+        settings.save();
+    }
+}
+
+void SettingsWidget::onZStressFactorEditingFinished()
+{
+    bool ok;
+    double value = m_zStressFactorEdit->text().toDouble(&ok);
+    if (ok && value >= 1.0) {
+        SettingsManager& settings = SettingsManager::instance();
+        settings.setZStressFactor(value);
         settings.save();
     }
 }

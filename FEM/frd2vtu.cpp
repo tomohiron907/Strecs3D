@@ -7,6 +7,7 @@
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkCellType.h>
 
+#include "../utils/SettingsManager.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -41,7 +42,7 @@ int convertFrdToVtu(const std::string& frd_filename, const std::string& vtu_file
     displacement->SetNumberOfComponents(3);
 
     auto stress = vtkSmartPointer<vtkDoubleArray>::New();
-    stress->SetName("Stress");
+    stress->SetName("Stress_Tensor");
     stress->SetNumberOfComponents(6); // Sxx, Syy, Szz, Sxy, Syz, Szx
 
     auto strain = vtkSmartPointer<vtkDoubleArray>::New();
@@ -52,9 +53,9 @@ int convertFrdToVtu(const std::string& frd_filename, const std::string& vtu_file
     error->SetName("Estimation_Error");
     error->SetNumberOfComponents(1);
 
-    auto vonMisesStress = vtkSmartPointer<vtkDoubleArray>::New();
-    vonMisesStress->SetName("von Mises Stress");
-    vonMisesStress->SetNumberOfComponents(1);
+    auto eqStress = vtkSmartPointer<vtkDoubleArray>::New();
+    eqStress->SetName("Stress");
+    eqStress->SetNumberOfComponents(1);
 
     // --- ファイル解析 ---
     std::string line;
@@ -141,16 +142,21 @@ int convertFrdToVtu(const std::string& frd_filename, const std::string& vtu_file
                     s4 *= 1e6; s5 *= 1e6; s6 *= 1e6;
                     
                     stress->InsertNextTuple6(s1, s2, s3, s4, s5, s6);
-                    
-                    // von Mises応力を計算
-                    // von Mises = sqrt(0.5 * ((s1-s2)^2 + (s2-s3)^2 + (s3-s1)^2 + 6*(s4^2 + s5^2 + s6^2)))
-                    double vonMises = std::sqrt(0.5 * (
-                        (s1 - s2) * (s1 - s2) + 
-                        (s2 - s3) * (s2 - s3) + 
-                        (s3 - s1) * (s3 - s1) + 
-                        6.0 * (s4 * s4 + s5 * s5 + s6 * s6)
+
+                    // 等価応力を計算（Z方向の重み係数を適用）
+                    double kz = SettingsManager::instance().zStressFactor();
+                    // Z方向の応力成分に重み係数を適用
+                    double s3w = s3 * kz;  // σz に重み
+                    double s5w = s5 * kz;  // τyz に重み
+                    double s6w = s6 * kz;  // τxz に重み
+
+                    double eqStressVal = std::sqrt(0.5 * (
+                        (s1 - s2) * (s1 - s2) +
+                        (s2 - s3w) * (s2 - s3w) +
+                        (s3w - s1) * (s3w - s1) +
+                        6.0 * (s4 * s4 + s5w * s5w + s6w * s6w)
                     ));
-                    vonMisesStress->InsertNextTuple1(vonMises);
+                    eqStress->InsertNextTuple1(eqStressVal);
                     break;
                 }
                 case ParserState::STRAIN: {
@@ -182,7 +188,7 @@ int convertFrdToVtu(const std::string& frd_filename, const std::string& vtu_file
     unstructuredGrid->GetPointData()->AddArray(stress);
     unstructuredGrid->GetPointData()->AddArray(strain);
     unstructuredGrid->GetPointData()->AddArray(error);
-    unstructuredGrid->GetPointData()->AddArray(vonMisesStress);
+    unstructuredGrid->GetPointData()->AddArray(eqStress);
 
 
     // --- VTUファイルに書き出し ---
