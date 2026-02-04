@@ -441,11 +441,8 @@ void MainWindowUI::connectUIStateSignals()
     // Connect SettingsWidget's regionCountChanged signal to AdaptiveDensitySlider's setRegionCount
     if (m_settingsWidget) {
         if (AdaptiveDensitySlider* slider = getRangeSlider()) {
-             qDebug() << "Connecting SettingsWidget::regionCountChanged to AdaptiveDensitySlider::setRegionCount";
              connect(m_settingsWidget, &SettingsWidget::regionCountChanged,
                     slider, &AdaptiveDensitySlider::setRegionCount);
-        } else {
-             qDebug() << "Warning: AdaptiveDensitySlider not found when connecting signals";
         }
     }
     

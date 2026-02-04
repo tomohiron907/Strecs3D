@@ -380,9 +380,18 @@ void AdaptiveDensitySlider::updatePercentEditPositions() {
     }
 }
 
+// ... (inside mouseMoveEvent or standard helper methods)
+
 void AdaptiveDensitySlider::clampHandles() {
     int top = m_margin;
     int bottom = height() - m_margin;
+    
+    // Special case for single handle
+    if (m_handles.size() == 1) {
+        m_handles[0] = std::clamp(m_handles[0], top, bottom);
+        return;
+    }
+
     for (int i = 0; i < (int)m_handles.size(); ++i) {
         if (i == 0)
             m_handles[i] = std::clamp(m_handles[i], top, m_handles[i+1] - m_minDistance);
@@ -392,6 +401,8 @@ void AdaptiveDensitySlider::clampHandles() {
             m_handles[i] = std::clamp(m_handles[i], m_handles[i-1] + m_minDistance, m_handles[i+1] - m_minDistance);
     }
 }
+
+
 
 int AdaptiveDensitySlider::handleAtPosition(const QPoint& pos) const {
     SliderBounds bounds = getSliderBounds();
@@ -668,7 +679,6 @@ void AdaptiveDensitySlider::drawAxisLabels(QPainter& painter, const SliderBounds
 }
 
 void AdaptiveDensitySlider::setRegionCount(int count) {
-    qDebug() << "AdaptiveDensitySlider: setRegionCount called with:" << count << "Current:" << m_regionCount;
     if (count >= 2 && count <= 10 && count != m_regionCount) {
         rebuildForRegionCount(count);
     }

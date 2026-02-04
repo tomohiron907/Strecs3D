@@ -511,7 +511,6 @@ void SettingsWidget::onRegionCountEditingFinished()
         SettingsManager& settings = SettingsManager::instance();
         settings.setRegionCount(value);
         settings.save();
-        qDebug() << "SettingsWidget: Emitting regionCountChanged with value:" << value;
         emit regionCountChanged(value);
     }
 }
