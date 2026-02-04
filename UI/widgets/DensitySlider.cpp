@@ -18,12 +18,11 @@
 DensitySlider::DensitySlider(QWidget* parent)
     : QWidget(parent)
 {
-    // コンストラクタで固定値ではなく、後で計算する
-    m_handles.resize(HANDLE_COUNT, 0); // 仮の値
+    m_handles.resize(HANDLE_COUNT, 0);
+    m_regionPercents.resize(REGION_COUNT, 20.0);
     setMinimumWidth(120);
     setMinimumHeight(220);
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
-    // パーセント入力欄を作成
     for (int i = 0; i < REGION_COUNT; ++i) {
         QLineEdit* edit = new QLineEdit(this);
         edit->setFixedWidth(40);
@@ -215,36 +214,28 @@ void DensitySlider::updateStressDensityMappings() {
 
     m_stressDensityMappings.clear();
 
-    // スライダーのハンドル位置から stress 値を計算
-    // handles[0] = 最も下のハンドル（最小stress側）
-    // handles[1] = 中央のハンドル
-    // handles[2] = 最も上のハンドル（最大stress側）
-    double stressAtHandle0 = yToStress(m_handles[0]);
-    double stressAtHandle1 = yToStress(m_handles[1]);
-    double stressAtHandle2 = yToStress(m_handles[2]);
+    std::vector<double> handleStresses;
+    for (int i = 0; i < HANDLE_COUNT; ++i) {
+        handleStresses.push_back(yToStress(m_handles[i]));
+    }
 
-    // 各セクションの応力範囲と平均値を計算し、密度を設定
     struct RegionStress {
         double minStress;
         double maxStress;
     };
 
-    std::vector<RegionStress> regions = {
-        {m_originalMinStress, stressAtHandle2},  // 領域0: 最上部
-        {stressAtHandle2, stressAtHandle1},      // 領域1
-        {stressAtHandle1, stressAtHandle0},      // 領域2
-        {stressAtHandle0, m_originalMaxStress}   // 領域3: 最下部
-    };
+    // Build regions dynamically: handles[0]=top/high stress, handles[last]=bottom/low stress
+    std::vector<RegionStress> regions;
+    regions.push_back({m_originalMinStress, handleStresses[HANDLE_COUNT - 1]});
+    for (int i = HANDLE_COUNT - 1; i > 0; --i) {
+        regions.push_back({handleStresses[i], handleStresses[i - 1]});
+    }
+    regions.push_back({handleStresses[0], m_originalMaxStress});
 
-    // 各セクションの密度を応力値から計算
     for (int i = 0; i < REGION_COUNT; ++i) {
-        //各セクションの最大値から密度を計算
         int calculatedDensity = calculateDensityFromStress(regions[i].maxStress);
-
-        // m_regionPercentsを更新
         m_regionPercents[i] = calculatedDensity;
 
-        // stressDensityMappingsに追加
         m_stressDensityMappings.push_back({
             regions[i].minStress,
             regions[i].maxStress,
@@ -252,7 +243,6 @@ void DensitySlider::updateStressDensityMappings() {
         });
     }
 
-    // 入力欄を更新
     for (int i = 0; i < REGION_COUNT; ++i) {
         m_percentEdits[i]->setText(QString::number(m_regionPercents[i], 'g', 2));
     }
@@ -263,9 +253,9 @@ void DensitySlider::updateInitialHandles() {
     int availableHeight = bounds.bottom - bounds.top;
     int segmentHeight = availableHeight / REGION_COUNT;
 
-    m_handles[0] = bounds.top + segmentHeight;       // 1/4位置
-    m_handles[1] = bounds.top + 2 * segmentHeight;   // 2/4位置
-    m_handles[2] = bounds.top + 3 * segmentHeight;   // 3/4位置
+    for (int i = 0; i < HANDLE_COUNT; ++i) {
+        m_handles[i] = bounds.top + (i + 1) * segmentHeight;
+    }
 }
 
 void DensitySlider::updatePercentEditPositions() {

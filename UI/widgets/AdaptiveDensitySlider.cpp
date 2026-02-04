@@ -19,6 +19,7 @@ AdaptiveDensitySlider::AdaptiveDensitySlider(QWidget* parent)
     : QWidget(parent)
 {
     m_handles.resize(HANDLE_COUNT, 0);
+    m_regionPercents.resize(REGION_COUNT, 20.0);
     setMinimumWidth(120);
     setMinimumHeight(220);
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
@@ -322,21 +323,23 @@ void AdaptiveDensitySlider::updateStressDensityMappings() {
 
     m_stressDensityMappings.clear();
 
-    double stressAtHandle0 = yToStress(m_handles[0]);
-    double stressAtHandle1 = yToStress(m_handles[1]);
-    double stressAtHandle2 = yToStress(m_handles[2]);
+    std::vector<double> handleStresses;
+    for (int i = 0; i < HANDLE_COUNT; ++i) {
+        handleStresses.push_back(yToStress(m_handles[i]));
+    }
 
     struct RegionStress {
         double minStress;
         double maxStress;
     };
 
-    std::vector<RegionStress> regions = {
-        {m_originalMinStress, stressAtHandle2},
-        {stressAtHandle2, stressAtHandle1},
-        {stressAtHandle1, stressAtHandle0},
-        {stressAtHandle0, m_originalMaxStress}
-    };
+    // Build regions dynamically: handles[0]=top/high stress, handles[last]=bottom/low stress
+    std::vector<RegionStress> regions;
+    regions.push_back({m_originalMinStress, handleStresses[HANDLE_COUNT - 1]});
+    for (int i = HANDLE_COUNT - 1; i > 0; --i) {
+        regions.push_back({handleStresses[i], handleStresses[i - 1]});
+    }
+    regions.push_back({handleStresses[0], m_originalMaxStress});
 
     for (int i = 0; i < REGION_COUNT; ++i) {
         int calculatedDensity = calculateDensityFromStress(regions[i].maxStress);
@@ -359,9 +362,9 @@ void AdaptiveDensitySlider::updateInitialHandles() {
     int availableHeight = bounds.bottom - bounds.top;
     int segmentHeight = availableHeight / REGION_COUNT;
 
-    m_handles[0] = bounds.top + segmentHeight;
-    m_handles[1] = bounds.top + 2 * segmentHeight;
-    m_handles[2] = bounds.top + 3 * segmentHeight;
+    for (int i = 0; i < HANDLE_COUNT; ++i) {
+        m_handles[i] = bounds.top + (i + 1) * segmentHeight;
+    }
 }
 
 void AdaptiveDensitySlider::updatePercentEditPositions() {

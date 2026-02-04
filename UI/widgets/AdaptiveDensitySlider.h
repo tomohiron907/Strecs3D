@@ -51,7 +51,7 @@ private:
     static constexpr int VERTICAL_LABEL_DISTANCE = 70;
     static constexpr int RIGHT_LABEL_DISTANCE = 70;
     static constexpr int REGION_COUNT = 4;
-    static constexpr int HANDLE_COUNT = 3;
+    static constexpr int HANDLE_COUNT = REGION_COUNT - 1;
 
     // Helper structure for slider bounds
     struct SliderBounds {
@@ -96,7 +96,7 @@ private:
     double m_originalMinStress = 0.0;
     double m_originalMaxStress = 1.0;
     std::vector<QLineEdit*> m_percentEdits;
-    std::vector<double> m_regionPercents = {20, 40, 60, 80};
+    std::vector<double> m_regionPercents;
     std::vector<StressDensityMapping> m_stressDensityMappings;
     void updateStressDensityMappings();
     void updateInitialHandles();

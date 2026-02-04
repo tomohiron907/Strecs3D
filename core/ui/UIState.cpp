@@ -5,21 +5,8 @@
 UIState::UIState(QObject* parent)
     : QObject(parent)
 {
-    // Initialize default colors for density slider (4 sections)
-    m_densitySliderColors = {
-        QColor(255, 0, 0),    // Red
-        QColor(255, 165, 0),  // Orange
-        QColor(255, 255, 0),  // Yellow
-        QColor(0, 255, 0)     // Green
-    };
-
-    // Initialize default stress density mappings
-    m_stressDensityMappings = {
-        {0.0, 0.25, 0.2},
-        {0.25, 0.5, 0.4},
-        {0.5, 0.75, 0.6},
-        {0.75, 1.0, 0.8}
-    };
+    // Colors and stress density mappings are initialized dynamically
+    // from the slider when stress range is set
 }
 
 // オブジェクトリスト全体の設定

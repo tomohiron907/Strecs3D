@@ -16,7 +16,7 @@ class UIState;
 class ApplicationController : public QObject {
     Q_OBJECT
 public:
-    static constexpr int DIVIDED_MESH_COUNT = 4;
+    static constexpr int DIVIDED_MESH_COUNT = 3;
     ApplicationController(QObject* parent = nullptr);
     ~ApplicationController() = default;
     
