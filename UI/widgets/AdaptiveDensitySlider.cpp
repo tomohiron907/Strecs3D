@@ -18,13 +18,14 @@
 AdaptiveDensitySlider::AdaptiveDensitySlider(QWidget* parent)
     : QWidget(parent)
 {
-    m_handles.resize(HANDLE_COUNT, 0);
-    m_regionPercents.resize(REGION_COUNT, 20.0);
+    m_regionCount = SettingsManager::instance().regionCount();
+    m_handles.resize(handleCount(), 0);
+    m_regionPercents.resize(m_regionCount, 20.0);
     setMinimumWidth(120);
     setMinimumHeight(220);
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
 
-    for (int i = 0; i < REGION_COUNT; ++i) {
+    for (int i = 0; i < m_regionCount; ++i) {
         QLineEdit* edit = new QLineEdit(this);
         edit->setFixedWidth(40);
         edit->setAlignment(Qt::AlignCenter);
@@ -78,9 +79,9 @@ std::vector<StressDensityMapping> AdaptiveDensitySlider::stressDensityMappings()
 }
 
 void AdaptiveDensitySlider::setRegionPercents(const std::vector<double>& percents) {
-    if (percents.size() == REGION_COUNT) {
+    if (percents.size() == static_cast<size_t>(m_regionCount)) {
         m_regionPercents = percents;
-        for (int i = 0; i < REGION_COUNT; ++i) {
+        for (int i = 0; i < m_regionCount; ++i) {
             m_percentEdits[i]->setText(QString::number(m_regionPercents[i], 'g', 2));
         }
         updateStressDensityMappings();
@@ -138,7 +139,7 @@ std::vector<QColor> AdaptiveDensitySlider::getRegionColors() const {
     std::vector<QColor> colors;
     std::vector<int> positions = getRegionPositions();
 
-    for (int i = 0; i < REGION_COUNT; ++i) {
+    for (int i = 0; i < m_regionCount; ++i) {
         // positions[i] = bottom edge (higher Y, lower stress)
         // positions[i+1] = top edge (lower Y, higher stress)
         int yBottom = positions[i];
@@ -217,7 +218,7 @@ void AdaptiveDensitySlider::mouseReleaseEvent(QMouseEvent*) {
 
 void AdaptiveDensitySlider::onPercentEditChanged() {
     bool changed = false;
-    for (int i = 0; i < REGION_COUNT; ++i) {
+    for (int i = 0; i < m_regionCount; ++i) {
         bool ok = false;
         double val = m_percentEdits[i]->text().toDouble(&ok);
         if (ok && m_regionPercents[i] != val) {
@@ -319,12 +320,12 @@ void AdaptiveDensitySlider::updateRegionBoundaries() {
 }
 
 void AdaptiveDensitySlider::updateStressDensityMappings() {
-    assert(m_handles.size() == HANDLE_COUNT);
+    assert(m_handles.size() == static_cast<size_t>(handleCount()));
 
     m_stressDensityMappings.clear();
 
     std::vector<double> handleStresses;
-    for (int i = 0; i < HANDLE_COUNT; ++i) {
+    for (int i = 0; i < handleCount(); ++i) {
         handleStresses.push_back(yToStress(m_handles[i]));
     }
 
@@ -335,13 +336,13 @@ void AdaptiveDensitySlider::updateStressDensityMappings() {
 
     // Build regions dynamically: handles[0]=top/high stress, handles[last]=bottom/low stress
     std::vector<RegionStress> regions;
-    regions.push_back({m_originalMinStress, handleStresses[HANDLE_COUNT - 1]});
-    for (int i = HANDLE_COUNT - 1; i > 0; --i) {
+    regions.push_back({m_originalMinStress, handleStresses[handleCount() - 1]});
+    for (int i = handleCount() - 1; i > 0; --i) {
         regions.push_back({handleStresses[i], handleStresses[i - 1]});
     }
     regions.push_back({handleStresses[0], m_originalMaxStress});
 
-    for (int i = 0; i < REGION_COUNT; ++i) {
+    for (int i = 0; i < m_regionCount; ++i) {
         int calculatedDensity = calculateDensityFromStress(regions[i].maxStress);
         m_regionPercents[i] = calculatedDensity;
 
@@ -352,7 +353,7 @@ void AdaptiveDensitySlider::updateStressDensityMappings() {
         });
     }
 
-    for (int i = 0; i < REGION_COUNT; ++i) {
+    for (int i = 0; i < m_regionCount; ++i) {
         m_percentEdits[i]->setText(QString::number(m_regionPercents[i], 'g', 2));
     }
 }
@@ -360,9 +361,9 @@ void AdaptiveDensitySlider::updateStressDensityMappings() {
 void AdaptiveDensitySlider::updateInitialHandles() {
     SliderBounds bounds = getSliderBounds();
     int availableHeight = bounds.bottom - bounds.top;
-    int segmentHeight = availableHeight / REGION_COUNT;
+    int segmentHeight = availableHeight / m_regionCount;
 
-    for (int i = 0; i < HANDLE_COUNT; ++i) {
+    for (int i = 0; i < handleCount(); ++i) {
         m_handles[i] = bounds.top + (i + 1) * segmentHeight;
     }
 }
@@ -370,7 +371,7 @@ void AdaptiveDensitySlider::updateInitialHandles() {
 void AdaptiveDensitySlider::updatePercentEditPositions() {
     SliderBounds bounds = getSliderBounds();
     std::vector<int> positions = getRegionPositions();
-    for (int i = 0; i < REGION_COUNT; ++i) {
+    for (int i = 0; i < m_regionCount; ++i) {
         int yCenter = (positions[i] + positions[i+1]) / 2;
         int editX = bounds.right + PERCENT_EDIT_GAP;
         int editY = yCenter - m_percentEdits[i]->height() / 2;
@@ -600,7 +601,7 @@ void AdaptiveDensitySlider::drawSliderBody(QPainter& painter, const SliderBounds
 
 void AdaptiveDensitySlider::drawRegions(QPainter& painter, const SliderBounds& bounds) {
     std::vector<int> positions = getRegionPositions();
-    for (int i = 0; i < REGION_COUNT; ++i) {
+    for (int i = 0; i < m_regionCount; ++i) {
         // positions[i] = bottom edge of region (higher Y value, lower stress)
         // positions[i+1] = top edge of region (lower Y value, higher stress)
         int yBottom = positions[i];
@@ -664,4 +665,53 @@ void AdaptiveDensitySlider::drawAxisLabels(QPainter& painter, const SliderBounds
     QRect rightTextRect(-labelHeight / 2, -40, labelHeight, 80);
     painter.drawText(rightTextRect, Qt::AlignCenter, "Infill Density [%]");
     painter.restore();
+}
+
+void AdaptiveDensitySlider::setRegionCount(int count) {
+    qDebug() << "AdaptiveDensitySlider: setRegionCount called with:" << count << "Current:" << m_regionCount;
+    if (count >= 2 && count <= 10 && count != m_regionCount) {
+        rebuildForRegionCount(count);
+    }
+}
+
+void AdaptiveDensitySlider::rebuildForRegionCount(int count) {
+    m_regionCount = count;
+
+    // Clear and delete old percent edit widgets
+    for (QLineEdit* edit : m_percentEdits) {
+        edit->hide();
+        edit->deleteLater();
+    }
+    m_percentEdits.clear();
+
+    // Resize handles and region percents
+    m_handles.clear();
+    m_handles.resize(handleCount(), 0);
+    m_regionPercents.clear();
+    m_regionPercents.resize(m_regionCount, 20.0);
+
+    // Create new percent edit widgets
+    for (int i = 0; i < m_regionCount; ++i) {
+        QLineEdit* edit = new QLineEdit(this);
+        edit->setFixedWidth(40);
+        edit->setAlignment(Qt::AlignCenter);
+        edit->setStyleSheet(QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; border-radius: %4px; selection-background-color: #555555; }")
+            .arg(ColorManager::INPUT_TEXT_COLOR.name())
+            .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
+            .arg(ColorManager::INPUT_BORDER_COLOR.name())
+            .arg(StyleManager::RADIUS_SMALL));
+        edit->setText(QString::number(m_regionPercents[i], 'g', 2));
+        edit->setValidator(new QDoubleValidator(0, 100, 2, edit));
+        connect(edit, &QLineEdit::editingFinished, this, &AdaptiveDensitySlider::onPercentEditChanged);
+        m_percentEdits.push_back(edit);
+    }
+
+    // Recalculate everything
+    updateInitialHandles();
+    updateRegionBoundaries();
+    updateStressDensityMappings();
+    updatePercentEditPositions();
+    update();
+
+    emit regionPercentsChanged(m_regionPercents);
 }

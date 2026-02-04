@@ -25,6 +25,8 @@ SettingsWidget::SettingsWidget(QWidget* parent)
     , m_safetyFactorValidator(nullptr)
     , m_zStressFactorEdit(nullptr)
     , m_zStressFactorValidator(nullptr)
+    , m_regionCountEdit(nullptr)
+    , m_regionCountValidator(nullptr)
 {
     setupUI();
     loadSettings();
@@ -264,6 +266,24 @@ QWidget* SettingsWidget::createDensitySliderGroup()
 
     containerLayout->addLayout(patternRow);
 
+    // Region Count row
+    m_regionCountValidator = new QIntValidator(2, 10, this);
+
+    m_regionCountEdit = new QLineEdit(container);
+    m_regionCountEdit->setValidator(m_regionCountValidator);
+    m_regionCountEdit->setStyleSheet(getLineEditStyle());
+    m_regionCountEdit->setFixedWidth(100);
+    m_regionCountEdit->setAlignment(Qt::AlignLeft);
+
+    QHBoxLayout* regionCountRow = new QHBoxLayout();
+    QLabel* regionCountLabel = new QLabel("Region Count", container);
+    regionCountLabel->setStyleSheet(getInputLabelStyle());
+    regionCountRow->addWidget(regionCountLabel);
+    regionCountRow->addStretch();
+    regionCountRow->addWidget(m_regionCountEdit);
+
+    containerLayout->addLayout(regionCountRow);
+
     wrapperLayout->addWidget(container);
 
     return wrapper;
@@ -321,6 +341,8 @@ void SettingsWidget::connectSignals()
             this, &SettingsWidget::onSafetyFactorEditingFinished);
     connect(m_zStressFactorEdit, &QLineEdit::editingFinished,
             this, &SettingsWidget::onZStressFactorEditingFinished);
+    connect(m_regionCountEdit, &QLineEdit::editingFinished,
+            this, &SettingsWidget::onRegionCountEditingFinished);
 }
 
 void SettingsWidget::loadSettings()
@@ -349,6 +371,7 @@ void SettingsWidget::loadSettings()
 
     m_safetyFactorEdit->setText(QString::number(settings.safetyFactor()));
     m_zStressFactorEdit->setText(QString::number(settings.zStressFactor()));
+    m_regionCountEdit->setText(QString::number(settings.regionCount()));
 
     m_initialLoadComplete = true;
 }
@@ -477,6 +500,19 @@ void SettingsWidget::onZStressFactorEditingFinished()
         SettingsManager& settings = SettingsManager::instance();
         settings.setZStressFactor(value);
         settings.save();
+    }
+}
+
+void SettingsWidget::onRegionCountEditingFinished()
+{
+    bool ok;
+    int value = m_regionCountEdit->text().toInt(&ok);
+    if (ok && value >= 2 && value <= 10) {
+        SettingsManager& settings = SettingsManager::instance();
+        settings.setRegionCount(value);
+        settings.save();
+        qDebug() << "SettingsWidget: Emitting regionCountChanged with value:" << value;
+        emit regionCountChanged(value);
     }
 }
 

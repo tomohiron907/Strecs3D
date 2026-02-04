@@ -50,6 +50,10 @@ void SettingsManager::setZStressFactor(double value) {
     m_zStressFactor = value;
 }
 
+void SettingsManager::setRegionCount(int value) {
+    m_regionCount = value;
+}
+
 bool SettingsManager::save() {
     if (!ensureConfigDirectory()) {
         return false;
@@ -63,6 +67,7 @@ bool SettingsManager::save() {
     j["material"]["type"] = m_materialType;
     j["safety"]["factor"] = m_safetyFactor;
     j["safety"]["z_stress_factor"] = m_zStressFactor;
+    j["infill"]["region_count"] = m_regionCount;
 
     QString filePath = getSettingsFilePath();
     std::ofstream file(filePath.toStdString());
@@ -101,6 +106,9 @@ bool SettingsManager::load() {
             }
             if (inf.contains("pattern")) {
                 m_infillPattern = inf["pattern"].get<std::string>();
+            }
+            if (inf.contains("region_count")) {
+                m_regionCount = inf["region_count"].get<int>();
             }
         } else if (j.contains("density_slider")) {
             // Backward compatibility: read old key

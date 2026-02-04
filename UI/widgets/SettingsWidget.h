@@ -17,6 +17,9 @@ class SettingsWidget : public QWidget
 public:
     explicit SettingsWidget(QWidget* parent = nullptr);
 
+signals:
+    void regionCountChanged(int count);
+
 private slots:
     void onMinDensityEditingFinished();
     void onMaxDensityEditingFinished();
@@ -25,6 +28,7 @@ private slots:
     void onInfillPatternChanged(const QString& text);
     void onSafetyFactorEditingFinished();
     void onZStressFactorEditingFinished();
+    void onRegionCountEditingFinished();
 
 private:
     void setupUI();
@@ -56,6 +60,8 @@ private:
     QDoubleValidator* m_safetyFactorValidator;
     QLineEdit* m_zStressFactorEdit;
     QDoubleValidator* m_zStressFactorValidator;
+    QLineEdit* m_regionCountEdit;
+    QIntValidator* m_regionCountValidator;
     bool m_initialLoadComplete = false;
 
 protected:
