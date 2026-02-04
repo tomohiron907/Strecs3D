@@ -60,6 +60,7 @@ private:
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 };
 
 #endif // SETTINGSWIDGET_H

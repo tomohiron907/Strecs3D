@@ -9,6 +9,7 @@
 #include <QDoubleValidator>
 #include <QGroupBox>
 #include <QMouseEvent>
+#include <QShowEvent>
 #include <QComboBox>
 #include <QMessageBox>
 
@@ -484,4 +485,11 @@ void SettingsWidget::mousePressEvent(QMouseEvent* event)
     // Clear focus from input fields by setting focus to this widget
     this->setFocus();
     QWidget::mousePressEvent(event);
+}
+
+void SettingsWidget::showEvent(QShowEvent* event)
+{
+    QWidget::showEvent(event);
+    // Prevent auto-focus on child input widgets when the tab is shown
+    this->setFocus();
 }
