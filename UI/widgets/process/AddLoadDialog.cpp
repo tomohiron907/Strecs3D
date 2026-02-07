@@ -174,8 +174,7 @@ void AddLoadDialog::setupUI()
     mainLayout->addLayout(formLayout);
 
     // Hint label
-    QLabel* hintLabel = new QLabel("ヒント: 面をダブルクリックするとSurface IDと方向が設定されます。\nエッジを選択すると方向ベクトルを設定できます。", this);
-    hintLabel->setWordWrap(true);
+    QLabel* hintLabel = new QLabel("Hint: Double-click a face to set the Surface ID and direction.\nSelect an edge to set the direction vector.", this);   hintLabel->setWordWrap(true);
     hintLabel->setStyleSheet(QString("color: #888888; font-size: %1px; background-color: transparent;")
         .arg(StyleManager::FONT_SIZE_SMALL));
     mainLayout->addWidget(hintLabel);
