@@ -1,5 +1,6 @@
 #include "RollbackConfirmationDialog.h"
 #include "../../../utils/StyleManager.h"
+#include "../../../utils/ColorManager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -47,13 +48,31 @@ void RollbackConfirmationDialog::setupUI() {
     connect(m_okButton, &QPushButton::clicked, this, &QDialog::accept);
     connect(m_cancelButton, &QPushButton::clicked, this, &QDialog::reject);
 
-    // Simple styling
-    m_okButton->setStyleSheet(QString("QPushButton { padding: %1px %2px; }")
+    // Dark theme styling to match other dialogs
+    setStyleSheet("QDialog { background-color: #2d2d2d; }");
+    m_messageLabel->setStyleSheet("color: #aaaaaa; background-color: transparent;");
+    m_cancelButton->setStyleSheet(
+        QString("QPushButton { background-color: #444; color: white; border: 1px solid #666; "
+        "padding: %1px %2px; border-radius: %3px; }"
+        "QPushButton:hover { background-color: #555; }"
+        "QPushButton:pressed { background-color: #333; }")
         .arg(StyleManager::BUTTON_PADDING_V)
-        .arg(StyleManager::BUTTON_PADDING_H));
-    m_cancelButton->setStyleSheet(QString("QPushButton { padding: %1px %2px; }")
+        .arg(StyleManager::BUTTON_PADDING_H)
+        .arg(StyleManager::BUTTON_RADIUS)
+    );
+    m_okButton->setStyleSheet(
+        QString("QPushButton { background-color: %1; color: %2; border: none; "
+                "padding: %5px %6px; border-radius: %7px; font-weight: bold; }"
+                "QPushButton:hover { background-color: %3; }"
+                "QPushButton:pressed { background-color: %4; }")
+        .arg(ColorManager::ACCENT_COLOR.name())
+        .arg(ColorManager::BUTTON_TEXT_COLOR.name())
+        .arg(ColorManager::BUTTON_HOVER_COLOR.name())
+        .arg(ColorManager::BUTTON_PRESSED_COLOR.name())
         .arg(StyleManager::BUTTON_PADDING_V)
-        .arg(StyleManager::BUTTON_PADDING_H));
+        .arg(StyleManager::BUTTON_PADDING_H)
+        .arg(StyleManager::BUTTON_RADIUS)
+    );
     setMinimumWidth(400);
 }
 
