@@ -344,16 +344,6 @@ void UIState::clearAllInfillRegions()
 }
 
 // ========== 階層外のデータ ==========
-void UIState::setStressRange(double minStress, double maxStress)
-{
-    if (m_minStress != minStress || m_maxStress != maxStress) {
-        m_minStress = minStress;
-        m_maxStress = maxStress;
-        emit stressRangeChanged(minStress, maxStress);
-        qDebug() << "UIState: Stress range changed to:" << minStress << "-" << maxStress;
-    }
-}
-
 void UIState::setStressDensityMappings(const std::vector<StressDensityMapping>& mappings)
 {
     m_stressDensityMappings = mappings;
@@ -399,8 +389,6 @@ void UIState::printDebugInfo() const
         qDebug() << "  Key:" << key << "Name:" << info.name << "Path:" << info.filePath
                  << "Visible:" << info.isVisible << "Transparency:" << info.transparency;
     }
-
-    qDebug() << "Stress Range:" << m_minStress << "to" << m_maxStress;
 
     qDebug() << "Stress Density Mappings (" << m_stressDensityMappings.size() << "entries):";
     for (size_t i = 0; i < m_stressDensityMappings.size(); ++i) {
@@ -450,8 +438,6 @@ QString UIState::getDebugString() const
         debug += QString("  Key: %1, Name: %2, Path: %3, Visible: %4, Transparency: %5\n")
                     .arg(key).arg(info.name).arg(info.filePath).arg(info.isVisible).arg(info.transparency);
     }
-
-    debug += QString("Stress Range: %1 to %2\n").arg(m_minStress).arg(m_maxStress);
 
     debug += QString("Stress Density Mappings (%1 entries):\n").arg(m_stressDensityMappings.size());
     for (size_t i = 0; i < m_stressDensityMappings.size(); ++i) {

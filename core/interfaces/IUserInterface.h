@@ -81,7 +81,6 @@ public slots:
     virtual void onVtkOpacityChanged(double opacity) { setVtkOpacity(opacity); }
     virtual void onStepOpacityChanged(double opacity) { setStepOpacity(opacity); }
     virtual void onDividedMeshOpacityChanged(int meshIndex, double opacity) { setDividedMeshOpacity(meshIndex, opacity); }
-    virtual void onStressRangeChanged(double minStress, double maxStress) { initializeStressConfiguration(minStress, maxStress); }
     virtual void onShowWarningMessage(const QString& title, const QString& message) { showWarningMessage(title, message); }
     virtual void onShowCriticalMessage(const QString& title, const QString& message) { showCriticalMessage(title, message); }
     virtual void onShowInfoMessage(const QString& title, const QString& message) { showInfoMessage(title, message); }

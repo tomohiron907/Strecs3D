@@ -12,8 +12,6 @@
 #include "widgets/process/steps/SimulationStepWidget.h"
 #include "widgets/process/steps/InfillStepWidget.h"
 #include "widgets/AdaptiveDensitySlider.h"
-#include "widgets/StressRangeWidget.h"
-#include "widgets/StressRangeWidget.h"
 #include "widgets/Button.h"
 #include <QVTKOpenGLNativeWidget.h>
 #include <vtkGenericOpenGLRenderWindow.h>
@@ -52,7 +50,6 @@ public:
     
     Button* getExport3mfButton() const { return export3mfButton; }
     AdaptiveDensitySlider* getRangeSlider() const;
-    StressRangeWidget* getStressRangeWidget() const;
     ObjectListWidget* getObjectListWidget() const { return objectListWidget; }
     PropertyWidget* getPropertyWidget() const { return propertyWidget; }
     UIState* getUIState() const { return uiState; }

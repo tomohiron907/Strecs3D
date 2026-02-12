@@ -308,12 +308,6 @@ AdaptiveDensitySlider* MainWindowUI::getRangeSlider() const {
     return nullptr;
 }
 
-StressRangeWidget* MainWindowUI::getStressRangeWidget() const {
-    if (processManagerWidget && processManagerWidget->getInfillStep())
-        return processManagerWidget->getInfillStep()->getStressRangeWidget();
-    return nullptr;
-}
-
 void MainWindowUI::createRightPaneWidget(QWidget* vtkParent)
 {
     // 右側ペインのコンテナ作成
@@ -451,11 +445,5 @@ void MainWindowUI::connectUIStateSignals()
 
 void MainWindowUI::updateUIFromState()
 {
-    // UIStateの値をUIコンポーネントに反映
-    if (StressRangeWidget* srw = getStressRangeWidget()) {
-        srw->setStressRange(uiState->getMinStress(), uiState->getMaxStress());
-    }
-
-
 }
  

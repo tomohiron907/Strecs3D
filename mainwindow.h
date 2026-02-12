@@ -40,7 +40,6 @@ public slots:
     void onVtkObjectVisibilityChanged(bool visible);
     void onVtkObjectOpacityChanged(double opacity);
     void onDensitySliderChanged(); // DensitySliderが変更された時の処理
-    void onStressRangeChanged(double minStress, double maxStress); // StressRangeWidgetが変更された時の処理
     void updateProcessButtonState(); // Processボタンの有効/無効状態を更新
     void showUIStateDebugInfo(); // UIStateのデバッグ情報をコンソールに表示
     void onConstrainButtonClicked(); // Constrainボタンが押された時の処理

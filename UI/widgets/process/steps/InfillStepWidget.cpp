@@ -1,6 +1,5 @@
 #include "InfillStepWidget.h"
 #include "../../AdaptiveDensitySlider.h"
-#include "../../StressRangeWidget.h"
 #include "../../Button.h"
 #include "../../../core/ui/UIState.h"
 #include <QVBoxLayout>
@@ -13,10 +12,6 @@ InfillStepWidget::InfillStepWidget(QWidget* parent) : QWidget(parent) {
     // Adaptive Density Slider
     m_densitySlider = new AdaptiveDensitySlider(this);
     layout->addWidget(m_densitySlider);
-
-    // Stress Range Widget (Below slider)
-    m_stressRangeWidget = new StressRangeWidget(this);
-    layout->addWidget(m_stressRangeWidget);
 
     layout->addSpacing(10);
 

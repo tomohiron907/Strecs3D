@@ -6,7 +6,6 @@
 class AdaptiveDensitySlider;
 class Button;
 class UIState;
-class StressRangeWidget;
 
 class InfillStepWidget : public QWidget {
     Q_OBJECT
@@ -15,7 +14,6 @@ public:
     void setUIState(UIState* uiState);
 
     AdaptiveDensitySlider* getDensitySlider() const { return m_densitySlider; }
-    StressRangeWidget* getStressRangeWidget() const { return m_stressRangeWidget; }
     Button* getProcessButton() const { return m_processButton; }
 
 signals:
@@ -23,7 +21,6 @@ signals:
 
 private:
     AdaptiveDensitySlider* m_densitySlider;
-    StressRangeWidget* m_stressRangeWidget;
     Button* m_processButton;
 };
 

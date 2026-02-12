@@ -81,16 +81,9 @@ void MainWindowUIAdapter::initializeStressConfiguration(double minStress, double
         slider->setOriginalStressRange(minStress, maxStress);
     }
     
-    auto stressRangeWidget = ui->getStressRangeWidget();
-    if (stressRangeWidget) {
-        stressRangeWidget->setStressRange(minStress, maxStress);
-    }
-    
-    // UIStateにストレス範囲とStressDensityMappingを登録
+    // UIStateにStressDensityMappingを登録
     UIState* uiState = ui->getUIState();
     if (uiState) {
-        uiState->setStressRange(minStress, maxStress);
-
         // DensitySliderからStressDensityMappingを取得してUIStateに登録
         if (slider) {
             auto mappings = slider->stressDensityMappings();

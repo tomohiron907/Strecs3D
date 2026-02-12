@@ -106,11 +106,6 @@ public:
     void setInfillRegionTransparency(const QString& key, double transparency);
     void clearAllInfillRegions();  // Clear all infill regions
 
-    // Stress Range（階層外のデータ）
-    void setStressRange(double minStress, double maxStress);
-    double getMinStress() const { return m_minStress; }
-    double getMaxStress() const { return m_maxStress; }
-
     // Stress Density Mapping（階層外のデータ）
     void setStressDensityMappings(const std::vector<StressDensityMapping>& mappings);
     std::vector<StressDensityMapping> getStressDensityMappings() const { return m_stressDensityMappings; }
@@ -153,7 +148,6 @@ signals:
     void infillRegionTransparencyChanged(const QString& key, double transparency);
 
     // 階層外のデータのシグナル
-    void stressRangeChanged(double minStress, double maxStress);
     void stressDensityMappingsChanged(const std::vector<StressDensityMapping>& mappings);
     void densitySliderColorsChanged(const std::vector<QColor>& colors);
 
@@ -165,8 +159,6 @@ private:
     ObjectListData m_objectList;
 
     // 階層外のデータ
-    double m_minStress = 0.0;
-    double m_maxStress = 1.0;
     std::vector<StressDensityMapping> m_stressDensityMappings;
     std::vector<QColor> m_densitySliderColors;
 

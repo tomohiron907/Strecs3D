@@ -132,7 +132,6 @@ add_executable(Strecs3D
 
   UI/widgets/DensitySlider.cpp
   UI/widgets/AdaptiveDensitySlider.cpp
-  UI/widgets/StressRangeWidget.cpp
   utils/ColorManager.cpp
   utils/StyleManager.cpp
   UI/widgets/Button.cpp

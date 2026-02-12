@@ -10,7 +10,6 @@
 #include "core/commands/file/OpenStepFileCommand.h"
 #include "core/commands/processing/ProcessFilesCommand.h"
 #include "core/commands/processing/Export3mfCommand.h"
-#include "core/commands/state/SetStressRangeCommand.h"
 #include "core/commands/state/SetStressDensityMappingCommand.h"
 #include "core/commands/visualization/SetMeshVisibilityCommand.h"
 #include "core/commands/visualization/SetMeshOpacityCommand.h"
@@ -92,7 +91,6 @@ void MainWindow::connectSignals()
     // Sliders/Widgets -> MainWindow slots
     connect(ui->getRangeSlider(), &AdaptiveDensitySlider::handlePositionsChanged, this, &MainWindow::onDensitySliderChanged);
     connect(ui->getRangeSlider(), &AdaptiveDensitySlider::regionPercentsChanged, this, &MainWindow::onDensitySliderChanged);
-    connect(ui->getStressRangeWidget(), &StressRangeWidget::stressRangeChanged, this, &MainWindow::onStressRangeChanged);
 
     // UIState -> MainWindow slots
     connect(ui->getUIState(), &UIState::boundaryConditionChanged, this, &MainWindow::onBoundaryConditionChanged);
@@ -377,23 +375,6 @@ void MainWindow::onDensitySliderChanged()
 }
 
 
-
-void MainWindow::onStressRangeChanged(double minStress, double maxStress)
-{
-    // コマンドパターンを使用してストレス範囲を設定
-    auto command = std::make_unique<SetStressRangeCommand>(
-        getUIState(),
-        minStress,
-        maxStress
-    );
-    command->execute();
-
-    // DensitySliderのStressRangeを更新
-    ui->getRangeSlider()->setStressRange(minStress, maxStress);
-
-    // DensitySliderの更新に伴い、Density Mappingも更新
-    onDensitySliderChanged();
-}
 
 void MainWindow::resetExportButton()
 {
