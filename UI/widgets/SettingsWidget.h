@@ -19,6 +19,7 @@ public:
 
 signals:
     void regionCountChanged(int count);
+    void settingsChanged();
 
 private slots:
     void onMinDensityEditingFinished();

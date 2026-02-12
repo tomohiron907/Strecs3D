@@ -62,6 +62,7 @@ public:
     
     // UIState連携メソッド
     ProcessManagerWidget* getProcessManagerWidget() const { return processManagerWidget; }
+    SettingsWidget* getSettingsWidget() const { return m_settingsWidget; }
     void connectUIStateSignals();
     void updateUIFromState();
     

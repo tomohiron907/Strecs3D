@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "core/application/MainWindowUIAdapter.h"
+#include "UI/widgets/SettingsWidget.h"
 #include "UI/widgets/AdaptiveDensitySlider.h"
 #include "UI/visualization/VisualizationManager.h"
 #include "UI/platform/WindowUtils.h"
@@ -128,6 +129,16 @@ void MainWindow::connectProcessManagerSignals()
     connect(pm, &ProcessManagerWidget::addConstraintClicked, this, clearSelection);
     connect(pm, &ProcessManagerWidget::simulateClicked, this, clearSelection);
     connect(pm, &ProcessManagerWidget::processInfillClicked, this, clearSelection);
+
+    // Settings change -> rollback from InfillMap to Simulate
+    if (auto* sw = ui->getSettingsWidget()) {
+        connect(sw, &SettingsWidget::settingsChanged, this, [this]() {
+            auto* flow = ui->getProcessManagerWidget()->getFlowWidget();
+            if (flow && flow->currentStep() == ProcessStep::InfillMap) {
+                handleProcessRollback(ProcessStep::Simulate);
+            }
+        });
+    }
 }
 
 void MainWindow::connectVisualizationSignals()

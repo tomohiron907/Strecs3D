@@ -382,8 +382,11 @@ void SettingsWidget::onMinDensityEditingFinished()
     int value = m_minDensityEdit->text().toInt(&ok);
     if (ok) {
         SettingsManager& settings = SettingsManager::instance();
-        settings.setMinDensity(value);
-        settings.save();
+        if (settings.minDensity() != value) {
+            settings.setMinDensity(value);
+            settings.save();
+            if (m_initialLoadComplete) emit settingsChanged();
+        }
     }
 }
 
@@ -393,8 +396,11 @@ void SettingsWidget::onMaxDensityEditingFinished()
     int value = m_maxDensityEdit->text().toInt(&ok);
     if (ok) {
         SettingsManager& settings = SettingsManager::instance();
-        settings.setMaxDensity(value);
-        settings.save();
+        if (settings.maxDensity() != value) {
+            settings.setMaxDensity(value);
+            settings.save();
+            if (m_initialLoadComplete) emit settingsChanged();
+        }
     }
 }
 
@@ -419,17 +425,22 @@ void SettingsWidget::onSlicerTypeChanged(const QString& text)
 
 void SettingsWidget::onMaterialTypeChanged(const QString& text)
 {
-    // Save settings to SettingsManager
     SettingsManager& settings = SettingsManager::instance();
-    settings.setMaterialType(text.toStdString());
-    settings.save();
+    if (QString::fromStdString(settings.materialType()) != text) {
+        settings.setMaterialType(text.toStdString());
+        settings.save();
+        if (m_initialLoadComplete) emit settingsChanged();
+    }
 }
 
 void SettingsWidget::onInfillPatternChanged(const QString& text)
 {
     SettingsManager& settings = SettingsManager::instance();
-    settings.setInfillPattern(text.toStdString());
-    settings.save();
+    if (QString::fromStdString(settings.infillPattern()) != text) {
+        settings.setInfillPattern(text.toStdString());
+        settings.save();
+        if (m_initialLoadComplete) emit settingsChanged();
+    }
 }
 
 QWidget* SettingsWidget::createSafetyGroup()
@@ -487,8 +498,11 @@ void SettingsWidget::onSafetyFactorEditingFinished()
     double value = m_safetyFactorEdit->text().toDouble(&ok);
     if (ok && value > 0.0) {
         SettingsManager& settings = SettingsManager::instance();
-        settings.setSafetyFactor(value);
-        settings.save();
+        if (settings.safetyFactor() != value) {
+            settings.setSafetyFactor(value);
+            settings.save();
+            if (m_initialLoadComplete) emit settingsChanged();
+        }
     }
 }
 
@@ -498,8 +512,11 @@ void SettingsWidget::onZStressFactorEditingFinished()
     double value = m_zStressFactorEdit->text().toDouble(&ok);
     if (ok && value >= 1.0) {
         SettingsManager& settings = SettingsManager::instance();
-        settings.setZStressFactor(value);
-        settings.save();
+        if (settings.zStressFactor() != value) {
+            settings.setZStressFactor(value);
+            settings.save();
+            if (m_initialLoadComplete) emit settingsChanged();
+        }
     }
 }
 
@@ -509,9 +526,12 @@ void SettingsWidget::onRegionCountEditingFinished()
     int value = m_regionCountEdit->text().toInt(&ok);
     if (ok && value >= 2 && value <= 10) {
         SettingsManager& settings = SettingsManager::instance();
-        settings.setRegionCount(value);
-        settings.save();
-        emit regionCountChanged(value);
+        if (settings.regionCount() != value) {
+            settings.setRegionCount(value);
+            settings.save();
+            emit regionCountChanged(value);
+            if (m_initialLoadComplete) emit settingsChanged();
+        }
     }
 }
 

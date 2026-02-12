@@ -105,6 +105,7 @@ void ProcessController::clearStepData(int targetIdx, int currentIdx)
         qDebug() << "Clearing infill data...";
         uiState_->clearAllInfillRegions();
         visManager->clearInfillActors();
+        visManager->hideVtkObject();
     }
 
     // Step 3: Simulation (if current >= 2 && target < 2)
