@@ -13,5 +13,7 @@
         <file>icons/export.png</file>
         <file>icons/export_dark.png</file>
         <file>icons/arrow_down.svg</file>
+        <file>icons/web.svg</file>
+        <file>icons/GitHub.svg</file>
     </qresource>
 </RCC> 

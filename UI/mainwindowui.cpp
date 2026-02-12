@@ -11,6 +11,9 @@
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
 #include <QGraphicsOpacityEffect>
+#include <QDesktopServices>
+#include <QUrl>
+#include <QPainter>
 
 #include "widgets/Button.h"
 #include "widgets/TabButton.h"
@@ -54,6 +57,18 @@ bool MainWindowUI::eventFilter(QObject* watched, QEvent* event)
             return true; // Block the event
         }
     }
+
+    // Handle hover icon swap for link buttons
+    if (event->type() == QEvent::Enter || event->type() == QEvent::Leave) {
+        QPushButton* btn = qobject_cast<QPushButton*>(watched);
+        if (btn && btn->property("hoverPix").isValid()) {
+            QPixmap pix = (event->type() == QEvent::Enter)
+                ? btn->property("hoverPix").value<QPixmap>()
+                : btn->property("normalPix").value<QPixmap>();
+            btn->setIcon(QIcon(pix));
+        }
+    }
+
     return false;
 }
 
@@ -106,11 +121,49 @@ void MainWindowUI::createHeaderWidget(QVBoxLayout* outerLayout)
 
     headerLayout->addStretch();
     
-    // Add a dummy spacer to balance the logo container (300px) and ensure true centering
-    QWidget* rightSpacer = new QWidget(centralWidget);
-    rightSpacer->setFixedWidth(LEFT_PANE_MAX_WIDTH);
-    rightSpacer->setAttribute(Qt::WA_TransparentForMouseEvents);
-    headerLayout->addWidget(rightSpacer);
+    // Right container with web/GitHub links (same width as logo container for centering balance)
+    QWidget* rightContainer = new QWidget(centralWidget);
+    rightContainer->setFixedWidth(LEFT_PANE_MAX_WIDTH);
+    QHBoxLayout* rightLayout = new QHBoxLayout(rightContainer);
+    rightLayout->setContentsMargins(0, 0, 40, 0);
+    rightLayout->setSpacing(12);
+    rightLayout->addStretch();
+
+    auto tintedPixmap = [](const QString& iconPath, const QColor& color, int size) {
+        QPixmap src(iconPath);
+        QPixmap pixmap = src.scaled(size, size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        QPainter painter(&pixmap);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(pixmap.rect(), color);
+        painter.end();
+        return pixmap;
+    };
+
+    auto createLinkButton = [&](const QString& iconPath, const QString& url) {
+        QPushButton* btn = new QPushButton(rightContainer);
+        int iconSize = 28;
+        QPixmap normalPix = tintedPixmap(iconPath, QColor(255, 255, 255, 100), iconSize * 2);
+        QPixmap hoverPix = tintedPixmap(iconPath, QColor(255, 255, 255, 190), iconSize * 2);
+        btn->setIcon(QIcon(normalPix));
+        btn->setIconSize(QSize(iconSize, iconSize));
+        btn->setFixedSize(36, 36);
+        btn->setCursor(Qt::PointingHandCursor);
+        btn->setStyleSheet(
+            "QPushButton { background: transparent; border: none; }"
+        );
+        btn->setProperty("normalPix", normalPix);
+        btn->setProperty("hoverPix", hoverPix);
+        btn->installEventFilter(this);
+        QObject::connect(btn, &QPushButton::clicked, [url]() {
+            QDesktopServices::openUrl(QUrl(url));
+        });
+        return btn;
+    };
+
+    rightLayout->addWidget(createLinkButton(":/resources/icons/web.svg", "https://strecs3d.xyz"));
+    rightLayout->addWidget(createLinkButton(":/resources/icons/GitHub.svg", "https://github.com/tomohiron907/Strecs3D"));
+
+    headerLayout->addWidget(rightContainer);
 
     headerLayout->setSpacing(HEADER_SPACING);
     headerLayout->setContentsMargins(WIDGET_MARGIN, 0, WIDGET_MARGIN, HEADER_BOTTOM_MARGIN);
