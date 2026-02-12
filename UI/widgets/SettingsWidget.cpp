@@ -11,7 +11,6 @@
 #include <QMouseEvent>
 #include <QShowEvent>
 #include <QComboBox>
-#include <QMessageBox>
 
 SettingsWidget::SettingsWidget(QWidget* parent)
     : QWidget(parent)
@@ -406,20 +405,11 @@ void SettingsWidget::onMaxDensityEditingFinished()
 
 void SettingsWidget::onSlicerTypeChanged(const QString& text)
 {
-    // Save settings to SettingsManager
     SettingsManager& settings = SettingsManager::instance();
-    settings.setSlicerType(text.toStdString());
-    settings.save();
-
-    // Show restart required message (only after initial load)
-    if (m_initialLoadComplete) {
-        QMessageBox::information(
-            this,
-            tr("Restart Required"),
-            tr("The slicer type has been changed to %1.\n"
-               "Please restart the application to apply this setting.")
-               .arg(text)
-        );
+    if (QString::fromStdString(settings.slicerType()) != text) {
+        settings.setSlicerType(text.toStdString());
+        settings.save();
+        if (m_initialLoadComplete) emit settingsChanged();
     }
 }
 
