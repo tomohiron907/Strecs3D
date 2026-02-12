@@ -37,6 +37,14 @@ void ConstraintPropertyWidget::setupUI()
     layout->setContentsMargins(StyleManager::FORM_SPACING, StyleManager::FORM_SPACING,
                                StyleManager::FORM_SPACING, StyleManager::FORM_SPACING);
 
+    // Read-only hint label (initially hidden)
+    m_readOnlyHintLabel = new QLabel("Go back to Step 2 to edit.");
+    m_readOnlyHintLabel->setStyleSheet(QString("color: %1; font-size: %2px; padding: 2px 4px;")
+        .arg(ColorManager::ACCENT_COLOR.name())
+        .arg(StyleManager::FONT_SIZE_SMALL));
+    m_readOnlyHintLabel->setVisible(false);
+    layout->addRow(m_readOnlyHintLabel);
+
     // Labels style
     QString labelStyle = "color: #aaaaaa;";
 
@@ -67,8 +75,8 @@ void ConstraintPropertyWidget::setupUI()
     
     // Apply label style
     for(int i = 0; i < layout->rowCount(); ++i) {
-        QWidget* label = layout->itemAt(i, QFormLayout::LabelRole)->widget();
-        if(label) label->setStyleSheet(labelStyle);
+        QLayoutItem* item = layout->itemAt(i, QFormLayout::LabelRole);
+        if(item && item->widget()) item->widget()->setStyleSheet(labelStyle);
     }
 
     // Spacer to push Close button to the bottom
@@ -138,6 +146,31 @@ void ConstraintPropertyWidget::pushData()
         c
     );
     command->execute();
+}
+
+void ConstraintPropertyWidget::setReadOnly(bool readOnly)
+{
+    m_nameEdit->setReadOnly(readOnly);
+    m_surfaceIdEdit->setReadOnly(readOnly);
+    m_readOnlyHintLabel->setVisible(readOnly);
+
+    QString inputStyle;
+    if (readOnly) {
+        inputStyle = QString("QLineEdit { color: #666666; background-color: #1a1a1a; border: 1px solid #333333; padding: %1px; border-radius: %2px; min-height: %3px; }")
+            .arg(StyleManager::PADDING_SMALL)
+            .arg(StyleManager::RADIUS_SMALL)
+            .arg(StyleManager::INPUT_HEIGHT_SMALL);
+    } else {
+        inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: %4px; border-radius: %5px; min-height: %6px; selection-background-color: #555555; }")
+            .arg(ColorManager::INPUT_TEXT_COLOR.name())
+            .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
+            .arg(ColorManager::INPUT_BORDER_COLOR.name())
+            .arg(StyleManager::PADDING_SMALL)
+            .arg(StyleManager::RADIUS_SMALL)
+            .arg(StyleManager::INPUT_HEIGHT_SMALL);
+    }
+    m_nameEdit->setStyleSheet(inputStyle);
+    m_surfaceIdEdit->setStyleSheet(inputStyle);
 }
 
 void ConstraintPropertyWidget::onCloseClicked()

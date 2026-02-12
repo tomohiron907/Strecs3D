@@ -35,6 +35,14 @@ void LoadPropertyWidget::setupUI()
     layout->setContentsMargins(StyleManager::FORM_SPACING, StyleManager::FORM_SPACING,
                                StyleManager::FORM_SPACING, StyleManager::FORM_SPACING);
 
+    // Read-only hint label (initially hidden)
+    m_readOnlyHintLabel = new QLabel("Go back to Step 2 to edit.");
+    m_readOnlyHintLabel->setStyleSheet(QString("color: %1; font-size: %2px; padding: 2px 4px;")
+        .arg(ColorManager::ACCENT_COLOR.name())
+        .arg(StyleManager::FONT_SIZE_SMALL));
+    m_readOnlyHintLabel->setVisible(false);
+    layout->addRow(m_readOnlyHintLabel);
+
     // Labels style
     QString labelStyle = "color: #aaaaaa;";
     // Updated input style: unified width, rounded corners, min-height to prevent collapse
@@ -249,6 +257,40 @@ void LoadPropertyWidget::setVisualizationManager(VisualizationManager* vizManage
     if (m_vizManager) {
         connect(m_vizManager, &VisualizationManager::edgeClicked,
                 this, &LoadPropertyWidget::onEdgeSelected);
+    }
+}
+
+void LoadPropertyWidget::setReadOnly(bool readOnly)
+{
+    m_nameEdit->setReadOnly(readOnly);
+    m_surfaceIdEdit->setReadOnly(readOnly);
+    m_magnitudeEdit->setReadOnly(readOnly);
+    m_referenceEdgeButton->setEnabled(!readOnly);
+    m_reverseCheckBox->setEnabled(!readOnly);
+    m_readOnlyHintLabel->setVisible(readOnly);
+
+    QString inputStyle;
+    if (readOnly) {
+        inputStyle = QString("QLineEdit { color: #666666; background-color: #1a1a1a; border: 1px solid #333333; padding: %1px; border-radius: %2px; min-height: %3px; }")
+            .arg(StyleManager::PADDING_SMALL)
+            .arg(StyleManager::RADIUS_SMALL)
+            .arg(StyleManager::INPUT_HEIGHT_SMALL);
+    } else {
+        inputStyle = QString("QLineEdit { color: %1; background-color: %2; border: 1px solid %3; padding: %4px; border-radius: %5px; min-height: %6px; selection-background-color: #555555; }")
+            .arg(ColorManager::INPUT_TEXT_COLOR.name())
+            .arg(ColorManager::INPUT_BACKGROUND_COLOR.name())
+            .arg(ColorManager::INPUT_BORDER_COLOR.name())
+            .arg(StyleManager::PADDING_SMALL)
+            .arg(StyleManager::RADIUS_SMALL)
+            .arg(StyleManager::INPUT_HEIGHT_SMALL);
+    }
+    m_nameEdit->setStyleSheet(inputStyle);
+    m_surfaceIdEdit->setStyleSheet(inputStyle);
+    // m_magnitudeEdit has transparent background inside its container, so style differently
+    if (readOnly) {
+        m_magnitudeEdit->setStyleSheet("QLineEdit { background: transparent; border: none; color: #666666; padding: 0px; }");
+    } else {
+        m_magnitudeEdit->setStyleSheet("QLineEdit { background: transparent; border: none; color: white; padding: 0px; }");
     }
 }
 

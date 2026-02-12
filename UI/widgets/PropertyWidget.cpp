@@ -198,12 +198,14 @@ void PropertyWidget::onObjectSelected(ObjectType type, const QString& id, int in
         case ObjectType::ITEM_BC_CONSTRAINT: {
             m_titleLabel->setText("Constraint Condition");
             m_constraintWidget->setTarget(index);
+            m_constraintWidget->setReadOnly(m_currentStep != ProcessStep::BoundaryCondition);
             m_stackedWidget->setCurrentWidget(m_constraintWidget);
             break;
         }
         case ObjectType::ITEM_BC_LOAD: {
             m_titleLabel->setText("Load Condition");
             m_loadWidget->setTarget(index);
+            m_loadWidget->setReadOnly(m_currentStep != ProcessStep::BoundaryCondition);
             m_stackedWidget->setCurrentWidget(m_loadWidget);
             break;
         }

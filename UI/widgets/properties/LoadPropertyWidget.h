@@ -19,6 +19,7 @@ public:
     explicit LoadPropertyWidget(QWidget* parent = nullptr);
     void setUIState(UIState* uiState);
     void setTarget(int index); // Set which load to edit
+    void setReadOnly(bool readOnly);
 
     // Set VisualizationManager reference for edge selection
     void setVisualizationManager(VisualizationManager* vizManager);
@@ -55,4 +56,5 @@ private:
     QCheckBox* m_reverseCheckBox;
 
     QPushButton* m_closeButton;
+    QLabel* m_readOnlyHintLabel;
 };

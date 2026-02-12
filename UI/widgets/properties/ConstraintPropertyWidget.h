@@ -15,6 +15,7 @@ public:
     explicit ConstraintPropertyWidget(QWidget* parent = nullptr);
     void setUIState(UIState* uiState);
     void setTarget(int index); // Set which constraint to edit
+    void setReadOnly(bool readOnly);
 
 signals:
     void closeClicked();
@@ -31,4 +32,5 @@ private:
     QLineEdit* m_nameEdit;
     QLineEdit* m_surfaceIdEdit;
     QPushButton* m_closeButton;
+    QLabel* m_readOnlyHintLabel;
 };
