@@ -8,6 +8,46 @@
 #include <QFrame>
 #include <QScrollArea>
 #include <QVector>
+#include <QPainter>
+#include <QPainterPath>
+
+// Custom label that paints a pixmap with rounded corners
+class RoundedImageLabel : public QWidget {
+    Q_OBJECT
+public:
+    explicit RoundedImageLabel(int radius, QWidget* parent = nullptr)
+        : QWidget(parent), m_radius(radius) {}
+
+    void setPixmap(const QPixmap& pixmap) { m_pixmap = pixmap; update(); }
+    void setPlaceholderText(const QString& text) { m_placeholder = text; update(); }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+
+        QPainterPath path;
+        path.addRoundedRect(rect(), m_radius, m_radius);
+        painter.setClipPath(path);
+
+        if (!m_pixmap.isNull()) {
+            QPixmap scaled = m_pixmap.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            int x = (width() - scaled.width()) / 2;
+            int y = (height() - scaled.height()) / 2;
+            painter.fillRect(rect(), QColor("#222222"));
+            painter.drawPixmap(x, y, scaled);
+        } else {
+            painter.fillRect(rect(), QColor("#222222"));
+            painter.setPen(QColor("#888888"));
+            painter.drawText(rect(), Qt::AlignCenter, m_placeholder);
+        }
+    }
+
+private:
+    QPixmap m_pixmap;
+    QString m_placeholder = "Loading...";
+    int m_radius;
+};
 
 class ShowcaseWidget : public QWidget {
     Q_OBJECT
@@ -21,19 +61,16 @@ protected:
 private:
     struct CardInfo {
         QString filename;
-        QString title;
-        QFrame* card;
-        QLabel* imageLabel;
-        QLabel* titleLabel;
+        RoundedImageLabel* imageLabel;
         bool loaded;
     };
 
     void setupUI();
     void createCard(const QString& filename);
     void rearrangeCards();
+    void updateCardSizes();
     void startFetching();
     void fetchNextImage();
-    static QString filenameToTitle(const QString& filename);
 
     QScrollArea* m_scrollArea;
     QWidget* m_containerWidget;
@@ -43,9 +80,9 @@ private:
     int m_nextFetchIndex = 0;
     bool m_fetchStarted = false;
 
-    static constexpr int CARD_WIDTH = 280;
+    static constexpr int COLUMNS = 3;
     static constexpr int CARD_SPACING = 16;
-    static constexpr int CARD_IMAGE_HEIGHT = 200;
+    static constexpr int SIDE_MARGIN = 300;
 };
 
 #endif // SHOWCASEWIDGET_H

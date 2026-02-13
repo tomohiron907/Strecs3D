@@ -7,7 +7,6 @@
 #include <QResizeEvent>
 #include <QShowEvent>
 #include <QPixmap>
-#include <QFont>
 #include <QTimer>
 
 static const QStringList IMAGE_FILES = {
@@ -47,12 +46,18 @@ void ShowcaseWidget::setupUI()
 
     m_gridLayout = new QGridLayout(m_containerWidget);
     m_gridLayout->setSpacing(CARD_SPACING);
-    m_gridLayout->setContentsMargins(CARD_SPACING * 2, CARD_SPACING * 2,
-                                      CARD_SPACING * 2, CARD_SPACING * 2);
+    m_gridLayout->setContentsMargins(SIDE_MARGIN, CARD_SPACING * 2,
+                                      SIDE_MARGIN, CARD_SPACING * 2);
+
+    for (int c = 0; c < COLUMNS; ++c) {
+        m_gridLayout->setColumnStretch(c, 1);
+    }
 
     for (const auto& filename : IMAGE_FILES) {
         createCard(filename);
     }
+
+    rearrangeCards();
 
     m_scrollArea->setWidget(m_containerWidget);
     mainLayout->addWidget(m_scrollArea);
@@ -62,40 +67,11 @@ void ShowcaseWidget::createCard(const QString& filename)
 {
     CardInfo info;
     info.filename = filename;
-    info.title = filenameToTitle(filename);
     info.loaded = false;
 
-    info.card = new QFrame(m_containerWidget);
-    info.card->setFrameShape(QFrame::NoFrame);
-    info.card->setStyleSheet(
-        QString("QFrame { background-color: %1; border-radius: %2px; }")
-        .arg(ColorManager::BACKGROUND_COLOR.lighter(130).name())
-        .arg(StyleManager::CONTAINER_RADIUS));
-
-    QVBoxLayout* cardLayout = new QVBoxLayout(info.card);
-    cardLayout->setContentsMargins(0, 0, 0, StyleManager::CONTAINER_PADDING);
-    cardLayout->setSpacing(StyleManager::CONTAINER_PADDING);
-
-    // Image label with placeholder
-    info.imageLabel = new QLabel(info.card);
-    info.imageLabel->setFixedHeight(CARD_IMAGE_HEIGHT);
-    info.imageLabel->setAlignment(Qt::AlignCenter);
-    info.imageLabel->setStyleSheet(
-        QString("QLabel { background-color: %1; border-top-left-radius: %2px; "
-                "border-top-right-radius: %2px; color: #888; }")
-        .arg(ColorManager::BACKGROUND_COLOR.lighter(110).name())
-        .arg(StyleManager::CONTAINER_RADIUS));
-    info.imageLabel->setText("Loading...");
-    cardLayout->addWidget(info.imageLabel);
-
-    // Title label
-    info.titleLabel = new QLabel(info.title, info.card);
-    info.titleLabel->setAlignment(Qt::AlignCenter);
-    QFont titleFont;
-    titleFont.setPixelSize(StyleManager::FONT_SIZE_NORMAL);
-    info.titleLabel->setFont(titleFont);
-    info.titleLabel->setStyleSheet("QLabel { color: #ddd; background: transparent; }");
-    cardLayout->addWidget(info.titleLabel);
+    info.imageLabel = new RoundedImageLabel(StyleManager::CONTAINER_RADIUS, m_containerWidget);
+    info.imageLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    info.imageLabel->setPlaceholderText("Loading...");
 
     m_cards.append(info);
 }
@@ -104,31 +80,48 @@ void ShowcaseWidget::rearrangeCards()
 {
     if (m_cards.isEmpty()) return;
 
-    // Remove all items from grid layout without deleting widgets
     while (m_gridLayout->count() > 0) {
         m_gridLayout->takeAt(0);
     }
 
-    int availableWidth = m_scrollArea->viewport()->width() - CARD_SPACING * 4;
-    int columns = qMax(1, availableWidth / (CARD_WIDTH + CARD_SPACING));
-
     for (int i = 0; i < m_cards.size(); ++i) {
-        int row = i / columns;
-        int col = i % columns;
-        m_gridLayout->addWidget(m_cards[i].card, row, col);
-        m_cards[i].card->setFixedWidth(CARD_WIDTH);
+        int row = i / COLUMNS;
+        int col = i % COLUMNS;
+        m_gridLayout->addWidget(m_cards[i].imageLabel, row, col);
+    }
+}
+
+void ShowcaseWidget::updateCardSizes()
+{
+    if (m_cards.isEmpty()) return;
+
+    int viewportWidth = m_scrollArea->viewport()->width();
+    if (viewportWidth <= 0) return;
+
+    // cardWidth = (viewportWidth - left/right margins - spacing between columns) / columns
+    int totalSpacing = CARD_SPACING * (COLUMNS - 1);
+    int cardWidth = (viewportWidth - SIDE_MARGIN * 2 - totalSpacing) / COLUMNS;
+    if (cardWidth < 100) cardWidth = 100;
+
+    // 16:9 aspect ratio
+    int cardHeight = cardWidth * 9 / 16;
+
+    for (auto& card : m_cards) {
+        card.imageLabel->setFixedHeight(cardHeight);
     }
 }
 
 void ShowcaseWidget::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
+    updateCardSizes();
     rearrangeCards();
 }
 
 void ShowcaseWidget::showEvent(QShowEvent* event)
 {
     QWidget::showEvent(event);
+    updateCardSizes();
     startFetching();
 }
 
@@ -156,30 +149,14 @@ void ShowcaseWidget::fetchNextImage()
             QByteArray data = reply->readAll();
             QPixmap pixmap;
             if (pixmap.loadFromData(data)) {
-                QPixmap scaled = pixmap.scaled(
-                    CARD_WIDTH, CARD_IMAGE_HEIGHT,
-                    Qt::KeepAspectRatio, Qt::SmoothTransformation);
-                m_cards[index].imageLabel->setPixmap(scaled);
-                m_cards[index].imageLabel->setText("");
+                m_cards[index].imageLabel->setPixmap(pixmap);
+                m_cards[index].imageLabel->setPlaceholderText("");
                 m_cards[index].loaded = true;
             }
         } else {
-            m_cards[index].imageLabel->setText("No Image");
+            m_cards[index].imageLabel->setPlaceholderText("No Image");
         }
 
-        // Fetch the next image after this one completes
         QTimer::singleShot(0, this, &ShowcaseWidget::fetchNextImage);
     });
-}
-
-QString ShowcaseWidget::filenameToTitle(const QString& filename)
-{
-    // Remove extension, replace underscores with spaces, capitalize each word
-    QString name = filename;
-    name = name.left(name.lastIndexOf('.'));
-    QStringList words = name.split('_', Qt::SkipEmptyParts);
-    for (auto& word : words) {
-        word[0] = word[0].toUpper();
-    }
-    return words.join(' ');
 }
