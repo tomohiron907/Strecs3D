@@ -19,6 +19,7 @@
 #include "widgets/TabButton.h"
 #include "widgets/TabGroup.h"
 #include "widgets/SettingsWidget.h"
+#include "widgets/ShowcaseWidget.h"
 #include "../utils/ColorManager.h"
 #include "../utils/StyleManager.h"
 
@@ -216,7 +217,7 @@ void MainWindowUI::createMainContentStack(QVBoxLayout* outerLayout)
     m_mainContentStack->addWidget(m_settingsWidget);
 
     // Showcase content (Index 2)
-    m_showcaseContent = new QWidget(m_mainContentStack);
+    m_showcaseContent = new ShowcaseWidget(m_mainContentStack);
     m_mainContentStack->addWidget(m_showcaseContent);
 
     // Guide content (Index 3)

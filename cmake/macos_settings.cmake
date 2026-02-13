@@ -36,6 +36,7 @@ function(apply_macos_settings TARGET_NAME)
   target_link_libraries(${TARGET_NAME} PRIVATE
     Qt6::Core
     Qt6::Widgets
+    Qt6::Network
     ${VTK_LIBRARIES}
     lib3mf::lib3mf
     libzip::zip

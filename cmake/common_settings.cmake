@@ -17,13 +17,14 @@ else()
 endif()
 
 # Qt6の検索
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
 # Qt6の詳細設定
 if(Qt6_FOUND)
   message(STATUS "Qt6 found: ${Qt6_VERSION}")
   message(STATUS "Qt6 Core: ${Qt6Core_DIR}")
   message(STATUS "Qt6 Widgets: ${Qt6Widgets_DIR}")
+  message(STATUS "Qt6 Network: ${Qt6Network_DIR}")
 else()
   message(FATAL_ERROR "Qt6 not found. Please install Qt6 development libraries.")
 endif()
@@ -138,6 +139,7 @@ add_executable(Strecs3D
   UI/widgets/TabButton.cpp
   UI/widgets/TabGroup.cpp
   UI/widgets/SettingsWidget.cpp
+  UI/widgets/ShowcaseWidget.cpp
 
 
   UI/widgets/ObjectListWidget.cpp

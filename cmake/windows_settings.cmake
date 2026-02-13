@@ -61,6 +61,7 @@ function(apply_windows_settings TARGET_NAME)
   target_link_libraries(${TARGET_NAME} PRIVATE
     Qt6::Core
     Qt6::Widgets
+    Qt6::Network
     ${VTK_LIBRARIES}
     ${LIB3MF_LIB}
     ${LIBZIP_LIBRARIES}

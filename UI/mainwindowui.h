@@ -27,6 +27,7 @@ class MainWindow;
 class TabButton;
 class TabGroup;
 class SettingsWidget;
+class ShowcaseWidget;
 
 class MainWindowUI : public QObject {
     Q_OBJECT
@@ -127,7 +128,7 @@ private:
     TabButton* m_settingsTab;
     QStackedWidget* m_mainContentStack;
     QWidget* m_processContent;
-    QWidget* m_showcaseContent;
+    ShowcaseWidget* m_showcaseContent;
     QWidget* m_guideContent;
     SettingsWidget* m_settingsWidget;
 };
