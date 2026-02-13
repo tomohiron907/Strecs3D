@@ -18,7 +18,12 @@ public:
     explicit RoundedImageLabel(int radius, QWidget* parent = nullptr)
         : QWidget(parent), m_radius(radius) {}
 
-    void setPixmap(const QPixmap& pixmap) { m_pixmap = pixmap; update(); }
+    void setPixmap(const QPixmap& pixmap) {
+        m_pixmap = pixmap;
+        m_scaledCache = QPixmap();
+        m_cachedSize = QSize();
+        update();
+    }
     void setPlaceholderText(const QString& text) { m_placeholder = text; update(); }
 
 protected:
@@ -31,11 +36,14 @@ protected:
         painter.setClipPath(path);
 
         if (!m_pixmap.isNull()) {
-            QPixmap scaled = m_pixmap.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-            int x = (width() - scaled.width()) / 2;
-            int y = (height() - scaled.height()) / 2;
+            if (m_cachedSize != size()) {
+                m_scaledCache = m_pixmap.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                m_cachedSize = size();
+            }
+            int x = (width() - m_scaledCache.width()) / 2;
+            int y = (height() - m_scaledCache.height()) / 2;
             painter.fillRect(rect(), QColor("#222222"));
-            painter.drawPixmap(x, y, scaled);
+            painter.drawPixmap(x, y, m_scaledCache);
         } else {
             painter.fillRect(rect(), QColor("#222222"));
             painter.setPen(QColor("#888888"));
@@ -45,6 +53,8 @@ protected:
 
 private:
     QPixmap m_pixmap;
+    QPixmap m_scaledCache;
+    QSize m_cachedSize;
     QString m_placeholder = "Loading...";
     int m_radius;
 };

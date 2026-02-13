@@ -238,6 +238,11 @@ void MainWindowUI::switchToTab(int index)
         return;
     }
 
+    if (m_tabAnimationRunning) {
+        return;
+    }
+    m_tabAnimationRunning = true;
+
     // Update tab button states via TabGroup
     m_tabGroup->setActiveIndex(index);
 
@@ -245,25 +250,27 @@ void MainWindowUI::switchToTab(int index)
     QWidget* nextWidget = m_mainContentStack->widget(index);
 
     int width = m_mainContentStack->width();
+    int height = m_mainContentStack->height();
     int direction = (index > currentIndex) ? 1 : -1;
 
-    // Position next widget off-screen
-    nextWidget->setGeometry(direction * width, 0, width, m_mainContentStack->height());
+    // Set size explicitly, then position off-screen using pos
+    nextWidget->resize(width, height);
+    nextWidget->move(direction * width, 0);
     nextWidget->show();
     nextWidget->raise();
 
-    // Animation for current widget (slide out)
-    QPropertyAnimation* currentAnim = new QPropertyAnimation(currentWidget, "geometry", this);
+    // Animation for current widget (slide out) - animate pos only
+    QPropertyAnimation* currentAnim = new QPropertyAnimation(currentWidget, "pos", this);
     currentAnim->setDuration(450);
-    currentAnim->setStartValue(QRect(0, 0, width, m_mainContentStack->height()));
-    currentAnim->setEndValue(QRect(-direction * width, 0, width, m_mainContentStack->height()));
+    currentAnim->setStartValue(QPoint(0, 0));
+    currentAnim->setEndValue(QPoint(-direction * width, 0));
     currentAnim->setEasingCurve(QEasingCurve::InOutQuad);
 
-    // Animation for next widget (slide in)
-    QPropertyAnimation* nextAnim = new QPropertyAnimation(nextWidget, "geometry", this);
+    // Animation for next widget (slide in) - animate pos only
+    QPropertyAnimation* nextAnim = new QPropertyAnimation(nextWidget, "pos", this);
     nextAnim->setDuration(450);
-    nextAnim->setStartValue(QRect(direction * width, 0, width, m_mainContentStack->height()));
-    nextAnim->setEndValue(QRect(0, 0, width, m_mainContentStack->height()));
+    nextAnim->setStartValue(QPoint(direction * width, 0));
+    nextAnim->setEndValue(QPoint(0, 0));
     nextAnim->setEasingCurve(QEasingCurve::InOutQuad);
 
     // Run animations in parallel
@@ -273,6 +280,7 @@ void MainWindowUI::switchToTab(int index)
 
     connect(group, &QParallelAnimationGroup::finished, this, [this, index, group]() {
         m_mainContentStack->setCurrentIndex(index);
+        m_tabAnimationRunning = false;
         group->deleteLater();
     });
 

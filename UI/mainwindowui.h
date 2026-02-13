@@ -132,6 +132,7 @@ private:
     ShowcaseWidget* m_showcaseContent;
     GuideWidget* m_guideContent;
     SettingsWidget* m_settingsWidget;
+    bool m_tabAnimationRunning = false;
 };
 
 #endif // MAINWINDOWUI_H 
