@@ -140,6 +140,7 @@ add_executable(Strecs3D
   UI/widgets/TabGroup.cpp
   UI/widgets/SettingsWidget.cpp
   UI/widgets/ShowcaseWidget.cpp
+  UI/widgets/GuideWidget.cpp
 
 
   UI/widgets/ObjectListWidget.cpp

@@ -20,6 +20,7 @@
 #include "widgets/TabGroup.h"
 #include "widgets/SettingsWidget.h"
 #include "widgets/ShowcaseWidget.h"
+#include "widgets/GuideWidget.h"
 #include "../utils/ColorManager.h"
 #include "../utils/StyleManager.h"
 
@@ -221,7 +222,7 @@ void MainWindowUI::createMainContentStack(QVBoxLayout* outerLayout)
     m_mainContentStack->addWidget(m_showcaseContent);
 
     // Guide content (Index 3)
-    m_guideContent = new QWidget(m_mainContentStack);
+    m_guideContent = new GuideWidget(m_mainContentStack);
     m_mainContentStack->addWidget(m_guideContent);
 
     // Start with Process tab
