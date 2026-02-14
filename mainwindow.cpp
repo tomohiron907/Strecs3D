@@ -136,6 +136,11 @@ void MainWindow::connectProcessManagerSignals()
                 handleProcessRollback(ProcessStep::Simulate);
             }
         });
+        connect(sw, &SettingsWidget::slicerTypeChanged, this, [this](const QString& slicerType) {
+            if (auto* btn = ui->getExport3mfButton()) {
+                btn->setText(QString("Export 3MF for %1").arg(slicerType));
+            }
+        });
     }
 }
 

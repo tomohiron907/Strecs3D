@@ -20,6 +20,7 @@ public:
 signals:
     void regionCountChanged(int count);
     void settingsChanged();
+    void slicerTypeChanged(const QString& slicerType);
 
 private slots:
     void onMinDensityEditingFinished();

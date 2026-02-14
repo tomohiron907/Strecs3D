@@ -409,7 +409,10 @@ void SettingsWidget::onSlicerTypeChanged(const QString& text)
     if (QString::fromStdString(settings.slicerType()) != text) {
         settings.setSlicerType(text.toStdString());
         settings.save();
-        if (m_initialLoadComplete) emit settingsChanged();
+        if (m_initialLoadComplete) {
+            emit settingsChanged();
+            emit slicerTypeChanged(text);
+        }
     }
 }
 
