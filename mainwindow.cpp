@@ -134,7 +134,6 @@ void MainWindow::connectProcessManagerSignals()
             auto* flow = ui->getProcessManagerWidget()->getFlowWidget();
             if (flow && flow->currentStep() == ProcessStep::InfillMap) {
                 handleProcessRollback(ProcessStep::Simulate);
-                resetExportButton();
             }
         });
         connect(sw, &SettingsWidget::slicerTypeChanged, this, [this](const QString& slicerType) {
@@ -510,6 +509,7 @@ void MainWindow::onSelectedObjectChanged(const SelectedObjectInfo& selection)
 void MainWindow::handleProcessRollback(ProcessStep targetStep)
 {
     processController_->rollbackToStep(targetStep);
+    resetExportButton();
 }
 
 void MainWindow::onBedSurfaceSelectionRequested()
