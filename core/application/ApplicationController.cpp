@@ -240,9 +240,10 @@ void ApplicationController::loadAndDisplayTempStlFiles(IUserInterface* ui)
     ui->hideVtkObject();
 
     // 分割STLウィジェットのチェックボックスをオン
-    for (int i = 0; i < DIVIDED_MESH_COUNT; ++i) {
-        ui->setDividedMeshVisibility(i, true);
-        ui->setDividedMeshOpacity(i, 1.0);
+    const auto& meshInfos = fileProcessor->getVtkProcessor()->getMeshInfos();
+    for (size_t i = 0; i < meshInfos.size(); ++i) {
+        ui->setDividedMeshVisibility(static_cast<int>(i), true);
+        ui->setDividedMeshOpacity(static_cast<int>(i), 1.0);
     }
 
     ui->showTempDividedStl(fileProcessor->getVtkProcessor().get());
@@ -313,12 +314,14 @@ std::vector<StressDensityMapping> ApplicationController::getStressDensityMapping
 
 void ApplicationController::resetDividedMeshWidgets(IUserInterface* ui)
 {
-    if (!ui) return;
+    if (!ui || !fileProcessor->getVtkProcessor()) return;
+
+    const auto& meshInfos = fileProcessor->getVtkProcessor()->getMeshInfos();
 
     // 分割されたメッシュウィジェットをリセット
-    for (int i = 0; i < DIVIDED_MESH_COUNT; ++i) {
-        ui->setDividedMeshFileName(i, QString("Divided Mesh %1").arg(i + 1));
-        ui->setDividedMeshOpacity(i, 1.0);
+    for (size_t i = 0; i < meshInfos.size(); ++i) {
+        ui->setDividedMeshFileName(static_cast<int>(i), QString("Divided Mesh %1").arg(i + 1));
+        ui->setDividedMeshOpacity(static_cast<int>(i), 1.0);
     }
 }
 

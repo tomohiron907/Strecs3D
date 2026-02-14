@@ -243,7 +243,7 @@ void MainWindowUIAdapter::registerDividedMeshes(const std::vector<MeshInfo>& mes
     if (!uiState) return;
 
     // 各分割メッシュをInfillRegionとして登録
-    for (size_t i = 0; i < meshInfos.size() && i < static_cast<size_t>(ApplicationController::DIVIDED_MESH_COUNT); ++i) {
+    for (size_t i = 0; i < meshInfos.size(); ++i) {
         const auto& meshInfo = meshInfos[i];
 
         // InfillRegionInfo を作成
@@ -311,7 +311,7 @@ void MainWindowUIAdapter::checkHighDensityWarning() {
         QString message = QString(
             "%1 of %2 regions are at maximum density (90%).\n\n"
             "Consider reviewing your design, load, or constraints."
-        ).arg(maxDensityCount).arg(ApplicationController::DIVIDED_MESH_COUNT);
+        ).arg(maxDensityCount).arg(slider->regionCount());
 
         QMessageBox msgBox(qobject_cast<QWidget*>(ui));
         msgBox.setIcon(QMessageBox::Warning);
