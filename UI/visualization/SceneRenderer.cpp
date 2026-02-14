@@ -39,6 +39,7 @@ void SceneRenderer::renderObjects(const std::vector<ObjectInfo>& objectList) {
         }
     }
 
+    ui_->getRenderer()->ResetCameraClippingRange();
     render();
 }
 
