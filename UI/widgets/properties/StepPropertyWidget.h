@@ -2,8 +2,6 @@
 
 #include <QWidget>
 #include <QFormLayout>
-#include <QCheckBox>
-#include <QDoubleSpinBox>
 #include <QLabel>
 #include "../../../core/ui/UIState.h"
 
@@ -22,6 +20,4 @@ private:
     
     QLabel* m_filenameLabel;
     QLabel* m_filePathLabel;
-    QCheckBox* m_visibleCheckBox;
-    QDoubleSpinBox* m_transparencySpinBox;
 };

@@ -418,7 +418,17 @@ void VtkProcessor::saveDividedMeshes(const std::vector<vtkSmartPointer<vtkPolyDa
 {
     const auto& stressValues = this->getStressValues();
     meshInfos.clear();
-    
+
+    // 古い分割メッシュファイルを削除（分割数を減らした時に残るファイルを防ぐ）
+    std::filesystem::path tempDirPath = TempPathUtility::getTempSubDirPath("div");
+    if (std::filesystem::exists(tempDirPath)) {
+        for (const auto& entry : std::filesystem::directory_iterator(tempDirPath)) {
+            if (entry.is_regular_file() && entry.path().extension() == ".stl") {
+                std::filesystem::remove(entry.path());
+            }
+        }
+    }
+
     for (size_t i = 0; i < dividedMeshes.size(); ++i) {
         int minValue = stressValues[i];
         int maxValue = stressValues[i + 1];
