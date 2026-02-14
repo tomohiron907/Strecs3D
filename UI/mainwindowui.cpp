@@ -305,7 +305,7 @@ void MainWindowUI::createButtons()
     QString slicerType = QString::fromStdString(SettingsManager::instance().slicerType());
     export3mfButton = new Button(QString("Export 3MF for %1").arg(slicerType), centralWidget);
     export3mfButton->setIcon(":/resources/icons/export.png");
-    export3mfButton->setIconDark(":/resources/icons/export_dark.png");
+    export3mfButton->setIconDark(":/resources/icons/export.png");
     export3mfButton->setEnabled(false);
 }
 
