@@ -87,17 +87,18 @@ function(apply_windows_settings TARGET_NAME)
 
   # Windows環境での設定
   # Debug時はコンソールを表示、Release時はGUIアプリとして実行
-  if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set_target_properties(${TARGET_NAME} PROPERTIES
-      WIN32_EXECUTABLE TRUE
-      VS_DEBUGGER_ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/$<CONFIG>;$ENV{PATH}"
-    )
-  else()
-    set_target_properties(${TARGET_NAME} PROPERTIES
-      WIN32_EXECUTABLE FALSE
-      VS_DEBUGGER_ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/$<CONFIG>;$ENV{PATH}"
-    )
-  endif()
+  set_target_properties(${TARGET_NAME} PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    VS_DEBUGGER_ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/$<CONFIG>;$ENV{PATH}"
+  )
+
+  # マルチ構成ジェネレータ対応: ビルドタイプに応じてサブシステムを設定
+  target_link_options(${TARGET_NAME} PRIVATE
+    $<$<CONFIG:Debug>:/SUBSYSTEM:CONSOLE>
+    $<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>
+    $<$<CONFIG:RelWithDebInfo>:/SUBSYSTEM:WINDOWS>
+    $<$<CONFIG:MinSizeRel>:/SUBSYSTEM:WINDOWS>
+  )
 
   # Add Windows specific source files
   target_sources(${TARGET_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/UI/platform/windows/WindowUtils.cpp")

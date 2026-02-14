@@ -30,12 +30,128 @@
 
 // Helper to run command and capture output
 int runCommand(const std::string& cmd, FEMProgressCallback* callback) {
+#if defined(_WIN32)
+    // Windows implementation using CreateProcess with pipe redirection
+    SECURITY_ATTRIBUTES saAttr;
+    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.bInheritHandle = TRUE;
+    saAttr.lpSecurityDescriptor = NULL;
+
+    // Create pipes for stdout/stderr
+    HANDLE hChildStdOutRead = NULL;
+    HANDLE hChildStdOutWrite = NULL;
+
+    if (!CreatePipe(&hChildStdOutRead, &hChildStdOutWrite, &saAttr, 0)) {
+        return -1;
+    }
+
+    // Ensure the read handle is not inherited
+    if (!SetHandleInformation(hChildStdOutRead, HANDLE_FLAG_INHERIT, 0)) {
+        CloseHandle(hChildStdOutRead);
+        CloseHandle(hChildStdOutWrite);
+        return -1;
+    }
+
+    // Setup process startup info
+    STARTUPINFOA siStartInfo;
+    ZeroMemory(&siStartInfo, sizeof(STARTUPINFOA));
+    siStartInfo.cb = sizeof(STARTUPINFOA);
+    siStartInfo.hStdError = hChildStdOutWrite;
+    siStartInfo.hStdOutput = hChildStdOutWrite;
+    siStartInfo.hStdInput = NULL;
+    siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+
+    PROCESS_INFORMATION piProcInfo;
+    ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+
+    // CreateProcess requires a mutable command line
+    std::string mutableCmd = cmd;
+    BOOL success = CreateProcessA(
+        NULL,                       // Application name
+        &mutableCmd[0],            // Command line (mutable)
+        NULL,                       // Process security attributes
+        NULL,                       // Thread security attributes
+        TRUE,                       // Inherit handles
+        CREATE_NO_WINDOW,          // Creation flags - no console window
+        NULL,                       // Environment
+        NULL,                       // Current directory
+        &siStartInfo,              // Startup info
+        &piProcInfo                // Process info
+    );
+
+    if (!success) {
+        CloseHandle(hChildStdOutRead);
+        CloseHandle(hChildStdOutWrite);
+        return -1;
+    }
+
+    // Close the write end of the pipe (child has its own copy)
+    CloseHandle(hChildStdOutWrite);
+
+    // Read output from the child process
+    char buffer[4096];
+    DWORD bytesRead;
+    std::string lineBuffer;
+
+    while (ReadFile(hChildStdOutRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL) && bytesRead > 0) {
+        buffer[bytesRead] = '\0';
+        lineBuffer += buffer;
+
+        // Process complete lines
+        size_t pos;
+        while ((pos = lineBuffer.find('\n')) != std::string::npos) {
+            std::string line = lineBuffer.substr(0, pos);
+            // Remove trailing \r if present
+            if (!line.empty() && line.back() == '\r') {
+                line.pop_back();
+            }
+            if (callback) {
+                callback->log(line);
+            } else {
+                std::cout << line << std::endl;
+            }
+            lineBuffer.erase(0, pos + 1);
+        }
+    }
+
+    // Process any remaining partial line
+    if (!lineBuffer.empty()) {
+        if (lineBuffer.back() == '\n') {
+            lineBuffer.pop_back();
+        }
+        if (!lineBuffer.empty() && lineBuffer.back() == '\r') {
+            lineBuffer.pop_back();
+        }
+        if (!lineBuffer.empty()) {
+            if (callback) {
+                callback->log(lineBuffer);
+            } else {
+                std::cout << lineBuffer << std::endl;
+            }
+        }
+    }
+
+    // Wait for the process to exit
+    WaitForSingleObject(piProcInfo.hProcess, INFINITE);
+
+    // Get exit code
+    DWORD exitCode;
+    GetExitCodeProcess(piProcInfo.hProcess, &exitCode);
+
+    // Cleanup
+    CloseHandle(hChildStdOutRead);
+    CloseHandle(piProcInfo.hProcess);
+    CloseHandle(piProcInfo.hThread);
+
+    return static_cast<int>(exitCode);
+#else
+    // Unix/Linux/macOS implementation using popen
     std::string full_cmd = cmd + " 2>&1"; // Capture stderr too
     FILE* pipe = popen(full_cmd.c_str(), "r");
     if (!pipe) {
         return -1;
     }
-    
+
     char buffer[128];
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
         std::string line(buffer);
@@ -49,8 +165,9 @@ int runCommand(const std::string& cmd, FEMProgressCallback* callback) {
             std::cout << line << std::endl;
         }
     }
-    
+
     return pclose(pipe);
+#endif
 }
 
 std::string runFEMAnalysis(const std::string& config_file, FEMProgressCallback* progressCallback) {
