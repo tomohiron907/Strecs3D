@@ -83,6 +83,11 @@ void SimulationStepWidget::resetProgress() {
         m_statusLabel->setText("");
         m_statusLabel->setVisible(false);
     }
+
+    // Reset simulation button state
+    m_simulateButton->setText("Simulate");
+    m_simulateButton->setEnabled(true);
+    m_simulateButton->setEmphasized(true);
 }
 
 void SimulationStepWidget::setSimulationRunning(bool running) {
