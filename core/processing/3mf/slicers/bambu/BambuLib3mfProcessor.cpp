@@ -1,10 +1,14 @@
 #include "BambuLib3mfProcessor.h"
 #include "../../../../../utils/tempPathUtility.h"
 #include "../../../../../utils/SettingsManager.h"
+#include <algorithm>
+#include <fstream>
 #include <iostream>
+#include <limits>
 #include <regex>
 #include <map>
 #include <filesystem>
+#include <sstream>
 
 bool BambuLib3mfProcessor::setMetaData(double maxStress) {
     std::vector<StressDensityMapping> emptyMappings;
@@ -13,6 +17,16 @@ bool BambuLib3mfProcessor::setMetaData(double maxStress) {
 }
 
 bool BambuLib3mfProcessor::setMetaData(double maxStress, const std::vector<StressDensityMapping>& mappings, const std::vector<MeshInfo>& meshInfos){
+    projectSettings = BambuProjectSettings::loadCurrent();
+    if (!projectSettings) {
+        std::cerr << "Failed to load Bambu project settings" << std::endl;
+        return false;
+    }
+
+    // Bambu Studio 2.8以降は Application と project_settings.config が揃わない3MFのモディファイア設定を破棄する
+    buildTransform = wrapper->GetIdentityTransform();
+    model->GetMetaDataGroup()->AddMetaData("", "Application", "BambuStudio-" + projectSettings->version(), "string", true);
+
     auto meshIterator = model->GetMeshObjects();
     std::regex filePattern(
         R"(^modifierMesh(\d+)\.stl$)"
@@ -56,8 +70,7 @@ bool BambuLib3mfProcessor::setMetaData(double maxStress, const std::vector<Stres
     setPlateDataBambu(meshIterator->Count());
     setAssembleDataBambu(meshIterator->Count());
     setupBuildObjects();
-    exportConfig();
-    return true;
+    return exportConfig();
 }
 
 bool BambuLib3mfProcessor::setMetaDataForInfillMesh(Lib3MF::PMeshObject Mesh, FileInfo fileInfo, double maxStress, const std::vector<StressDensityMapping>& mappings) {
@@ -87,7 +100,7 @@ bool BambuLib3mfProcessor::setMetaDataForInfillMeshBambu(Lib3MF::PMeshObject Mes
             break;
         }
     }
-    std::string density_str = std::to_string(density);
+    std::string density_str = std::to_string(density) + "%";
     part.id = fileInfo.id+1;
     part.subtype = "modifier_part";
     part.metadata.push_back({"name", fileInfo.name});
@@ -101,6 +114,8 @@ bool BambuLib3mfProcessor::setMetaDataForInfillMeshBambu(Lib3MF::PMeshObject Mes
     part.metadata.push_back({"minimum_sparse_infill_area", "0"});
     part.metadata.push_back({"sparse_infill_anchor", "5"});
     part.metadata.push_back({"sparse_infill_anchor_max", "5"});
+    part.metadata.push_back({"skeleton_infill_density", density_str});
+    part.metadata.push_back({"skin_infill_density", density_str});
     part.metadata.push_back({"sparse_infill_density", density_str});
     part.metadata.push_back({"sparse_infill_pattern", SettingsManager::instance().infillPattern()});
     part.mesh_stat = {0, 0, 0, 0, 0};
@@ -109,6 +124,8 @@ bool BambuLib3mfProcessor::setMetaDataForInfillMeshBambu(Lib3MF::PMeshObject Mes
 }
 
 bool BambuLib3mfProcessor::setMetaDataForOutlineMeshBambu(Lib3MF::PMeshObject Mesh){
+    updateBuildTransform(Mesh);
+
     xmlconverter::Part part;
     part.id = Mesh->GetResourceID();
     part.subtype = "normal_part";
@@ -120,10 +137,13 @@ bool BambuLib3mfProcessor::setMetaDataForOutlineMeshBambu(Lib3MF::PMeshObject Me
     part.metadata.push_back({"source_offset_x", "0"});
     part.metadata.push_back({"source_offset_y", "0"});
     part.metadata.push_back({"source_offset_z", "0"});
-    part.metadata.push_back({"sparse_infill_density", "0"});
+    part.metadata.push_back({"skeleton_infill_density", "0%"});
+    part.metadata.push_back({"skin_infill_density", "0%"});
+    part.metadata.push_back({"sparse_infill_density", "0%"});
     part.mesh_stat = {0, 0, 0, 0, 0};
 
-    object.parts.push_back(part);
+    // モディファイアは順序が前のパーツにのみ作用するため、本体を先頭に置く
+    object.parts.insert(object.parts.begin(), part);
     return true;
 }
 
@@ -140,6 +160,15 @@ bool BambuLib3mfProcessor::setPlateDataBambu(int meshCount){
     plate.metadata.push_back({"plater_id", "1"});
     plate.metadata.push_back({"plater_name", ""});
     plate.metadata.push_back({"locked", "false"});
+    plate.metadata.push_back({"filament_map_mode", "Auto For Flush"});
+    std::string filamentMaps;
+    std::string filamentVolumeMaps;
+    for (int i = 0; i < projectSettings->filamentCount(); i++) {
+        filamentMaps += i == 0 ? "1" : " 1";
+        filamentVolumeMaps += i == 0 ? "0" : " 0";
+    }
+    plate.metadata.push_back({"filament_maps", filamentMaps});
+    plate.metadata.push_back({"filament_volume_maps", filamentVolumeMaps});
     plate.metadata.push_back({"thumbnail_file", "Metadata/plate_1.png"});
     plate.metadata.push_back({"thumbnail_no_light_file", "Metadata/plate_no_light_1.png"});
     plate.metadata.push_back({"top_file", "Metadata/top_1.png"});
@@ -157,7 +186,7 @@ bool BambuLib3mfProcessor::setAssembleDataBambu(int meshCount){
     xmlconverter::AssembleItem item;
     item.object_id = meshCount+1;
     item.instance_id = 0;
-    item.transform = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1";
+    item.transform = buildTranslationString();
     item.offset = "0 0 0";
     config.assemble.items.push_back(item);
     return true;
@@ -169,10 +198,15 @@ bool BambuLib3mfProcessor::setupBuildObjects(){
     auto mergedObject = model->AddComponentsObject();
     auto meshIterator = model->GetMeshObjects();
     int meshCount = meshIterator->Count();
+    std::vector<Lib3MF::PMeshObject> meshes;
     for (int i = 0; i < meshCount; i++) {
         meshIterator->MoveNext();
-        auto currentMesh = meshIterator->GetCurrentMeshObject();
-        mergedObject->AddComponent(currentMesh.get(), identityTransform);
+        meshes.push_back(meshIterator->GetCurrentMeshObject());
+    }
+    // 本体は最後に読み込まれている。こちらも本体を先頭にする
+    std::rotate(meshes.begin(), meshes.end() - 1, meshes.end());
+    for (const auto& mesh : meshes) {
+        mergedObject->AddComponent(mesh.get(), identityTransform);
     }
     mergedObject->SetName("Group #1");
 
@@ -184,7 +218,7 @@ bool BambuLib3mfProcessor::setupBuildObjects(){
         model->RemoveBuildItem(buildItem);
     }
     
-    model->AddBuildItem(mergedObject.get(), identityTransform);
+    model->AddBuildItem(mergedObject.get(), buildTransform);
     return true;
 }
 
@@ -202,7 +236,49 @@ bool BambuLib3mfProcessor::exportConfig(){
     } else {
         std::cerr << "XMLの書き出しに失敗しました。" << std::endl;
     }
+    return exportProjectSettings(outputDir);
+}
+
+bool BambuLib3mfProcessor::exportProjectSettings(const std::string& outputDir){
+    const QByteArray& settings = projectSettings->data();
+    std::ofstream ofs(outputDir + "/project_settings.config", std::ios::binary);
+    ofs.write(settings.constData(), settings.size());
+    if (!ofs) {
+        std::cerr << "Failed to write project_settings.config" << std::endl;
+        return false;
+    }
     return true;
+}
+
+void BambuLib3mfProcessor::updateBuildTransform(Lib3MF::PMeshObject outlineMesh) {
+    float minCoord[3], maxCoord[3];
+    std::fill(minCoord, minCoord + 3, std::numeric_limits<float>::max());
+    std::fill(maxCoord, maxCoord + 3, std::numeric_limits<float>::lowest());
+
+    Lib3MF_uint32 vertexCount = outlineMesh->GetVertexCount();
+    for (Lib3MF_uint32 i = 0; i < vertexCount; ++i) {
+        sPosition pos = outlineMesh->GetVertex(i);
+        for (int axis = 0; axis < 3; ++axis) {
+            minCoord[axis] = std::min(minCoord[axis], pos.m_Coordinates[axis]);
+            maxCoord[axis] = std::max(maxCoord[axis], pos.m_Coordinates[axis]);
+        }
+    }
+    if (vertexCount == 0) {
+        return;
+    }
+
+    buildTransform.m_Fields[3][0] = projectSettings->plateCenterX() - (minCoord[0] + maxCoord[0]) / 2;
+    buildTransform.m_Fields[3][1] = projectSettings->plateCenterY() - (minCoord[1] + maxCoord[1]) / 2;
+    buildTransform.m_Fields[3][2] = -minCoord[2];
+}
+
+std::string BambuLib3mfProcessor::buildTranslationString() const {
+    std::ostringstream oss;
+    oss << "1 0 0 0 1 0 0 0 1 "
+        << buildTransform.m_Fields[3][0] << " "
+        << buildTransform.m_Fields[3][1] << " "
+        << buildTransform.m_Fields[3][2];
+    return oss.str();
 }
 
 bool BambuLib3mfProcessor::offsetModifierMeshZ(Lib3MF::PMeshObject mesh, float zOffset) {

@@ -9,6 +9,8 @@ class QMouseEvent;
 class QComboBox;
 class QDoubleValidator;
 class QHBoxLayout;
+class QLabel;
+class QPushButton;
 
 class SettingsWidget : public QWidget
 {
@@ -31,6 +33,8 @@ private slots:
     void onSafetyFactorEditingFinished();
     void onZStressFactorEditingFinished();
     void onRegionCountEditingFinished();
+    void onSelectBambuPrinterClicked();
+    void onResetBambuPrinterClicked();
 
 private:
     void setupUI();
@@ -38,12 +42,14 @@ private:
 
     // UI setup helpers
     QWidget* createSlicerSelectionGroup();
+    QWidget* createBambuPrinterGroup();
     QWidget* createMaterialSelectionGroup();
     QWidget* createDensitySliderGroup();
     QWidget* createSafetyGroup();
     QLineEdit* createDensityInput();
     QHBoxLayout* createDensityRow(const QString& labelText, QLineEdit* edit);
     void connectSignals();
+    void updateBambuPrinterGroup();
 
     // Style helpers
     QString getTitleLabelStyle() const;
@@ -51,11 +57,16 @@ private:
     QString getInputLabelStyle() const;
     QString getLineEditStyle() const;
     QString getComboBoxStyle() const;
+    QString getButtonStyle() const;
 
     QLineEdit* m_minDensityEdit;
     QLineEdit* m_maxDensityEdit;
     QIntValidator* m_densityValidator;
     QComboBox* m_slicerComboBox;
+    QWidget* m_bambuPrinterGroup;
+    QLabel* m_bambuPrinterLabel;
+    QPushButton* m_selectBambuPrinterButton;
+    QPushButton* m_resetBambuPrinterButton;
     QComboBox* m_materialComboBox;
     QComboBox* m_infillPatternComboBox;
     QLineEdit* m_safetyFactorEdit;

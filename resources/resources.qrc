@@ -15,5 +15,6 @@
         <file>icons/arrow_down.svg</file>
         <file>icons/web.svg</file>
         <file>icons/GitHub.svg</file>
+        <file>bambu/project_settings.config</file>
     </qresource>
 </RCC> 

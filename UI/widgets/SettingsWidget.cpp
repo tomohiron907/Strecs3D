@@ -1,4 +1,5 @@
 #include "SettingsWidget.h"
+#include "../../utils/BambuProjectSettings.h"
 #include "../../utils/SettingsManager.h"
 #include "../../utils/StyleManager.h"
 #include <QVBoxLayout>
@@ -11,6 +12,9 @@
 #include <QMouseEvent>
 #include <QShowEvent>
 #include <QComboBox>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QPushButton>
 
 SettingsWidget::SettingsWidget(QWidget* parent)
     : QWidget(parent)
@@ -18,6 +22,10 @@ SettingsWidget::SettingsWidget(QWidget* parent)
     , m_maxDensityEdit(nullptr)
     , m_densityValidator(nullptr)
     , m_slicerComboBox(nullptr)
+    , m_bambuPrinterGroup(nullptr)
+    , m_bambuPrinterLabel(nullptr)
+    , m_selectBambuPrinterButton(nullptr)
+    , m_resetBambuPrinterButton(nullptr)
     , m_materialComboBox(nullptr)
     , m_infillPatternComboBox(nullptr)
     , m_safetyFactorEdit(nullptr)
@@ -40,6 +48,7 @@ void SettingsWidget::setupUI()
     mainLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 
     mainLayout->addWidget(createSlicerSelectionGroup());
+    mainLayout->addWidget(createBambuPrinterGroup());
     mainLayout->addWidget(createDensitySliderGroup());
     mainLayout->addWidget(createMaterialSelectionGroup());
     mainLayout->addWidget(createSafetyGroup());
@@ -131,6 +140,25 @@ QString SettingsWidget::getComboBoxStyle() const
         .arg(StyleManager::FONT_SIZE_LARGE);
 }
 
+QString SettingsWidget::getButtonStyle() const
+{
+    return QString("QPushButton {"
+        "  background-color: #333333;"
+        "  color: #FFFFFF;"
+        "  border: 1px solid #555555;"
+        "  border-radius: %1px;"
+        "  padding: %2px %3px;"
+        "  font-size: %4px;"
+        "}"
+        "QPushButton:hover {"
+        "  border-color: #0078D4;"
+        "}")
+        .arg(StyleManager::RADIUS_SMALL)
+        .arg(StyleManager::PADDING_MEDIUM)
+        .arg(StyleManager::FORM_SPACING)
+        .arg(StyleManager::FONT_SIZE_LARGE);
+}
+
 QWidget* SettingsWidget::createSlicerSelectionGroup()
 {
     QWidget* wrapper = new QWidget(this);
@@ -171,6 +199,89 @@ QWidget* SettingsWidget::createSlicerSelectionGroup()
     wrapperLayout->addWidget(container);
 
     return wrapper;
+}
+
+QWidget* SettingsWidget::createBambuPrinterGroup()
+{
+    m_bambuPrinterGroup = new QWidget(this);
+    m_bambuPrinterGroup->setFixedWidth(600);
+
+    QVBoxLayout* wrapperLayout = new QVBoxLayout(m_bambuPrinterGroup);
+    wrapperLayout->setContentsMargins(0, 0, 0, 0);
+    wrapperLayout->setSpacing(5);
+
+    // Title
+    QLabel* title = new QLabel("Bambu Studio Printer", m_bambuPrinterGroup);
+    title->setStyleSheet(getTitleLabelStyle());
+    wrapperLayout->addWidget(title);
+
+    // Container frame
+    QFrame* container = new QFrame(m_bambuPrinterGroup);
+    container->setStyleSheet(getContainerFrameStyle());
+
+    QVBoxLayout* containerLayout = new QVBoxLayout(container);
+    containerLayout->setContentsMargins(80, 20, 80, 20);
+    containerLayout->setSpacing(15);
+
+    m_bambuPrinterLabel = new QLabel(container);
+    m_bambuPrinterLabel->setStyleSheet(getInputLabelStyle());
+    containerLayout->addWidget(m_bambuPrinterLabel);
+
+    QLabel* hintLabel = new QLabel(
+        "Exported 3MF files open with this printer. To change it, save a project "
+        "with your printer in Bambu Studio and select that 3MF file.", container);
+    hintLabel->setWordWrap(true);
+    hintLabel->setStyleSheet("QLabel { color: #888888; border: none; }");
+    containerLayout->addWidget(hintLabel);
+
+    QHBoxLayout* buttonRow = new QHBoxLayout();
+    m_selectBambuPrinterButton = new QPushButton("Select 3MF...", container);
+    m_selectBambuPrinterButton->setStyleSheet(getButtonStyle());
+    m_resetBambuPrinterButton = new QPushButton("Use Default", container);
+    m_resetBambuPrinterButton->setStyleSheet(getButtonStyle());
+    buttonRow->addStretch();
+    buttonRow->addWidget(m_selectBambuPrinterButton);
+    buttonRow->addWidget(m_resetBambuPrinterButton);
+    containerLayout->addLayout(buttonRow);
+
+    wrapperLayout->addWidget(container);
+
+    return m_bambuPrinterGroup;
+}
+
+void SettingsWidget::updateBambuPrinterGroup()
+{
+    const auto projectSettings = BambuProjectSettings::loadCurrent();
+    const QString printerName = projectSettings
+        ? QString::fromStdString(projectSettings->printerName())
+        : QString("Unknown");
+    m_bambuPrinterLabel->setText("Printer: " + printerName);
+    m_bambuPrinterGroup->setVisible(m_slicerComboBox->currentText() == "Bambu");
+}
+
+void SettingsWidget::onSelectBambuPrinterClicked()
+{
+    const QString path = QFileDialog::getOpenFileName(
+        this, "Select Bambu Studio Project", QString(), "3MF Files (*.3mf)");
+    if (path.isEmpty()) {
+        return;
+    }
+
+    QString error;
+    if (!BambuProjectSettings::importFrom3mf(path.toStdString(), error)) {
+        QMessageBox::warning(this, "Bambu Studio Printer", error);
+        return;
+    }
+    updateBambuPrinterGroup();
+}
+
+void SettingsWidget::onResetBambuPrinterClicked()
+{
+    if (!BambuProjectSettings::resetToDefault()) {
+        QMessageBox::warning(this, "Bambu Studio Printer", "Failed to reset the printer settings.");
+        return;
+    }
+    updateBambuPrinterGroup();
 }
 
 QWidget* SettingsWidget::createMaterialSelectionGroup()
@@ -332,6 +443,10 @@ void SettingsWidget::connectSignals()
             this, &SettingsWidget::onMaxDensityEditingFinished);
     connect(m_slicerComboBox, &QComboBox::currentTextChanged,
             this, &SettingsWidget::onSlicerTypeChanged);
+    connect(m_selectBambuPrinterButton, &QPushButton::clicked,
+            this, &SettingsWidget::onSelectBambuPrinterClicked);
+    connect(m_resetBambuPrinterButton, &QPushButton::clicked,
+            this, &SettingsWidget::onResetBambuPrinterClicked);
     connect(m_materialComboBox, &QComboBox::currentTextChanged,
             this, &SettingsWidget::onMaterialTypeChanged);
     connect(m_infillPatternComboBox, &QComboBox::currentTextChanged,
@@ -355,6 +470,8 @@ void SettingsWidget::loadSettings()
     if (slicerIndex != -1) {
         m_slicerComboBox->setCurrentIndex(slicerIndex);
     }
+
+    updateBambuPrinterGroup();
 
     QString currentMaterial = QString::fromStdString(settings.materialType());
     int materialIndex = m_materialComboBox->findText(currentMaterial);
@@ -405,6 +522,8 @@ void SettingsWidget::onMaxDensityEditingFinished()
 
 void SettingsWidget::onSlicerTypeChanged(const QString& text)
 {
+    updateBambuPrinterGroup();
+
     SettingsManager& settings = SettingsManager::instance();
     if (QString::fromStdString(settings.slicerType()) != text) {
         settings.setSlicerType(text.toStdString());

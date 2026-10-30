@@ -140,7 +140,9 @@ bool ProcessPipeline::processCuraMode(BaseLib3mfProcessor& processor, const std:
 
 bool ProcessPipeline::processBambuMode(BaseLib3mfProcessor& processor, double maxStress, const std::vector<StressDensityMapping>& mappings) {
     const auto& meshInfos = vtkProcessor->getMeshInfos();
-    processor.setMetaData(maxStress, mappings, meshInfos);
+    if (!processor.setMetaData(maxStress, mappings, meshInfos)) {
+        throw std::runtime_error("Failed to set metadata");
+    }
     const std::string tempFile = TempPathUtility::getTempFilePath("result/base.3mf").toStdString();
     if (!processor.save3mf(tempFile)) {
         throw std::runtime_error("Failed to save temporary 3MF file");

@@ -2,6 +2,8 @@
 #define BAMBULIB3MFPROCESSOR_H
 
 #include "../../BaseLib3mfProcessor.h"
+#include "../../../../../utils/BambuProjectSettings.h"
+#include <optional>
 
 class BambuLib3mfProcessor : public BaseLib3mfProcessor {
 private:
@@ -29,6 +31,10 @@ public:
 private:
     // Bambu-specific constants
     static constexpr float MODIFIER_MESH_Z_OFFSET = -0.4f;
+
+    std::optional<BambuProjectSettings> projectSettings;
+    // 元形状をプレート中央の床面に置くための平行移動量
+    sTransform buildTransform;
     
     // Bambu-specific helper methods
     bool setMetaDataForInfillMeshBambu(Lib3MF::PMeshObject Mesh, FileInfo fileInfo, double maxStress);
@@ -37,6 +43,11 @@ private:
     
     // Offset modifier mesh vertices in Z direction
     bool offsetModifierMeshZ(Lib3MF::PMeshObject mesh, float zOffset);
+
+    // Compute buildTransform from the bounding box of the outline mesh
+    void updateBuildTransform(Lib3MF::PMeshObject outlineMesh);
+    std::string buildTranslationString() const;
+    bool exportProjectSettings(const std::string& outputDir);
 };
 
 #endif
